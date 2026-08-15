@@ -39,6 +39,8 @@ const ICON_MAP = {
 
 export default function ExpenseTracker() {
   const { 
+    user,
+    setIsAuthModalOpen,
     budgets, 
     expenses, 
     categoryStats, 

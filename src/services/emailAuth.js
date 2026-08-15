@@ -9,7 +9,7 @@ import { auth } from './firebase';
 const activeOtpSessions = new Map();
 
 /**
- * Dispatches official email verification to the traveler's email address
+ * Dispatches real email verification OTP to the traveler's email address
  */
 export async function sendEmailOtp(email, fullName = 'Traveler') {
   if (!email || !email.includes('@')) {
@@ -22,7 +22,7 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
   const cleanEmail = email.toLowerCase().trim();
 
   try {
-    // Generate secure 6-digit OTP code
+    // Generate secure random 6-digit OTP code
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes validity
 
@@ -33,37 +33,54 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       attempts: 0
     });
 
-    // 1. Dispatch official Google Firebase Email
-    const actionCodeSettings = {
-      url: (typeof window !== 'undefined' ? window.location.origin : 'https://munnartools.vercel.app') + `?verify_email=${encodeURIComponent(cleanEmail)}`,
-      handleCodeInApp: true
-    };
+    // 1. Dispatch real email via FormSubmit Public Mail Gateway
+    const formSubmitPromise = fetch(`https://formsubmit.co/ajax/${encodeURIComponent(cleanEmail)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        _subject: `🌿 Munnar Explorer Verification Code: ${otpCode}`,
+        name: 'Munnar Explorer Verification',
+        email: 'noreply@munnartools.vercel.app',
+        message: `Hello ${fullName}!\n\nYour 6-digit Munnar Explorer verification OTP is:\n\n👉 ${otpCode}\n\nEnter this code on the website to access your budget and trip expense tracker.\n\nCode expires in 15 minutes.\n\nCrafted by Bharathkumar E.`,
+        _template: 'box'
+      })
+    }).catch((e) => console.warn('FormSubmit note:', e));
 
+    // 2. Dispatch via Web3Forms Gateway
+    const web3FormsPromise = fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        access_key: 'a29fa03e-86e4-4d69-95e2-63dbb1086202',
+        email: cleanEmail,
+        from_name: 'Munnar Explorer App',
+        subject: `🌿 Munnar Explorer Verification Code: ${otpCode}`,
+        message: `Hello ${fullName}!\n\nYour 6-digit verification code is: ${otpCode}\n\nEnter this code on the website to verify your account.`
+      })
+    }).catch((e) => console.warn('Web3Forms note:', e));
+
+    // 3. Dispatch Google Firebase Email Link
     try {
-      await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
+      const actionCodeSettings = {
+        url: (typeof window !== 'undefined' ? window.location.origin : 'https://munnartools.vercel.app') + `?verify_email=${encodeURIComponent(cleanEmail)}`,
+        handleCodeInApp: true
+      };
+      sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings).catch((e) => console.warn('Firebase Email note:', e));
       if (typeof window !== 'undefined') {
         window.localStorage.setItem('munnar_email_for_signin', cleanEmail);
       }
     } catch (fbErr) {
-      console.warn('Firebase Email dispatch note:', fbErr.message);
+      console.warn('Firebase email error:', fbErr);
     }
 
-    // 2. Dispatch real email via public reliable mail dispatch
-    try {
-      await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          access_key: 'a29fa03e-86e4-4d69-95e2-63dbb1086202',
-          email: cleanEmail,
-          from_name: 'Munnar Explorer App',
-          subject: `🌿 Munnar Explorer Verification Code: ${otpCode}`,
-          message: `Hello ${fullName}!\n\nYour 6-digit verification code is: ${otpCode}\n\nEnter this code on the website to access your Munnar trip budgets and expenses.\n\nCode expires in 15 minutes.`
-        })
-      });
-    } catch (w3Err) {
-      // Non-blocking mail fallback
-    }
+    // Wait for at least one delivery request
+    await Promise.race([formSubmitPromise, web3FormsPromise]);
 
     return {
       success: true,
@@ -75,7 +92,7 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
     console.error('Email dispatch error:', error);
     return {
       success: false,
-      error: error.message || 'Failed to dispatch email. Please check your email address.'
+      error: 'Could not send verification email. Please check your email address.'
     };
   }
 }

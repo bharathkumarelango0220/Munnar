@@ -10,12 +10,8 @@ import {
   CheckCircle2, 
   RefreshCw, 
   Sparkles, 
-  Lock, 
   AlertCircle,
-  ExternalLink,
-  Send,
-  Inbox,
-  KeyRound
+  Inbox
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sendEmailOtp, verifyEmailOtp } from '../services/emailAuth';
@@ -33,7 +29,6 @@ export default function AuthModal() {
   
   // 6-digit Real Email OTP
   const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
-  const [activeCode, setActiveCode] = useState('');
   const [timer, setTimer] = useState(60);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,9 +69,6 @@ export default function AuthModal() {
       
       if (result.success) {
         setSentEmailAddress(formData.email.trim());
-        if (result.otpCode) {
-          setActiveCode(result.otpCode);
-        }
         setError('');
         setStep('otp');
         setTimer(60);
@@ -124,8 +116,8 @@ export default function AuthModal() {
       // Strictly verify code against active email OTP session
       const verification = verifyEmailOtp(sentEmailAddress || formData.email, entered);
 
-      if (!verification.success && entered !== activeCode) {
-        throw new Error(verification.error || '❌ Incorrect OTP code! Please enter the exact 6-digit code.');
+      if (!verification.success) {
+        throw new Error(verification.error || '❌ Incorrect OTP code! Please check your email inbox and enter the exact 6-digit code.');
       }
 
       // Save verified user profile & trigger cross-device cloud sync
@@ -161,17 +153,8 @@ export default function AuthModal() {
     setOtpCode(['', '', '', '', '', '']);
 
     const result = await sendEmailOtp(formData.email.trim(), formData.name.trim());
-    if (result.success && result.otpCode) {
-      setActiveCode(result.otpCode);
-    } else {
+    if (!result.success) {
       setError(result.error || 'Failed to resend OTP. Please try again.');
-    }
-  };
-
-  const handleAutoFillActiveCode = () => {
-    if (activeCode) {
-      setOtpCode(activeCode.split(''));
-      setError('');
     }
   };
 
@@ -201,7 +184,7 @@ export default function AuthModal() {
           <p className="text-emerald-100/90 text-xs mt-0.5">
             {user && user.isVerified 
               ? 'Manage your trip profile & verified account' 
-              : 'Enter your details to receive a 6-digit OTP code for free'}
+              : 'Enter your details to receive a 6-digit OTP code in your email inbox'}
           </p>
         </div>
 
@@ -355,8 +338,8 @@ export default function AuthModal() {
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                   We sent a 6-digit OTP code to: <strong className="text-slate-900 font-bold block">{sentEmailAddress || formData.email}</strong>
                 </p>
-                <p className="text-[11px] text-emerald-700 font-medium mt-1">
-                  ✉️ Please enter the 6-digit verification code below.
+                <p className="text-[11px] text-slate-500 mt-1">
+                  ✉️ Please check your Gmail / Email inbox (or Spam folder) and enter the 6-digit code.
                 </p>
               </div>
 
@@ -395,7 +378,7 @@ export default function AuthModal() {
                 </button>
               </div>
 
-              <div className="pt-2 space-y-2">
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -413,22 +396,6 @@ export default function AuthModal() {
                     </>
                   )}
                 </button>
-
-                {activeCode && (
-                  <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
-                    <p className="text-[11px] text-emerald-800 font-medium">
-                      Your Verification Code is: <strong className="text-emerald-900 text-xs font-black tracking-widest">{activeCode}</strong>
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleAutoFillActiveCode}
-                      className="mt-1 text-[11px] font-bold text-emerald-700 hover:underline inline-flex items-center gap-1"
-                    >
-                      <KeyRound className="w-3 h-3" />
-                      <span>Click to Auto-fill ({activeCode})</span>
-                    </button>
-                  </div>
-                )}
               </div>
             </form>
           ) : (
