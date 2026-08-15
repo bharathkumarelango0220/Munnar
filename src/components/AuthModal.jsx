@@ -12,10 +12,7 @@ import {
   Sparkles, 
   Lock, 
   MessageSquare,
-  Zap,
-  Info,
-  Check,
-  Send
+  AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sendFirebaseOtp } from '../services/firebase';
@@ -31,14 +28,12 @@ export default function AuthModal() {
     tripName: user?.tripName || 'Munnar Expedition 2026'
   });
   
-  // 6-digit standard SMS OTP
+  // 6-digit real SMS OTP
   const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
-  const [generatedOtp, setGeneratedOtp] = useState('');
   const [confirmationObj, setConfirmationObj] = useState(null);
-  const [timer, setTimer] = useState(30);
+  const [timer, setTimer] = useState(60);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [smsSentSuccess, setSmsSentSuccess] = useState(false);
 
   useEffect(() => {
     let interval;
@@ -72,35 +67,18 @@ export default function AuthModal() {
     try {
       const result = await sendFirebaseOtp(cleanPhone, 'recaptcha-container');
       
-      if (result.success) {
-        if (result.confirmationResult) {
-          setConfirmationObj(result.confirmationResult);
-        }
-        if (result.demoCode) {
-          setGeneratedOtp(result.demoCode);
-        }
-        setSmsSentSuccess(true);
+      if (result.success && result.confirmationResult) {
+        setConfirmationObj(result.confirmationResult);
         setError('');
         setStep('otp');
-        setTimer(30);
+        setTimer(60);
         setOtpCode(['', '', '', '', '', '']);
       } else {
-        // If Firebase cellular route is still propagating, generate an instant 6-digit verification code
-        const instantCode = result.fallbackCode || Math.floor(100000 + Math.random() * 900000).toString();
-        setGeneratedOtp(instantCode);
-        setStep('otp');
-        setTimer(30);
-        setOtpCode(['', '', '', '', '', '']);
-        setError('');
+        setError(result.error || 'Failed to send SMS OTP. Please check your phone number and Firebase settings.');
       }
     } catch (err) {
       console.error('OTP Send error:', err);
-      // Seamless fallback so the user can verify immediately
-      setGeneratedOtp('123456');
-      setStep('otp');
-      setTimer(30);
-      setOtpCode(['', '', '', '', '', '']);
-      setError('');
+      setError(err.message || 'Failed to send real SMS OTP. Please check your network connection.');
     } finally {
       setIsSubmitting(false);
     }
@@ -127,7 +105,12 @@ export default function AuthModal() {
     const entered = otpCode.join('');
     
     if (entered.length < 6) {
-      setError('Please enter the complete 6-digit SMS OTP code');
+      setError('Please enter the complete 6-digit SMS OTP code sent to your phone');
+      return;
+    }
+
+    if (!confirmationObj) {
+      setError('Verification session expired. Please request a new SMS OTP.');
       return;
     }
 
@@ -135,45 +118,39 @@ export default function AuthModal() {
     setIsSubmitting(true);
 
     try {
-      if (confirmationObj && entered !== '123456' && entered !== generatedOtp && entered !== '742819') {
-        await confirmationObj.confirm(entered);
-      }
-
-      loginUser({
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email,
-        tripName: formData.tripName
-      });
-
-      setStep('success');
-      confetti({
-        particleCount: 50,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-
-      setTimeout(() => {
-        setIsAuthModalOpen(false);
-        setStep('details');
-      }, 1400);
-    } catch (err) {
-      console.warn('Verification note:', err);
-      // If code was 123456 or matches generated code, still accept
-      if (entered === '123456' || entered === generatedOtp || entered === '742819') {
+      // Strictly verify code against Google Firebase authentication server
+      const userCredential = await confirmationObj.confirm(entered);
+      
+      if (userCredential && userCredential.user) {
         loginUser({
           name: formData.name,
           phone: formData.phone,
           email: formData.email,
           tripName: formData.tripName
         });
+
         setStep('success');
+        confetti({
+          particleCount: 50,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+
         setTimeout(() => {
           setIsAuthModalOpen(false);
           setStep('details');
         }, 1400);
       } else {
-        setError('Incorrect OTP code. Please enter the 6-digit code or use 123456.');
+        throw new Error('Verification failed. Incorrect OTP.');
+      }
+    } catch (err) {
+      console.error('OTP confirmation error:', err);
+      if (err.code === 'auth/invalid-verification-code') {
+        setError('❌ Incorrect OTP code! Please check the exact 6-digit SMS received on your phone.');
+      } else if (err.code === 'auth/code-expired') {
+        setError('❌ OTP code has expired. Please tap "Resend SMS OTP" to get a new code.');
+      } else {
+        setError(err.message || '❌ Invalid OTP code. Please enter the exact code received via SMS.');
       }
     } finally {
       setIsSubmitting(false);
@@ -183,24 +160,16 @@ export default function AuthModal() {
   const handleResendOtp = async () => {
     if (timer > 0) return;
     setError('');
-    setTimer(30);
+    setTimer(60);
     setOtpCode(['', '', '', '', '', '']);
     
     const cleanPhone = formData.phone.replace(/\D/g, '');
     const result = await sendFirebaseOtp(cleanPhone, 'recaptcha-container');
-    if (result.confirmationResult) {
+    if (result.success && result.confirmationResult) {
       setConfirmationObj(result.confirmationResult);
-    } else if (result.demoCode || result.fallbackCode) {
-      setGeneratedOtp(result.demoCode || result.fallbackCode);
+    } else {
+      setError(result.error || 'Failed to resend SMS OTP. Please try again.');
     }
-  };
-
-  // 1-Click Fill Test Code for instant demonstration
-  const handleQuickFillCode = () => {
-    const codeToFill = generatedOtp || '123456';
-    const digits = codeToFill.slice(0, 6).split('');
-    setOtpCode(digits);
-    setError('');
   };
 
   return (
@@ -227,20 +196,20 @@ export default function AuthModal() {
           </div>
 
           <h2 className="text-xl font-extrabold tracking-tight">
-            {user && user.isVerified ? 'Traveler Profile' : 'Mobile SMS Verification'}
+            {user && user.isVerified ? 'Traveler Profile' : 'Real Mobile SMS Verification'}
           </h2>
           <p className="text-emerald-100/90 text-xs mt-0.5">
             {user && user.isVerified 
               ? 'Manage your trip profile & verified phone number' 
-              : 'Enter your phone number to receive a 6-digit SMS OTP'}
+              : 'Enter your phone number to receive a 6-digit cellular SMS OTP'}
           </p>
         </div>
 
         {/* Body Content */}
         <div className="p-5 sm:p-6">
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-rose-500 flex-shrink-0"></span>
+            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
@@ -317,7 +286,7 @@ export default function AuthModal() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Mobile Number (To Receive SMS OTP)
+                  Mobile Number (To Receive Real SMS OTP)
                 </label>
                 <div className="relative">
                   <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 text-slate-500 font-bold text-xs">
@@ -362,12 +331,12 @@ export default function AuthModal() {
                   {isSubmitting ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Sending SMS to +91 {formData.phone}...</span>
+                      <span>Sending Real SMS OTP...</span>
                     </>
                   ) : (
                     <>
                       <MessageSquare className="w-4 h-4" />
-                      <span>Send OTP via SMS</span>
+                      <span>Send Real OTP via SMS</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -376,18 +345,18 @@ export default function AuthModal() {
 
             </form>
           ) : step === 'otp' ? (
-            /* Step 2: 6-Digit SMS OTP Input */
+            /* Step 2: 6-Digit Real SMS OTP Input */
             <form onSubmit={handleVerifyOtp} className="space-y-4">
               <div className="text-center">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-2 shadow-inner">
                   <MessageSquare className="w-6 h-6" />
                 </div>
-                <h3 className="font-bold text-slate-900 text-base">Enter 6-Digit Verification Code</h3>
+                <h3 className="font-bold text-slate-900 text-base">Enter 6-Digit SMS OTP Code</h3>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  Sent to mobile <strong className="text-slate-900 font-bold">+91 {formData.phone}</strong>
+                  Real cellular SMS dispatched to <strong className="text-slate-900 font-bold">+91 {formData.phone}</strong>
                 </p>
-                <p className="text-[11px] text-emerald-700 font-medium mt-1">
-                  📲 Check your phone's SMS inbox or enter test code <strong>123456</strong> below.
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Please check your phone's SMS inbox and type the 6-digit code received.
                 </p>
               </div>
 
@@ -422,7 +391,7 @@ export default function AuthModal() {
                   onClick={handleResendOtp}
                   className={`font-bold ${timer > 0 ? 'text-slate-400' : 'text-emerald-600 hover:underline'}`}
                 >
-                  {timer > 0 ? `Resend in ${timer}s` : 'Resend SMS OTP'}
+                  {timer > 0 ? `Resend SMS in ${timer}s` : 'Resend SMS OTP'}
                 </button>
               </div>
 
@@ -434,25 +403,15 @@ export default function AuthModal() {
                 {isSubmitting ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Verifying Code...</span>
+                    <span>Verifying SMS Code with Google...</span>
                   </>
                 ) : (
                   <>
                     <ShieldCheck className="w-4 h-4" />
-                    <span>Verify Code & Continue</span>
+                    <span>Verify Real SMS OTP</span>
                   </>
                 )}
               </button>
-
-              <div className="text-center pt-1">
-                <button
-                  type="button"
-                  onClick={handleQuickFillCode}
-                  className="text-[11px] font-bold text-slate-700 hover:text-emerald-700 underline"
-                >
-                  ⚡ Auto-fill verification code (123456)
-                </button>
-              </div>
             </form>
           ) : (
             /* Step 3: Success Screen */
@@ -460,7 +419,7 @@ export default function AuthModal() {
               <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto animate-bounce">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">Mobile Verified Successfully!</h3>
+              <h3 className="text-lg font-bold text-slate-900">Mobile SIM Verified Successfully!</h3>
               <p className="text-xs text-slate-500">Welcome to Munnar Travel Companion, {formData.name}!</p>
             </div>
           )}
