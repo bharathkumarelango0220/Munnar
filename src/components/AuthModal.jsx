@@ -285,7 +285,7 @@ export default function AuthModal() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Bharathkumar"
+                    placeholder="Enter your full name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
@@ -306,7 +306,7 @@ export default function AuthModal() {
                     type="tel"
                     required
                     maxLength={10}
-                    placeholder="8220802736"
+                    placeholder="Enter 10-digit mobile number"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
                     className="w-full pl-16 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium tracking-wide"
@@ -323,7 +323,7 @@ export default function AuthModal() {
                   <input
                     type="email"
                     required
-                    placeholder="bharathkumarelango02@gmail.com"
+                    placeholder="yourname@example.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
