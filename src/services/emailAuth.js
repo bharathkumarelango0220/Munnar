@@ -1,13 +1,15 @@
-/**
- * 100% Free Email OTP Authentication Service
- * Zero billing, zero credit card, 100% free forever
- */
+import { 
+  sendSignInLinkToEmail, 
+  isSignInWithEmailLink, 
+  signInWithEmailLink 
+} from 'firebase/auth';
+import { auth } from './firebase';
 
 // In-memory active OTP verification store with expiration timestamp
 const activeOtpSessions = new Map();
 
 /**
- * Generates and dispatches a 6-digit verification OTP code to the traveler's email
+ * Dispatches official email verification to the traveler's email address
  */
 export async function sendEmailOtp(email, fullName = 'Traveler') {
   if (!email || !email.includes('@')) {
@@ -17,50 +19,63 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
     };
   }
 
+  const cleanEmail = email.toLowerCase().trim();
+
   try {
-    // Generate secure 6-digit code
+    // Generate secure 6-digit OTP code
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes validity
+    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes validity
 
     // Store in active session
-    activeOtpSessions.set(email.toLowerCase().trim(), {
+    activeOtpSessions.set(cleanEmail, {
       code: otpCode,
       expiresAt,
       attempts: 0
     });
 
-    // Try sending email via public free email dispatch endpoint
+    // 1. Dispatch official Google Firebase Email
+    const actionCodeSettings = {
+      url: (typeof window !== 'undefined' ? window.location.origin : 'https://munnartools.vercel.app') + `?verify_email=${encodeURIComponent(cleanEmail)}`,
+      handleCodeInApp: true
+    };
+
     try {
-      await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('munnar_email_for_signin', cleanEmail);
+      }
+    } catch (fbErr) {
+      console.warn('Firebase Email dispatch note:', fbErr.message);
+    }
+
+    // 2. Dispatch real email via public reliable mail dispatch
+    try {
+      await fetch('https://api.web3forms.com/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          service_id: 'default_service',
-          template_id: 'munnar_otp_template',
-          user_id: 'public_client',
-          template_params: {
-            to_email: email,
-            to_name: fullName,
-            otp_code: otpCode,
-            app_name: 'Munnar Explorer'
-          }
+          access_key: 'a29fa03e-86e4-4d69-95e2-63dbb1086202',
+          email: cleanEmail,
+          from_name: 'Munnar Explorer App',
+          subject: `🌿 Munnar Explorer Verification Code: ${otpCode}`,
+          message: `Hello ${fullName}!\n\nYour 6-digit verification code is: ${otpCode}\n\nEnter this code on the website to access your Munnar trip budgets and expenses.\n\nCode expires in 15 minutes.`
         })
       });
-    } catch (e) {
-      // Non-blocking network catch
+    } catch (w3Err) {
+      // Non-blocking mail fallback
     }
 
     return {
       success: true,
-      email: email.toLowerCase().trim(),
+      email: cleanEmail,
       otpCode,
-      expiresInMinutes: 10
+      expiresInMinutes: 15
     };
   } catch (error) {
-    console.error('Email OTP generation error:', error);
+    console.error('Email dispatch error:', error);
     return {
       success: false,
-      error: 'Failed to dispatch email OTP. Please check your email and try again.'
+      error: error.message || 'Failed to dispatch email. Please check your email address.'
     };
   }
 }
@@ -108,4 +123,35 @@ export function verifyEmailOtp(email, enteredCode) {
   return {
     success: true
   };
+}
+
+/**
+ * Checks if the current page was opened from an official Google Email link
+ */
+export async function checkEmailLinkSignIn() {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      let email = window.localStorage.getItem('munnar_email_for_signin');
+      if (!email) {
+        const urlParams = new URLSearchParams(window.location.search);
+        email = urlParams.get('verify_email');
+      }
+
+      if (email) {
+        const result = await signInWithEmailLink(auth, email, window.location.href);
+        window.localStorage.removeItem('munnar_email_for_signin');
+        return {
+          success: true,
+          email,
+          user: result.user
+        };
+      }
+    }
+    return null;
+  } catch (err) {
+    console.error('Email link sign in error:', err);
+    return null;
+  }
 }
