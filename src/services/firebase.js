@@ -38,19 +38,23 @@ export function setupRecaptcha(containerId = 'recaptcha-container') {
       return null;
     }
 
-    // Clean up any previous verifier instance to prevent dead DOM node references
+    // Reset previous verifier instance
     if (window.recaptchaVerifier) {
       try {
         window.recaptchaVerifier.clear();
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Recaptcha clear warning:', e);
+      }
       window.recaptchaVerifier = null;
     }
 
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, container, {
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
       size: 'invisible',
-      callback: () => {},
+      callback: (response) => {
+        // reCAPTCHA solved
+      },
       'expired-callback': () => {
-        console.warn('Recaptcha expired');
+        console.warn('reCAPTCHA token expired');
       }
     });
 
@@ -71,7 +75,7 @@ export async function sendFirebaseOtp(phoneNumber, containerId = 'recaptcha-cont
   try {
     const verifier = setupRecaptcha(containerId);
     if (!verifier) {
-      throw new Error('Unable to initialize reCAPTCHA verifier. Please refresh the page.');
+      throw new Error('Unable to initialize reCAPTCHA security verifier. Please refresh the page.');
     }
     
     // Request Firebase to dispatch SMS OTP to the carrier network
@@ -83,27 +87,25 @@ export async function sendFirebaseOtp(phoneNumber, containerId = 'recaptcha-cont
       isRealSms: true
     };
   } catch (error) {
-    console.error('Firebase Phone Auth Error:', error);
+    console.error('Firebase Phone Auth Detailed Error:', error);
     
-    // Provide human-friendly error messages based on Firebase error codes
     let userFriendlyMsg = error.message;
     if (error.code === 'auth/operation-not-allowed') {
-      userFriendlyMsg = 'Phone Authentication is not enabled yet in your Firebase Console. Go to Firebase > Authentication > Sign-in method > Enable Phone.';
+      userFriendlyMsg = 'Firebase is still activating Phone Auth for your project. Please verify Phone is Enabled in Firebase Console and that munnartools.vercel.app is added to Authorized Domains.';
     } else if (error.code === 'auth/unauthorized-domain') {
-      userFriendlyMsg = 'Your domain is not authorized in Firebase. Go to Firebase > Authentication > Settings > Authorized domains > Add munnartools.vercel.app.';
+      userFriendlyMsg = 'Your domain is not authorized. Go to Firebase Console > Authentication > Settings > Authorized domains > Add munnartools.vercel.app.';
     } else if (error.code === 'auth/invalid-phone-number') {
-      userFriendlyMsg = 'Invalid phone number format. Please enter a valid 10-digit mobile number.';
+      userFriendlyMsg = 'Invalid phone number format. Please enter a valid 10-digit mobile number (+91...).';
     } else if (error.code === 'auth/too-many-requests') {
-      userFriendlyMsg = 'Too many requests sent to this number recently. Please wait a moment or use test code 123456.';
+      userFriendlyMsg = 'Too many SMS requests sent to this number. Please wait 1-2 minutes before retrying.';
     } else if (error.code === 'auth/captcha-check-failed') {
-      userFriendlyMsg = 'reCAPTCHA verification failed. Please try again.';
+      userFriendlyMsg = 'reCAPTCHA check failed. Please disable ad-blockers and try again.';
     }
 
     return {
       success: false,
       error: userFriendlyMsg,
-      errorCode: error.code,
-      fallbackCode: '123456'
+      errorCode: error.code
     };
   }
 }
