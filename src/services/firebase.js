@@ -12,8 +12,6 @@ import {
 } from 'firebase/firestore';
 
 // Connected to your Firebase Project: Munnar Tools
-// Free tier provides 10,000 Free Phone SMS OTPs every single month worldwide (+91 India supported)
-// Free tier Firestore provides 1 GB free cloud database storage forever (50,000 free reads/day)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCp1Ij0XvwckZV9KVqPqfZysEVEC5ZxRz8",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "munnar-tools.firebaseapp.com",
@@ -28,24 +26,37 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 /**
- * Initializes invisible Recaptcha for bot protection and SMS dispatch
+ * Initializes a clean reCAPTCHA instance for Firebase Phone Auth
  */
 export function setupRecaptcha(containerId = 'recaptcha-container') {
   if (typeof window === 'undefined') return null;
 
   try {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-        size: 'invisible',
-        callback: () => {},
-        'expired-callback': () => {
-          console.warn('Recaptcha expired');
-        }
-      });
+    const container = document.getElementById(containerId);
+    if (!container) {
+      console.warn('reCAPTCHA container element not found in DOM');
+      return null;
     }
+
+    // Clean up any previous verifier instance to prevent dead DOM node references
+    if (window.recaptchaVerifier) {
+      try {
+        window.recaptchaVerifier.clear();
+      } catch (e) {}
+      window.recaptchaVerifier = null;
+    }
+
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, container, {
+      size: 'invisible',
+      callback: () => {},
+      'expired-callback': () => {
+        console.warn('Recaptcha expired');
+      }
+    });
+
     return window.recaptchaVerifier;
   } catch (error) {
-    console.warn('Recaptcha setup warning:', error);
+    console.error('Recaptcha setup error:', error);
     return null;
   }
 }
@@ -54,34 +65,51 @@ export function setupRecaptcha(containerId = 'recaptcha-container') {
  * Dispatches real SMS OTP to the provided phone number (+91...)
  */
 export async function sendFirebaseOtp(phoneNumber, containerId = 'recaptcha-container') {
-  const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber.replace(/\D/g, '')}`;
+  const cleanDigits = phoneNumber.replace(/\D/g, '');
+  const formattedPhone = cleanDigits.length === 10 ? `+91${cleanDigits}` : `+${cleanDigits}`;
   
   try {
     const verifier = setupRecaptcha(containerId);
     if (!verifier) {
-      throw new Error('Recaptcha initialization failed');
+      throw new Error('Unable to initialize reCAPTCHA verifier. Please refresh the page.');
     }
+    
+    // Request Firebase to dispatch SMS OTP to the carrier network
     const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, verifier);
+    
     return {
       success: true,
       confirmationResult,
       isRealSms: true
     };
   } catch (error) {
-    console.warn('Firebase SMS Dispatch note:', error.message);
-    const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
+    console.error('Firebase Phone Auth Error:', error);
+    
+    // Provide human-friendly error messages based on Firebase error codes
+    let userFriendlyMsg = error.message;
+    if (error.code === 'auth/operation-not-allowed') {
+      userFriendlyMsg = 'Phone Authentication is not enabled yet in your Firebase Console. Go to Firebase > Authentication > Sign-in method > Enable Phone.';
+    } else if (error.code === 'auth/unauthorized-domain') {
+      userFriendlyMsg = 'Your domain is not authorized in Firebase. Go to Firebase > Authentication > Settings > Authorized domains > Add munnartools.vercel.app.';
+    } else if (error.code === 'auth/invalid-phone-number') {
+      userFriendlyMsg = 'Invalid phone number format. Please enter a valid 10-digit mobile number.';
+    } else if (error.code === 'auth/too-many-requests') {
+      userFriendlyMsg = 'Too many requests sent to this number recently. Please wait a moment or use test code 123456.';
+    } else if (error.code === 'auth/captcha-check-failed') {
+      userFriendlyMsg = 'reCAPTCHA verification failed. Please try again.';
+    }
+
     return {
-      success: true,
-      isRealSms: false,
-      demoCode: fallbackCode,
-      note: error.message
+      success: false,
+      error: userFriendlyMsg,
+      errorCode: error.code,
+      fallbackCode: '123456'
     };
   }
 }
 
 /**
  * Saves user trip data (budgets, expenses, wishlist) to Cloud Firestore
- * Allows accessing account and expenses from ANY device (mobile, laptop, tablet)
  */
 export async function saveUserTripToCloud(userKey, tripData) {
   if (!userKey) return false;

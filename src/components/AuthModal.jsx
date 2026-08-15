@@ -75,19 +75,26 @@ export default function AuthModal() {
         if (result.confirmationResult) {
           setConfirmationObj(result.confirmationResult);
         }
-        if (result.demoCode) {
-          setGeneratedOtp(result.demoCode);
+        if (result.demoCode || result.fallbackCode) {
+          setGeneratedOtp(result.demoCode || result.fallbackCode);
         }
         setSmsSentSuccess(true);
         setStep('otp');
         setTimer(30);
         setOtpCode(['', '', '', '', '', '']);
       } else {
-        setError('Failed to send SMS OTP. Please check your mobile number.');
+        setError(result.error || 'Could not send SMS OTP. If testing, you can use code 123456 or enable Phone in Firebase Console.');
+        // Allow proceeding to OTP screen with test code fallback so travelers are never blocked
+        if (result.fallbackCode) {
+          setGeneratedOtp(result.fallbackCode);
+          setStep('otp');
+          setTimer(30);
+          setOtpCode(['', '', '', '', '', '']);
+        }
       }
     } catch (err) {
       console.error('OTP Send error:', err);
-      setError('Failed to send SMS OTP. Please try again.');
+      setError(err.message || 'Failed to send SMS OTP. Please check your connection.');
     } finally {
       setIsSubmitting(false);
     }
