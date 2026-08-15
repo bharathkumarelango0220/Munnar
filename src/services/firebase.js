@@ -11,16 +11,16 @@ import {
   setDoc 
 } from 'firebase/firestore';
 
-// Default / Configurable Firebase Project configuration
+// Connected to your Firebase Project: Munnar Tools
 // Free tier provides 10,000 Free Phone SMS OTPs every single month worldwide (+91 India supported)
 // Free tier Firestore provides 1 GB free cloud database storage forever (50,000 free reads/day)
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDemoKeyForMunnarExplorerAppFreeSMS",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "munnar-explorer-app.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "munnar-explorer-app",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "munnar-explorer-app.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1029384756",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1029384756:web:abcdef123456"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCp1Ij0XvwckZV9KVqPqfZysEVEC5ZxRz8",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "munnar-tools.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "munnar-tools",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "munnar-tools.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "711023873700",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:711023873700:web:cfabf896a9fae49ba9a031"
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
@@ -74,7 +74,7 @@ export async function sendFirebaseOtp(phoneNumber, containerId = 'recaptcha-cont
       success: true,
       isRealSms: false,
       demoCode: fallbackCode,
-      note: 'To enable direct Google telecom SMS, insert your free Firebase API key in .env or use the test verification code.'
+      note: error.message
     };
   }
 }
