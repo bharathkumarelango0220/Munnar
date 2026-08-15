@@ -37,9 +37,9 @@ export default function ReportGenerator() {
 
   const printRef = useRef();
 
-  const travelerName = user?.name || 'Bharathkumar E';
-  const travelerPhone = user?.phone || '+91 8220802736';
-  const travelerEmail = user?.email || 'bharathkumarelango02@gmail.com';
+  const travelerName = user?.name || 'Guest Traveler';
+  const travelerPhone = user?.phone ? `+91 ${user.phone}` : 'Not linked';
+  const travelerEmail = user?.email || 'Not linked';
   const tripTitle = user?.tripName || 'Munnar Travel Expedition 2026';
   const reportDate = new Date().toLocaleDateString('en-IN', {
     day: '2-digit',

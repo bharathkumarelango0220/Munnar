@@ -80,26 +80,16 @@ const BLANK_BUDGETS = {
   unexpected: 0
 };
 
-const DEFAULT_USER = {
-  name: 'Bharathkumar E',
-  phone: '8220802736',
-  email: 'bharathkumarelango02@gmail.com',
-  isVerified: true,
-  tripName: 'Munnar Trip 2026',
-  tripStartDate: '2026-08-15',
-  tripEndDate: '2026-08-18'
-};
-
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
   // Navigation
   const [activeTab, setActiveTab] = useState('places'); // 'places', 'tracker', 'reports', 'tools', 'creator'
 
-  // User State
+  // Fresh user state - starts unauthenticated on fresh devices
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('munnar_user');
-    return saved ? JSON.parse(saved) : DEFAULT_USER;
+    return saved ? JSON.parse(saved) : null;
   });
 
   // Flag indicating if the user has already configured their custom budgets
@@ -138,9 +128,20 @@ export function AppProvider({ children }) {
   // Debounced Cloud Sync Ref
   const syncTimeoutRef = useRef(null);
 
+  // Auto prompt login if not logged in on first visit to expense tracker
+  useEffect(() => {
+    if (!user || !user.isVerified) {
+      // Keep state clean for fresh visitors
+    }
+  }, []);
+
   // Persist to localStorage & Trigger Free Cloud Sync across devices
   useEffect(() => {
-    localStorage.setItem('munnar_user', JSON.stringify(user));
+    if (user) {
+      localStorage.setItem('munnar_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('munnar_user');
+    }
   }, [user]);
 
   useEffect(() => {
@@ -350,6 +351,13 @@ export function AppProvider({ children }) {
 
   const logoutUser = () => {
     setUser(null);
+    setBudgets(BLANK_BUDGETS);
+    setExpenses([]);
+    setIsBudgetConfigured(false);
+    localStorage.removeItem('munnar_user');
+    localStorage.removeItem('munnar_budgets');
+    localStorage.removeItem('munnar_budget_configured');
+    localStorage.removeItem('munnar_expenses');
   };
 
   const resetAllData = () => {

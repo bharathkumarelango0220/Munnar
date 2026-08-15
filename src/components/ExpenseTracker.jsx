@@ -122,6 +122,27 @@ export default function ExpenseTracker() {
         </div>
       </div>
 
+      {/* Login Prompt Banner for unauthenticated visitors */}
+      {(!user || !user.isVerified) && (
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-white">Log in with Mobile to Enable Multi-Device Sync</h4>
+              <p className="text-[11px] text-slate-300">Access your Munnar trip budget & expenses from any phone or laptop for free.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsAuthModalOpen(true)}
+            className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black self-start sm:self-auto transition-all shadow-sm flex-shrink-0"
+          >
+            Verify Mobile & Login →
+          </button>
+        </div>
+      )}
+
       {/* STEP 1: If user hasn't set their budget yet, show prominent setup wizard banner */}
       {!isBudgetConfigured && (
         <div className="rounded-3xl bg-gradient-to-br from-emerald-900 via-slate-900 to-teal-950 text-white p-5 sm:p-7 border border-emerald-500/40 shadow-xl space-y-4">
