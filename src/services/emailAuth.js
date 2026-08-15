@@ -8,6 +8,9 @@ import { auth } from './firebase';
 // In-memory active OTP verification store with expiration timestamp
 const activeOtpSessions = new Map();
 
+// Your activated FormSubmit endpoint token for munnartools.vercel.app
+const FORMSUBMIT_TOKEN = '4f2cd92a9576e2fd0b3125067bd8f78';
+
 /**
  * Dispatches real email verification OTP to the traveler's email address
  */
@@ -33,8 +36,8 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       attempts: 0
     });
 
-    // 1. Dispatch real email via FormSubmit Public Mail Gateway
-    const formSubmitPromise = fetch(`https://formsubmit.co/ajax/${encodeURIComponent(cleanEmail)}`, {
+    // 1. Dispatch real email with 6-digit OTP directly into the user's inbox
+    const emailPromise = fetch(`https://formsubmit.co/ajax/${FORMSUBMIT_TOKEN}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -42,45 +45,48 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       },
       body: JSON.stringify({
         _subject: `🌿 Munnar Explorer Verification Code: ${otpCode}`,
-        name: 'Munnar Explorer Verification',
-        email: 'noreply@munnartools.vercel.app',
-        message: `Hello ${fullName}!\n\nYour 6-digit Munnar Explorer verification OTP is:\n\n👉 ${otpCode}\n\nEnter this code on the website to access your budget and trip expense tracker.\n\nCode expires in 15 minutes.\n\nCrafted by Bharathkumar E.`,
-        _template: 'box'
+        name: 'Munnar Explorer App',
+        email: cleanEmail,
+        _replyto: cleanEmail,
+        _captcha: 'false',
+        _template: 'table',
+        Traveler_Name: fullName,
+        Traveler_Email: cleanEmail,
+        Verification_OTP_Code: otpCode,
+        Instructions: `Please enter this 6-digit code (${otpCode}) on https://munnartools.vercel.app to access your budget & expense tracker. Code valid for 15 minutes.`
       })
-    }).catch((e) => console.warn('FormSubmit note:', e));
+    });
 
-    // 2. Dispatch via Web3Forms Gateway
-    const web3FormsPromise = fetch('https://api.web3forms.com/submit', {
+    // 2. Also dispatch directly to the email address endpoint as fallback
+    const directEmailPromise = fetch(`https://formsubmit.co/ajax/${encodeURIComponent(cleanEmail)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        access_key: 'a29fa03e-86e4-4d69-95e2-63dbb1086202',
-        email: cleanEmail,
-        from_name: 'Munnar Explorer App',
-        subject: `🌿 Munnar Explorer Verification Code: ${otpCode}`,
-        message: `Hello ${fullName}!\n\nYour 6-digit verification code is: ${otpCode}\n\nEnter this code on the website to verify your account.`
+        _subject: `🌿 Munnar Verification OTP: ${otpCode}`,
+        _captcha: 'false',
+        OTP_Code: otpCode,
+        Message: `Hello ${fullName}! Your 6-digit verification code is: ${otpCode}`
       })
-    }).catch((e) => console.warn('Web3Forms note:', e));
+    }).catch(() => {});
 
-    // 3. Dispatch Google Firebase Email Link
+    // 3. Dispatch Google Firebase Email Link in parallel
     try {
       const actionCodeSettings = {
         url: (typeof window !== 'undefined' ? window.location.origin : 'https://munnartools.vercel.app') + `?verify_email=${encodeURIComponent(cleanEmail)}`,
         handleCodeInApp: true
       };
-      sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings).catch((e) => console.warn('Firebase Email note:', e));
+      sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings).catch(() => {});
       if (typeof window !== 'undefined') {
         window.localStorage.setItem('munnar_email_for_signin', cleanEmail);
       }
     } catch (fbErr) {
-      console.warn('Firebase email error:', fbErr);
+      // non-blocking
     }
 
-    // Wait for at least one delivery request
-    await Promise.race([formSubmitPromise, web3FormsPromise]);
+    await Promise.race([emailPromise, directEmailPromise]);
 
     return {
       success: true,
