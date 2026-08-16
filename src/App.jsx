@@ -8,11 +8,9 @@ import HeroBanner from './components/HeroBanner';
 import TouristPlaces from './components/TouristPlaces';
 import ExpenseTracker from './components/ExpenseTracker';
 import ReportGenerator from './components/ReportGenerator';
-import TripTools from './components/TripTools';
-import CreatorCard from './components/CreatorCard';
-import WeatherWidget from './components/WeatherWidget';
+import TripCostPredictor from './components/TripCostPredictor';
+import RouteOptimizer from './components/RouteOptimizer';
 import FuelCalculator from './components/FuelCalculator';
-import FoodGuide from './components/FoodGuide';
 import AuthModal from './components/AuthModal';
 import AddExpenseModal from './components/AddExpenseModal';
 import SetBudgetModal from './components/SetBudgetModal';
@@ -25,9 +23,9 @@ import {
   Sparkles, 
   Compass,
   ArrowUp,
-  CloudSun,
+  Calculator,
   Fuel,
-  Utensils
+  MapPin
 } from 'lucide-react';
 
 export default function App() {
@@ -72,9 +70,8 @@ export default function App() {
           {activeTab === 'places' && <TouristPlaces />}
           {activeTab === 'tracker' && <ExpenseTracker />}
           {activeTab === 'fuel' && <FuelCalculator />}
-          {activeTab === 'weather' && <WeatherWidget />}
-          {activeTab === 'food' && <FoodGuide />}
-          {activeTab === 'tools' && <TripTools />}
+          {activeTab === 'predictor' && <TripCostPredictor />}
+          {activeTab === 'route' && <RouteOptimizer />}
           {activeTab === 'reports' && <ReportGenerator />}
           {activeTab === 'creator' && <CreatorCard />}
         </div>
@@ -104,7 +101,7 @@ export default function App() {
                 <span className="font-black text-lg tracking-tight">MunnarGo</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Free mobile-first tourist companion, 6-category expense tracker, fuel calculator & live weather radar for everyone traveling to Munnar, Kerala.
+                Free mobile-first tourist companion, 6-category expense tracker, fuel calculator, total cost predictor & smart route sequencer for Munnar, Kerala.
               </p>
             </div>
 
@@ -128,18 +125,13 @@ export default function App() {
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => { setActiveTab('weather'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    ⛅ Live Weather & Mist Forecast
+                  <button onClick={() => { setActiveTab('predictor'); scrollToTop(); }} className="hover:text-white transition-colors">
+                    🧮 All-in-One Total Cost Predictor
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => { setActiveTab('food'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    🍛 Munnar Food & Restaurant Guide
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => { setActiveTab('tools'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    🎒 3-Day Itineraries & Packing Checklist
+                  <button onClick={() => { setActiveTab('route'); scrollToTop(); }} className="hover:text-white transition-colors">
+                    🗺️ Smart Route Optimizer (Zero Backtrack)
                   </button>
                 </li>
                 <li>

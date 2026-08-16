@@ -18,7 +18,7 @@ export default function BottomNav() {
     { id: 'tracker', label: 'Expenses', icon: Wallet },
     { id: 'add', label: 'Add ₹', icon: Plus, isAction: true },
     { id: 'fuel', label: 'Fuel', icon: Fuel },
-    { id: 'tools', label: 'Guide', icon: Layers },
+    { id: 'route', label: 'Route', icon: Map },
   ];
 
   return (

@@ -85,34 +85,24 @@ export default function Navbar() {
               ⛽ Fuel & Mileage
             </button>
             <button
-              onClick={() => setActiveTab('weather')}
+              onClick={() => setActiveTab('predictor')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'weather'
+                activeTab === 'predictor'
                   ? 'bg-white text-emerald-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              ⛅ Weather
+              🧮 Cost Predictor
             </button>
             <button
-              onClick={() => setActiveTab('food')}
+              onClick={() => setActiveTab('route')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'food'
+                activeTab === 'route'
                   ? 'bg-white text-emerald-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              🍛 Food Guide
-            </button>
-            <button
-              onClick={() => setActiveTab('tools')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'tools'
-                  ? 'bg-white text-emerald-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              🎒 Itinerary & Packing
+              🗺️ Route Optimizer
             </button>
             <button
               onClick={() => setActiveTab('reports')}
