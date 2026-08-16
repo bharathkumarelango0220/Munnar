@@ -115,11 +115,6 @@ export default function App() {
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => { setActiveTab('tracker'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    💰 6-Category Expense Tracker
-                  </button>
-                </li>
-                <li>
                   <button onClick={() => { setActiveTab('fuel'); scrollToTop(); }} className="hover:text-white transition-colors">
                     ⛽ Ghat Road Fuel & Mileage Calculator
                   </button>
@@ -127,6 +122,11 @@ export default function App() {
                 <li>
                   <button onClick={() => { setActiveTab('predictor'); scrollToTop(); }} className="hover:text-white transition-colors">
                     🧮 All-in-One Total Cost Predictor
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => { setActiveTab('tracker'); scrollToTop(); }} className="hover:text-white transition-colors">
+                    💰 Trip Budget & Expense Tracker
                   </button>
                 </li>
                 <li>

@@ -4,10 +4,9 @@ import {
   Compass, 
   Wallet, 
   Fuel, 
-  Map, 
+  Calculator, 
   Plus, 
-  Sparkles,
-  Layers
+  Map
 } from 'lucide-react';
 
 export default function BottomNav() {
@@ -15,10 +14,10 @@ export default function BottomNav() {
 
   const navItems = [
     { id: 'places', label: 'Places', icon: Compass },
-    { id: 'tracker', label: 'Expenses', icon: Wallet },
-    { id: 'add', label: 'Add ₹', icon: Plus, isAction: true },
     { id: 'fuel', label: 'Fuel', icon: Fuel },
-    { id: 'route', label: 'Route', icon: Map },
+    { id: 'add', label: 'Add ₹', icon: Plus, isAction: true },
+    { id: 'predictor', label: 'Predictor', icon: Calculator },
+    { id: 'tracker', label: 'Expenses', icon: Wallet },
   ];
 
   return (

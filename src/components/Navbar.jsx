@@ -65,16 +65,6 @@ export default function Navbar() {
               📍 Places
             </button>
             <button
-              onClick={() => setActiveTab('tracker')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'tracker'
-                  ? 'bg-white text-emerald-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              💰 Expenses
-            </button>
-            <button
               onClick={() => setActiveTab('fuel')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'fuel'
@@ -82,7 +72,7 @@ export default function Navbar() {
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              ⛽ Fuel & Mileage
+              ⛽ Fuel Calculator
             </button>
             <button
               onClick={() => setActiveTab('predictor')}
@@ -93,6 +83,16 @@ export default function Navbar() {
               }`}
             >
               🧮 Cost Predictor
+            </button>
+            <button
+              onClick={() => setActiveTab('tracker')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'tracker'
+                  ? 'bg-white text-emerald-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              💰 Expenses
             </button>
             <button
               onClick={() => setActiveTab('route')}
