@@ -34,7 +34,7 @@ const googleProvider = new GoogleAuthProvider();
 
 /**
  * 100% Free Firebase Official Transactional Email Dispatch (Zero Spam, Google MX Servers)
- * Uses native allowlisted domain fallbacks to eliminate (auth/unauthorized-continue-uri)
+ * Uses clean allowlisted domain without invalid query string syntax
  */
 export async function sendFirebaseEmailAuth(email) {
   if (!email || !email.includes('@')) {
@@ -43,33 +43,33 @@ export async function sendFirebaseEmailAuth(email) {
 
   const cleanEmail = email.toLowerCase().trim();
   
-  // Allowed domain URI candidate cascade
-  const tryOrigins = [
-    `https://triptools-a4440.firebaseapp.com?email_auth=${encodeURIComponent(cleanEmail)}`,
-    `https://munnartools.vercel.app?email_auth=${encodeURIComponent(cleanEmail)}`,
-    typeof window !== 'undefined' && window.location.origin ? `${window.location.origin}?email_auth=${encodeURIComponent(cleanEmail)}` : null
-  ].filter(Boolean);
+  // Clean exact domain targets registered in Authorized Domains
+  const candidateUrls = [
+    'https://munnartools.vercel.app',
+    'https://triptools-a4440.firebaseapp.com',
+    typeof window !== 'undefined' ? window.location.origin : 'https://munnartools.vercel.app'
+  ];
 
   let lastError = null;
 
-  for (const testUrl of tryOrigins) {
+  for (const urlTarget of candidateUrls) {
     try {
       const actionCodeSettings = {
-        url: testUrl,
+        url: urlTarget,
         handleCodeInApp: true
       };
       await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
       try {
         localStorage.setItem('emailForSignIn', cleanEmail);
       } catch (e) {}
-      console.log(`Firebase official email dispatched to ${cleanEmail} via ${testUrl}`);
+      console.log(`Firebase official email dispatched to ${cleanEmail} for domain ${urlTarget}`);
       return {
         success: true,
         message: 'Official Firebase verification email sent!'
       };
     } catch (error) {
       lastError = error;
-      console.warn(`Firebase trial with ${testUrl} notice:`, error?.message);
+      console.warn(`Firebase trial with ${urlTarget}:`, error?.message);
     }
   }
 
@@ -89,8 +89,7 @@ export async function checkFirebaseEmailSignIn() {
     if (isSignInWithEmailLink(auth, window.location.href)) {
       let email = window.localStorage.getItem('emailForSignIn');
       if (!email) {
-        const urlParams = new URLSearchParams(window.location.search);
-        email = urlParams.get('email_auth');
+        email = window.prompt('Please enter your email to confirm sign-in:');
       }
 
       if (email) {
