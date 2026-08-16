@@ -11,6 +11,7 @@ import ReportGenerator from './components/ReportGenerator';
 import TripCostPredictor from './components/TripCostPredictor';
 import RouteOptimizer from './components/RouteOptimizer';
 import FuelCalculator from './components/FuelCalculator';
+import CreatorCard from './components/CreatorCard';
 import AuthModal from './components/AuthModal';
 import AddExpenseModal from './components/AddExpenseModal';
 import SetBudgetModal from './components/SetBudgetModal';
