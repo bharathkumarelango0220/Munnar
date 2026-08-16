@@ -53,56 +53,86 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/60">
+          <nav className="hidden lg:flex items-center gap-1 bg-slate-100/90 p-1 rounded-2xl border border-slate-200/80">
             <button
               onClick={() => setActiveTab('places')}
-              className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'places'
-                  ? 'bg-white text-emerald-700 shadow-sm'
+                  ? 'bg-white text-emerald-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              📍 Tourist Places
+              📍 Places
             </button>
             <button
               onClick={() => setActiveTab('tracker')}
-              className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'tracker'
-                  ? 'bg-white text-emerald-700 shadow-sm'
+                  ? 'bg-white text-emerald-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              💰 Expense Tracker
+              💰 Expenses
             </button>
             <button
-              onClick={() => setActiveTab('reports')}
-              className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                activeTab === 'reports'
-                  ? 'bg-white text-emerald-700 shadow-sm'
+              onClick={() => setActiveTab('splitter')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'splitter'
+                  ? 'bg-white text-emerald-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              📄 Download Report
+              👥 Split Bills
+            </button>
+            <button
+              onClick={() => setActiveTab('weather')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'weather'
+                  ? 'bg-white text-emerald-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              ⛅ Weather
+            </button>
+            <button
+              onClick={() => setActiveTab('food')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'food'
+                  ? 'bg-white text-emerald-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              🍛 Food Guide
             </button>
             <button
               onClick={() => setActiveTab('tools')}
-              className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'tools'
-                  ? 'bg-white text-emerald-700 shadow-sm'
+                  ? 'bg-white text-emerald-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              🧳 Trip Guide
+              🎒 Itinerary & Packing
+            </button>
+            <button
+              onClick={() => setActiveTab('reports')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'reports'
+                  ? 'bg-white text-emerald-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              📄 PDF Report
             </button>
             <button
               onClick={() => setActiveTab('creator')}
-              className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'creator'
-                  ? 'bg-emerald-600 text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-xs'
                   : 'text-slate-600 hover:text-emerald-700'
               }`}
             >
-              👨‍💻 Creator Info
+              👨‍💻 Creator
             </button>
           </nav>
 

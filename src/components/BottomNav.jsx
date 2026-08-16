@@ -3,26 +3,26 @@ import { useApp } from '../context/AppContext';
 import { 
   Compass, 
   Wallet, 
-  FileSpreadsheet, 
+  Users, 
   Map, 
-  UserCheck, 
   Plus, 
-  Code
+  Sparkles,
+  Layers
 } from 'lucide-react';
 
 export default function BottomNav() {
-  const { activeTab, setActiveTab, setIsAddExpenseModalOpen, totalRemaining } = useApp();
+  const { activeTab, setActiveTab, setIsAddExpenseModalOpen } = useApp();
 
   const navItems = [
     { id: 'places', label: 'Places', icon: Compass },
     { id: 'tracker', label: 'Expenses', icon: Wallet },
     { id: 'add', label: 'Add ₹', icon: Plus, isAction: true },
-    { id: 'reports', label: 'Report', icon: FileSpreadsheet },
-    { id: 'creator', label: 'Creator', icon: Code },
+    { id: 'splitter', label: 'Split ₹', icon: Users },
+    { id: 'tools', label: 'Guide', icon: Layers },
   ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-2xl safe-bottom">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-2xl safe-bottom">
       <div className="grid grid-cols-5 h-16 max-w-lg mx-auto items-center px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -47,7 +47,7 @@ export default function BottomNav() {
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all ${
-                isActive ? 'text-emerald-700 font-bold' : 'text-slate-700 hover:text-slate-900'
+                isActive ? 'text-emerald-700 font-bold' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <div className={`p-1 rounded-lg transition-transform ${isActive ? 'scale-110' : ''}`}>

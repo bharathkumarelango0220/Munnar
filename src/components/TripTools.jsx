@@ -12,42 +12,153 @@ import {
   Clock, 
   Navigation, 
   Check, 
-  Sparkles 
+  Sparkles, 
+  Plus, 
+  RotateCcw, 
+  ExternalLink,
+  DollarSign
 } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import confetti from 'canvas-confetti';
 
-const PACKING_ITEMS = [
-  { id: 'p1', label: 'Warm jacket or fleece sweater (10°C-18°C evening mist)' },
-  { id: 'p2', label: 'Raincoat or compact umbrella (frequent sudden hill showers)' },
-  { id: 'p3', label: 'Comfortable trekking shoes / grip sneakers for damp slopes' },
-  { id: 'p4', label: 'Government ID card (original Aadhar/Driving license for national park & hotel check-ins)' },
-  { id: 'p5', label: 'Power bank & phone camera with ample storage' },
-  { id: 'p6', label: 'Motion sickness tablets (for Ghat roads & hairpin bends)' },
-  { id: 'p7', label: 'Cash currency (several remote viewpoint spice & tea stalls have weak network/UPI)' },
-  { id: 'p8', label: 'Thermos flask for hot mountain tea/water' },
-  { id: 'p9', label: 'Insect repellent & moisturizing cream' }
-];
+const INITIAL_PACKING_CATEGORIES = {
+  warm: {
+    name: 'Warm Clothing & Sweaters',
+    icon: '🧥',
+    items: [
+      { id: 'w1', label: 'Warm fleece jacket / sweater (essential for 12°C-18°C evening mist)' },
+      { id: 'w2', label: 'Woolen beanie / cap & gloves (for Kolukkumalai sunrise 8°C cold)' },
+      { id: 'w3', label: 'Thermal inners (for winter months Oct - Feb)' },
+      { id: 'w4', label: 'Cotton socks (2-3 extra pairs for damp hill walks)' }
+    ]
+  },
+  rain: {
+    name: 'Rain & Monsoon Gear',
+    icon: '☔',
+    items: [
+      { id: 'r1', label: 'Sturdy compact umbrella (frequent sudden mountain showers)' },
+      { id: 'r2', label: 'Waterproof rain poncho / jacket' },
+      { id: 'r3', label: 'Waterproof phone pouch / backpack rain cover' }
+    ]
+  },
+  meds: {
+    name: 'Medicines & First Aid',
+    icon: '💊',
+    items: [
+      { id: 'm1', label: 'Motion sickness tablets (for Ghat roads & 40+ hairpin bends)' },
+      { id: 'm2', label: 'Insect & mosquito repellent cream / spray' },
+      { id: 'm3', label: 'Basic pain relief, band-aids & ORS electrolyte sachets' },
+      { id: 'm4', label: 'Moisturizing lip balm & cold cream for hill dry skin' }
+    ]
+  },
+  gadgets: {
+    name: 'Gadgets & Electronics',
+    icon: '📱',
+    items: [
+      { id: 'g1', label: 'High-capacity 20,000mAh Power Bank (battery drains faster in cold)' },
+      { id: 'g2', label: 'Fast car charger & extra USB cables' },
+      { id: 'g3', label: 'Camera memory card with ample free space for tea garden photos' }
+    ]
+  },
+  docs: {
+    name: 'Travel Documents & Cash',
+    icon: '📄',
+    items: [
+      { id: 'd1', label: 'Government Photo ID (Original Aadhar/Passport for national park & hotel check-ins)' },
+      { id: 'd2', label: 'Physical Cash (₹2,000-₹4,000) for remote tea/spice stalls with weak UPI network' },
+      { id: 'd3', label: 'Advance Eravikulam National Park ticket printout/QR code' }
+    ]
+  },
+  essentials: {
+    name: 'Trekking & Hill Essentials',
+    icon: '🥾',
+    items: [
+      { id: 'e1', label: 'Comfortable grip sneakers / trekking shoes for damp grassy slopes' },
+      { id: 'e2', label: 'Insulated thermos flask for hot drinking water / chai' },
+      { id: 'e3', label: 'Sunglasses & high UV sunscreen (high mountain sun index)' }
+    ]
+  }
+};
 
 export default function TripTools() {
+  const { openAddExpenseForCategory } = useApp();
   const [activeDay, setActiveDay] = useState(1);
-  const [checkedItems, setCheckedItems] = useState(() => {
-    const saved = localStorage.getItem('munnar_packing');
-    return saved ? JSON.parse(saved) : ['p1', 'p4', 'p5'];
+  const [activePackCategory, setActivePackCategory] = useState('all');
+
+  const [packingData, setPackingData] = useState(() => {
+    const saved = localStorage.getItem('munnar_custom_packing');
+    return saved ? JSON.parse(saved) : INITIAL_PACKING_CATEGORIES;
   });
 
+  const [checkedItems, setCheckedItems] = useState(() => {
+    const saved = localStorage.getItem('munnar_checked_items');
+    return saved ? JSON.parse(saved) : ['w1', 'r1', 'm1', 'g1', 'd1', 'd2', 'e1'];
+  });
+
+  const [newItemText, setNewItemText] = useState('');
+  const [newItemCategory, setNewItemCategory] = useState('warm');
+
   useEffect(() => {
-    localStorage.setItem('munnar_packing', JSON.stringify(checkedItems));
+    localStorage.setItem('munnar_custom_packing', JSON.stringify(packingData));
+  }, [packingData]);
+
+  useEffect(() => {
+    localStorage.setItem('munnar_checked_items', JSON.stringify(checkedItems));
   }, [checkedItems]);
 
   const toggleItem = (id) => {
-    setCheckedItems((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+    const isNowChecked = !checkedItems.includes(id);
+    const updated = isNowChecked
+      ? [...checkedItems, id]
+      : checkedItems.filter((item) => item !== id);
+    setCheckedItems(updated);
+
+    // Celebrate 100% packing
+    if (isNowChecked && updated.length === totalItemsCount) {
+      confetti({
+        particleCount: 50,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
   };
+
+  const handleAddCustomItem = (e) => {
+    e.preventDefault();
+    if (!newItemText.trim()) return;
+
+    const itemId = `c_${Date.now()}`;
+    const updated = { ...packingData };
+    updated[newItemCategory].items.push({
+      id: itemId,
+      label: newItemText.trim()
+    });
+
+    setPackingData(updated);
+    setNewItemText('');
+  };
+
+  const handleResetChecklist = () => {
+    if (confirm('Reset packing checklist to standard Munnar travel essentials?')) {
+      setPackingData(INITIAL_PACKING_CATEGORIES);
+      setCheckedItems(['w1', 'r1', 'm1', 'g1', 'd1', 'd2', 'e1']);
+    }
+  };
+
+  // Calculate totals
+  const allItemsList = Object.values(packingData).flatMap((cat) => cat.items);
+  const totalItemsCount = allItemsList.length;
+  const checkedCount = checkedItems.filter((id) =>
+    allItemsList.some((it) => it.id === id)
+  ).length;
+  const percentPacked = Math.round((checkedCount / (totalItemsCount || 1)) * 100);
 
   const itineraries = {
     1: {
       title: 'Day 1: Classic Mattupetty & Top Station Cloud Circuit',
       timing: '8:30 AM - 6:30 PM (Approx 70 km round trip)',
+      mapRouteUrl: 'https://www.google.com/maps/dir/Munnar+Tea+Museum/Photo+Point/Mattupetty+Dam/Kundala+Dam/Top+Station',
+      estCost: '₹850 / person (Entry + Boating + Meals)',
       stops: [
         { time: '09:00 AM', place: 'KDHP Tea Museum', note: 'Factory history & orthodox tea tasting (2 hrs)' },
         { time: '11:30 AM', place: 'Photo Point & Honey Bee Tree', note: 'Quick tea estate photos (30 mins)' },
@@ -59,6 +170,8 @@ export default function TripTools() {
     2: {
       title: 'Day 2: Kolukkumalai Sunrise & Nilgiri Tahr Wildlife',
       timing: '4:30 AM - 6:00 PM (Off-road jeep + Eco safari)',
+      mapRouteUrl: 'https://www.google.com/maps/dir/Suryanelli/Kolukkumalai+Tea+Estate/Eravikulam+National+Park/Pothamedu+View+Point',
+      estCost: '₹1,500 / person (Jeep Safari share + National Park pass)',
       stops: [
         { time: '04:30 AM', place: 'Kolukkumalai Sunrise 4x4 Jeep Safari', note: 'Start from Suryanelli base for world highest tea sunrise' },
         { time: '08:30 AM', place: 'Kolukkumalai Tea Factory Tour', note: 'Hot wood-fired black tea tasting' },
@@ -70,6 +183,8 @@ export default function TripTools() {
     3: {
       title: 'Day 3: Waterfalls, Sandalwood & Forest Delights',
       timing: '9:00 AM - 5:00 PM (Marayoor highway)',
+      mapRouteUrl: 'https://www.google.com/maps/dir/Attukal+Waterfalls/Lakkam+Waterfalls/Marayoor+Sandalwood+Forest/Blossom+Hydel+Park',
+      estCost: '₹600 / person (Entry + Fresh Jaggery & Spice shopping)',
       stops: [
         { time: '09:30 AM', place: 'Attukal Waterfalls', note: 'Cascading roaring mountain falls' },
         { time: '11:30 AM', place: 'Lakkam Waterfalls', note: 'Refreshing crystal-clear natural rock pool dip' },
@@ -80,41 +195,43 @@ export default function TripTools() {
   };
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 animate-fadeIn">
       
       {/* Header */}
       <div>
         <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">
           <Compass className="w-4 h-4 text-emerald-600" />
-          <span>Travel Assistance & Planning</span>
+          <span>Travel Planning & Essentials</span>
         </div>
         <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-          Munnar Itinerary, Weather & Travel Essentials
+          Munnar Itinerary, Packing Checklist & SOS Guide 🎒🗺️
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-          Curated 3-day plans, live climate guide, packing checklist, and 24x7 emergency contacts.
+          Curated 3-day optimal routes, categorized smart packing checklist, and 24x7 emergency contacts.
         </p>
       </div>
 
       {/* 1. Suggested 3-Day Itinerary */}
       <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-soft space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h3 className="font-extrabold text-base text-slate-900">
-              Suggested 3-Day Munnar Road Trip Route
+            <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
+              Day-by-Day Sightseeing Routes
+            </span>
+            <h3 className="font-extrabold text-base sm:text-lg text-slate-900">
+              Optimal Sightseeing Itinerary Planner
             </h3>
-            <p className="text-xs text-slate-500">Optimized to minimize driving time and maximize scenery</p>
           </div>
 
-          {/* Day selection tabs */}
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+          {/* Day Switcher Buttons */}
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl">
             {[1, 2, 3].map((day) => (
               <button
                 key={day}
                 onClick={() => setActiveDay(day)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeDay === day
-                    ? 'bg-emerald-600 text-white shadow-sm'
+                    ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -124,25 +241,45 @@ export default function TripTools() {
           </div>
         </div>
 
-        {/* Selected Day Content */}
-        <div className="space-y-3">
-          <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200">
-            <h4 className="font-black text-sm text-emerald-950">{itineraries[activeDay].title}</h4>
-            <span className="text-xs font-semibold text-emerald-700 block mt-0.5">{itineraries[activeDay].timing}</span>
+        {/* Active Day Detail Card */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h4 className="font-black text-sm sm:text-base text-slate-900">
+                {itineraries[activeDay].title}
+              </h4>
+              <p className="text-xs text-slate-600 font-medium mt-0.5">
+                ⏱️ {itineraries[activeDay].timing} • 💰 Est. Cost: <strong>{itineraries[activeDay].estCost}</strong>
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <a
+                href={itineraries[activeDay].mapRouteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition-colors"
+              >
+                <Navigation className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Open Full Route in Google Maps</span>
+                <ExternalLink className="w-3 h-3 opacity-70" />
+              </a>
+            </div>
           </div>
 
-          <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-emerald-200">
-            {itineraries[activeDay].stops.map((stop, idx) => (
-              <div key={idx} className="relative group">
-                <span className="absolute -left-6 top-1.5 w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-100"></span>
-                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 hover:bg-slate-100/70 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <strong className="text-xs sm:text-sm font-bold text-slate-900">{stop.place}</strong>
-                    <span className="text-[11px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-slate-200">
-                      {stop.time}
-                    </span>
+          {/* Stops Timeline */}
+          <div className="relative pl-6 space-y-3.5 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-emerald-300">
+            {itineraries[activeDay].stops.map((stop, i) => (
+              <div key={i} className="relative group">
+                <span className="absolute -left-6 top-1.5 w-4 h-4 rounded-full bg-emerald-600 border-2 border-white shadow-xs flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+                </span>
+                <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <div>
+                    <span className="text-[11px] font-black text-emerald-700">{stop.time}</span>
+                    <h5 className="font-bold text-xs sm:text-sm text-slate-900">{stop.place}</h5>
                   </div>
-                  <p className="text-xs text-slate-600 mt-1">{stop.note}</p>
+                  <p className="text-xs text-slate-500">{stop.note}</p>
                 </div>
               </div>
             ))}
@@ -150,131 +287,187 @@ export default function TripTools() {
         </div>
       </div>
 
-      {/* 2. Weather & Packing Checklist Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+      {/* 2. Smart Categorized Packing Checklist */}
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-soft space-y-5">
         
-        {/* Weather Guide Card */}
-        <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-soft space-y-4 flex flex-col justify-between">
+        {/* Header & Progress Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Climate & Seasons</span>
-              <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold border border-blue-200">
-                1,600m Altitude
-              </span>
-            </div>
-            <h3 className="font-black text-base text-slate-900">Munnar Hill Weather Guide</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Expect misty mornings, pleasant afternoons, and chilly nights.</p>
-
-            <div className="grid grid-cols-3 gap-2 my-4 text-center">
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                <Sun className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-                <span className="text-[10px] text-slate-500 font-bold block">Day Temp</span>
-                <strong className="text-sm font-black text-slate-800">19°C - 24°C</strong>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                <Thermometer className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-                <span className="text-[10px] text-slate-500 font-bold block">Night Temp</span>
-                <strong className="text-sm font-black text-slate-800">10°C - 15°C</strong>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                <CloudRain className="w-5 h-5 text-teal-500 mx-auto mb-1" />
-                <span className="text-[10px] text-slate-500 font-bold block">Mist Index</span>
-                <strong className="text-sm font-black text-emerald-700">Very High</strong>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed bg-amber-50/70 p-3 rounded-xl border border-amber-200">
-              💡 <strong>Traveler Insight:</strong> Keep headlamps or fog lights on while driving on ghat roads between 5:00 AM to 8:30 AM due to dense rolling mountain mist.
-            </p>
-          </div>
-        </div>
-
-        {/* Packing Checklist Card */}
-        <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-soft space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider block">Checklist</span>
-              <h3 className="font-black text-base text-slate-900">Munnar Packing Checklist</h3>
-            </div>
-            <span className="text-xs font-bold text-slate-500">
-              {checkedItems.length} / {PACKING_ITEMS.length} Packed
+            <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
+              Smart Hill Station Checklist
             </span>
+            <h3 className="font-extrabold text-base sm:text-lg text-slate-900">
+              Munnar Travel Packing Assistant 🎒
+            </h3>
           </div>
 
-          <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1">
-            {PACKING_ITEMS.map((item) => {
-              const isChecked = checkedItems.includes(item.id);
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => toggleItem(item.id)}
-                  className={`flex items-start gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all border ${
-                    isChecked
-                      ? 'bg-emerald-50/80 border-emerald-200 text-slate-800'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  <div className="mt-0.5">
-                    {isChecked ? (
-                      <CheckSquare className="w-4 h-4 text-emerald-600 fill-emerald-100" />
-                    ) : (
-                      <Square className="w-4 h-4 text-slate-400" />
-                    )}
-                  </div>
-                  <span className={`text-xs font-medium leading-tight ${isChecked ? 'line-through opacity-75' : ''}`}>
-                    {item.label}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <span className="text-xs font-bold text-slate-900">
+                {checkedCount} / {totalItemsCount} Packed
+              </span>
+              <span className="text-xs font-black text-emerald-700 ml-1.5">({percentPacked}%)</span>
+            </div>
+            <button
+              onClick={handleResetChecklist}
+              className="p-1.5 rounded-xl border border-slate-200 text-slate-400 hover:text-slate-700 hover:border-slate-300 transition-colors"
+              title="Reset checklist"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
+
+        {/* Visual Progress Bar */}
+        <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
+            style={{ width: `${percentPacked}%` }}
+          ></div>
+        </div>
+
+        {/* Category Pills Filter */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <button
+            onClick={() => setActivePackCategory('all')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              activePackCategory === 'all'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            All Items ({totalItemsCount})
+          </button>
+          {Object.entries(packingData).map(([catKey, catData]) => (
+            <button
+              key={catKey}
+              onClick={() => setActivePackCategory(catKey)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1 transition-all ${
+                activePackCategory === catKey
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <span>{catData.icon}</span>
+              <span>{catData.name}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Items Grid by Category */}
+        <div className="space-y-4">
+          {Object.entries(packingData)
+            .filter(([catKey]) => activePackCategory === 'all' || activePackCategory === catKey)
+            .map(([catKey, catData]) => (
+              <div key={catKey} className="space-y-2">
+                <h4 className="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                  <span>{catData.icon}</span>
+                  <span>{catData.name}</span>
+                </h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {catData.items.map((item) => {
+                    const isChecked = checkedItems.includes(item.id);
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => toggleItem(item.id)}
+                        className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+                          isChecked
+                            ? 'bg-emerald-50/80 border-emerald-200 text-slate-800'
+                            : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                        }`}
+                      >
+                        <div className="mt-0.5">
+                          {isChecked ? (
+                            <div className="w-4 h-4 rounded-md bg-emerald-600 text-white flex items-center justify-center">
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            </div>
+                          ) : (
+                            <div className="w-4 h-4 rounded-md border-2 border-slate-300 bg-white"></div>
+                          )}
+                        </div>
+                        <span className={`text-xs font-medium leading-relaxed ${isChecked ? 'line-through text-slate-400' : ''}`}>
+                          {item.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+        </div>
+
+        {/* Add Custom Item Form */}
+        <form onSubmit={handleAddCustomItem} className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-2">
+          <input
+            type="text"
+            placeholder="+ Add your custom travel item..."
+            value={newItemText}
+            onChange={(e) => setNewItemText(e.target.value)}
+            className="w-full sm:flex-1 px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-500"
+          />
+          <select
+            value={newItemCategory}
+            onChange={(e) => setNewItemCategory(e.target.value)}
+            className="w-full sm:w-48 px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-emerald-500"
+          >
+            {Object.entries(packingData).map(([catKey, catData]) => (
+              <option key={catKey} value={catKey}>
+                {catData.icon} {catData.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Item</span>
+          </button>
+        </form>
 
       </div>
 
-      {/* 3. Emergency Contacts Card */}
-      <div className="bg-slate-900 text-white rounded-3xl p-5 sm:p-6 border border-slate-800 space-y-3">
+      {/* 3. 24x7 Emergency Helplines & Health Centers */}
+      <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-5 sm:p-6 text-white shadow-soft space-y-4">
         <div className="flex items-center gap-2">
           <ShieldAlert className="w-5 h-5 text-rose-400" />
-          <h3 className="font-extrabold text-base text-white">
-            Munnar Emergency Helpline & Assistance
+          <h3 className="font-extrabold text-base sm:text-lg text-white">
+            Munnar Emergency Contacts & Tourist Police (24x7)
           </h3>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-          <a
-            href="tel:04865230321"
-            className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-          >
-            <span className="text-[10px] text-slate-400 font-bold block">Munnar Police</span>
-            <strong className="text-xs sm:text-sm text-emerald-300 font-bold block">04865-230321</strong>
-          </a>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          
+          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between">
+            <span className="text-[11px] text-slate-400">Tourist Police Munnar</span>
+            <a href="tel:04865230321" className="text-sm font-black text-emerald-400 hover:underline mt-1 block">
+              📞 04865 230321
+            </a>
+          </div>
 
-          <a
-            href="tel:04865230223"
-            className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-          >
-            <span className="text-[10px] text-slate-400 font-bold block">Tata General Hospital</span>
-            <strong className="text-xs sm:text-sm text-emerald-300 font-bold block">04865-230223</strong>
-          </a>
+          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between">
+            <span className="text-[11px] text-slate-400">Tata General Hospital</span>
+            <a href="tel:04865230223" className="text-sm font-black text-emerald-400 hover:underline mt-1 block">
+              🏥 04865 230223
+            </a>
+          </div>
 
-          <a
-            href="tel:04865231587"
-            className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-          >
-            <span className="text-[10px] text-slate-400 font-bold block">Forest Range Office</span>
-            <strong className="text-xs sm:text-sm text-emerald-300 font-bold block">04865-231587</strong>
-          </a>
+          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between">
+            <span className="text-[11px] text-slate-400">Forest Dept Wildlife SOS</span>
+            <a href="tel:04865231587" className="text-sm font-black text-emerald-400 hover:underline mt-1 block">
+              🐘 04865 231587
+            </a>
+          </div>
 
-          <a
-            href="tel:108"
-            className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-          >
-            <span className="text-[10px] text-slate-400 font-bold block">Kerala Ambulance</span>
-            <strong className="text-xs sm:text-sm text-rose-300 font-bold block">108</strong>
-          </a>
+          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between">
+            <span className="text-[11px] text-slate-400">Emergency Ambulance</span>
+            <a href="tel:108" className="text-sm font-black text-rose-400 hover:underline mt-1 block">
+              🚑 108 / 112
+            </a>
+          </div>
+
         </div>
       </div>
 

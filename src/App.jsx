@@ -10,6 +10,9 @@ import ExpenseTracker from './components/ExpenseTracker';
 import ReportGenerator from './components/ReportGenerator';
 import TripTools from './components/TripTools';
 import CreatorCard from './components/CreatorCard';
+import WeatherWidget from './components/WeatherWidget';
+import GroupExpenseSplitter from './components/GroupExpenseSplitter';
+import FoodGuide from './components/FoodGuide';
 import AuthModal from './components/AuthModal';
 import AddExpenseModal from './components/AddExpenseModal';
 import SetBudgetModal from './components/SetBudgetModal';
@@ -21,7 +24,10 @@ import {
   Mail, 
   Sparkles, 
   Compass,
-  ArrowUp
+  ArrowUp,
+  CloudSun,
+  Users,
+  Utensils
 } from 'lucide-react';
 
 export default function App() {
@@ -65,8 +71,11 @@ export default function App() {
         <div className="transition-all duration-300">
           {activeTab === 'places' && <TouristPlaces />}
           {activeTab === 'tracker' && <ExpenseTracker />}
-          {activeTab === 'reports' && <ReportGenerator />}
+          {activeTab === 'splitter' && <GroupExpenseSplitter />}
+          {activeTab === 'weather' && <WeatherWidget />}
+          {activeTab === 'food' && <FoodGuide />}
           {activeTab === 'tools' && <TripTools />}
+          {activeTab === 'reports' && <ReportGenerator />}
           {activeTab === 'creator' && <CreatorCard />}
         </div>
 
@@ -95,17 +104,17 @@ export default function App() {
                 <span className="font-black text-lg tracking-tight">MunnarGo</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Free mobile-first tourist companion & 6-category dynamic expense tracker for everyone traveling to Munnar, Kerala.
+                Free mobile-first tourist companion, 6-category expense tracker, group bill splitter & live weather radar for everyone traveling to Munnar, Kerala.
               </p>
             </div>
 
             {/* Col 2: Navigation Links */}
             <div className="space-y-2">
-              <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Explore App</h4>
+              <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Explore Features</h4>
               <ul className="space-y-1.5 text-xs text-slate-300">
                 <li>
                   <button onClick={() => { setActiveTab('places'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    📍 Munnar Tourist Places
+                    📍 16+ Munnar Tourist Places
                   </button>
                 </li>
                 <li>
@@ -114,29 +123,44 @@ export default function App() {
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => { setActiveTab('reports'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    📄 Download PDF Trip Report
+                  <button onClick={() => { setActiveTab('splitter'); scrollToTop(); }} className="hover:text-white transition-colors">
+                    👥 Group Bill Splitter & WhatsApp Share
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => { setActiveTab('weather'); scrollToTop(); }} className="hover:text-white transition-colors">
+                    ⛅ Live Weather & Mist Forecast
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => { setActiveTab('food'); scrollToTop(); }} className="hover:text-white transition-colors">
+                    🍛 Munnar Food & Restaurant Guide
                   </button>
                 </li>
                 <li>
                   <button onClick={() => { setActiveTab('tools'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    🧳 3-Day Itinerary & Packing Guide
+                    🎒 3-Day Itineraries & Packing Checklist
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => { setActiveTab('reports'); scrollToTop(); }} className="hover:text-white transition-colors">
+                    📄 Download PDF Trip Report
                   </button>
                 </li>
               </ul>
             </div>
 
-            {/* Col 3: Creator Details */}
+            {/* Col 3: Developer & Contact */}
             <div className="space-y-2">
-              <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Creator & Developer</h4>
-              <p className="text-xs font-bold text-white">Bharathkumar E</p>
-              <div className="space-y-1 text-xs text-slate-300">
-                <a href="tel:8220802736" className="flex items-center gap-1.5 hover:text-emerald-300 transition-colors">
-                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+              <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Developer Contact</h4>
+              <p className="text-xs text-slate-300 font-bold">Bharathkumar E</p>
+              <div className="space-y-1 text-xs text-slate-400">
+                <a href="tel:8220802736" className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors">
+                  <Phone className="w-3.5 h-3.5 text-emerald-500" />
                   <span>+91 8220802736</span>
                 </a>
-                <a href="mailto:bharathkumarelango02@gmail.com" className="flex items-center gap-1.5 hover:text-emerald-300 transition-colors">
-                  <Mail className="w-3.5 h-3.5 text-emerald-400" />
+                <a href="mailto:bharathkumarelango02@gmail.com" className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors">
+                  <Mail className="w-3.5 h-3.5 text-emerald-500" />
                   <span className="truncate">bharathkumarelango02@gmail.com</span>
                 </a>
               </div>
@@ -162,20 +186,18 @@ export default function App() {
           </div>
 
           <div className="pt-6 border-t border-slate-800 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p>© {new Date().getFullYear()} Munnar Explorer & Expense Tracker. Free for all travelers.</p>
-            <p className="flex items-center gap-1">
-              <span>Crafted with</span>
-              <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-              <span>by <strong className="text-white">Bharathkumar E</strong></span>
+            <p>© {new Date().getFullYear()} MunnarGo Companion & Expense Tracker. Free for all travelers.</p>
+            <p className="text-emerald-400 font-medium">
+              Handcrafted with ❤️ by <a href="https://apexassure.vercel.app/" target="_blank" rel="noopener noreferrer" className="underline font-bold text-white hover:text-emerald-300">Bharathkumar E</a>
             </p>
           </div>
         </div>
       </footer>
 
-      {/* Mobile-Native Bottom Navigation Bar */}
+      {/* Persistent Bottom Navigation for Mobile */}
       <BottomNav />
 
-      {/* Interactive Global Modals */}
+      {/* Global Modals */}
       <AuthModal />
       <AddExpenseModal />
       <SetBudgetModal />
