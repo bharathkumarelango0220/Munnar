@@ -147,7 +147,6 @@ export function AppProvider({ children }) {
   const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
   const [isSetBudgetModalOpen, setIsSetBudgetModalOpen] = useState(false);
   const [isReceiptScannerOpen, setIsReceiptScannerOpen] = useState(false);
-  const [isVoiceAssistantOpen, setIsVoiceAssistantOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [prefilledCategory, setPrefilledCategory] = useState('');
 
@@ -371,8 +370,6 @@ export function AppProvider({ children }) {
         setIsSetBudgetModalOpen,
         isReceiptScannerOpen,
         setIsReceiptScannerOpen,
-        isVoiceAssistantOpen,
-        setIsVoiceAssistantOpen,
         prefilledCategory,
         openAddExpenseForCategory,
         isCloudSynced,

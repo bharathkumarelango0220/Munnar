@@ -16,7 +16,6 @@ import AuthModal from './components/AuthModal';
 import AddExpenseModal from './components/AddExpenseModal';
 import SetBudgetModal from './components/SetBudgetModal';
 import AIReceiptScannerModal from './components/AIReceiptScannerModal';
-import AIVoiceAssistantModal from './components/AIVoiceAssistantModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import { 
   Heart, 
@@ -199,7 +198,6 @@ export default function App() {
       <AddExpenseModal />
       <SetBudgetModal />
       <AIReceiptScannerModal />
-      <AIVoiceAssistantModal />
     </div>
   );
 }
