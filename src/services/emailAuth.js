@@ -44,18 +44,29 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       attempts: 0
     });
 
-    const emailSubject = `${otpCode} is your TripTools verification code`;
-    const emailBody = `Hello ${recipientName},
+    const emailSubject = `TripTools Verification Code: ${otpCode}`;
+    const plainMessage = `Hello ${recipientName},
 
-Use this one-time verification code to sign in to your TripTools account:
+Your TripTools verification code is: ${otpCode}
 
-[ ${otpCode} ]
-
-This code is valid for 15 minutes. If you did not request this verification, you can safely ignore this email.
+This code is valid for 15 minutes. If you did not request this code, you can safely ignore this email.
 
 Best regards,
-TripTools Team
-https://munnartools.vercel.app`;
+TripTools Team`;
+
+    const htmlMessage = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 20px; background-color: #f8fafc; border-radius: 16px;">
+  <div style="background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center;">
+    <h2 style="color: #0f172a; margin-top: 0; font-size: 18px; font-weight: 800;">TripTools Login Verification</h2>
+    <p style="color: #475569; font-size: 13px; line-height: 1.5; margin: 8px 0 16px;">Hello <strong>${recipientName}</strong>,<br>Use the 6-digit one-time code below to sign in:</p>
+    <div style="display: inline-block; background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 12px 24px; margin: 8px 0 16px;">
+      <span style="font-size: 26px; font-weight: 900; letter-spacing: 5px; color: #16a34a; font-family: monospace;">${otpCode}</span>
+    </div>
+    <p style="color: #64748b; font-size: 11px; margin: 12px 0 0;">This code is valid for 15 minutes. Do not share this code with anyone.</p>
+  </div>
+  <div style="text-align: center; margin-top: 12px; color: #94a3b8; font-size: 10px;">
+    TripTools Security Verification
+  </div>
+</div>`;
 
     const templateParams = {
       to_email: cleanEmail,
@@ -78,9 +89,10 @@ https://munnartools.vercel.app`;
       passcode: otpCode,
       code: otpCode,
       subject: emailSubject,
-      message: emailBody,
-      body: emailBody,
-      content: emailBody
+      message: plainMessage,
+      body: plainMessage,
+      content: plainMessage,
+      html_message: htmlMessage
     };
 
     // Initialize EmailJS
