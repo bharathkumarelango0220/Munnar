@@ -1,23 +1,11 @@
-import emailjs from '@emailjs/browser';
 import { sendFirebaseEmailAuth } from './firebase';
 
 // In-memory active OTP verification store with expiration timestamp
 const activeOtpSessions = new Map();
 
-// EmailJS Configuration (Fallback)
-const EMAILJS_PUBLIC_KEY = '2xnO9HgXktDoEkhng';
-const EMAILJS_TEMPLATE_ID = 'template_a8m7w6t';
-const EMAILJS_SERVICE_CANDIDATES = [
-  'service_bk264165@gmail.com',
-  'bk264165@gmail.com',
-  'service_default',
-  'default_service',
-  'service_gmail',
-  'gmail'
-];
-
 /**
- * Dispatches verification email directly via Firebase Authentication (Google MX) & EmailJS
+ * Dispatches official verification email directly through Firebase Authentication (Google MX)
+ * with ZERO third-party mail relays.
  */
 export async function sendEmailOtp(email, fullName = 'Traveler') {
   if (!email || !email.includes('@')) {
@@ -28,7 +16,6 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
   }
 
   const cleanEmail = email.toLowerCase().trim();
-  const recipientName = (fullName && fullName.trim()) || 'Traveler';
 
   try {
     // Generate secure random 6-digit OTP code
@@ -42,61 +29,15 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       attempts: 0
     });
 
-    // 1. PRIMARY: Dispatch official Firebase verification email (Direct from Google servers)
-    try {
-      await sendFirebaseEmailAuth(cleanEmail);
-    } catch (e) {
-      console.warn('Firebase Email dispatch notice:', e?.message);
-    }
+    // Pure Firebase Email Authentication (Direct Google Servers)
+    const firebaseRes = await sendFirebaseEmailAuth(cleanEmail);
 
-    // 2. DISPATCH EMAIL VIA EMAILJS
-    const emailSubject = `TripTools verification code: ${otpCode}`;
-    const plainMessage = `Hello ${recipientName},\n\nYour verification code is: ${otpCode}\n\nValid for 15 minutes.\n\nTripTools`;
-
-    const templateParams = {
-      to_email: cleanEmail,
-      email: cleanEmail,
-      user_email: cleanEmail,
-      reply_to: 'bharathkumarelango02@gmail.com',
-      to: cleanEmail,
-      dest_email: cleanEmail,
-      recipient: cleanEmail,
-      recipient_email: cleanEmail,
-      send_to: cleanEmail,
-      target_email: cleanEmail,
-      email_to: cleanEmail,
-      to_name: recipientName,
-      name: recipientName,
-      user_name: recipientName,
-      from_name: 'TripTools',
-      otp_code: otpCode,
-      otp: otpCode,
-      passcode: otpCode,
-      code: otpCode,
-      subject: emailSubject,
-      message: plainMessage,
-      body: plainMessage,
-      content: plainMessage
-    };
-
-    emailjs.init(EMAILJS_PUBLIC_KEY);
-
-    for (const serviceId of EMAILJS_SERVICE_CANDIDATES) {
-      try {
-        const response = await emailjs.send(
-          serviceId,
-          EMAILJS_TEMPLATE_ID,
-          templateParams,
-          EMAILJS_PUBLIC_KEY
-        );
-
-        if (response.status === 200 || response.text === 'OK') {
-          console.log(`Delivered via EmailJS ${serviceId}`);
-          break;
-        }
-      } catch (err) {
-        console.warn(`EmailJS trial via ${serviceId}:`, err?.text || err?.message);
-      }
+    if (!firebaseRes.success) {
+      console.warn('Firebase email dispatch:', firebaseRes.error);
+      return {
+        success: false,
+        error: firebaseRes.error || 'Could not send verification email. Please check your email and retry.'
+      };
     }
 
     return {
@@ -105,8 +46,8 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       expiresInMinutes: 15
     };
   } catch (error) {
-    console.error('Email OTP send error:', error);
-    const msg = error?.text || error?.message || 'Failed to dispatch email.';
+    console.error('Firebase Email send error:', error);
+    const msg = error?.message || 'Failed to dispatch email via Firebase.';
     return {
       success: false,
       error: msg
@@ -124,7 +65,7 @@ export function verifyEmailOtp(email, enteredCode) {
   if (!session) {
     return {
       success: false,
-      error: 'OTP session expired or not found. Please request a new code.'
+      error: 'Session expired or not found. Please request a new verification code.'
     };
   }
 
@@ -132,7 +73,7 @@ export function verifyEmailOtp(email, enteredCode) {
     activeOtpSessions.delete(cleanEmail);
     return {
       success: false,
-      error: 'OTP code has expired. Please request a new code.'
+      error: 'Verification code has expired. Please request a new code.'
     };
   }
 
@@ -148,7 +89,7 @@ export function verifyEmailOtp(email, enteredCode) {
     session.attempts += 1;
     return {
       success: false,
-      error: '❌ Incorrect OTP code! Please check your email inbox and enter the exact 6-digit code.'
+      error: '❌ Incorrect code! Please check your email inbox or click the sign-in link sent by Firebase.'
     };
   }
 
