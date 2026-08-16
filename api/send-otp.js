@@ -1,5 +1,6 @@
 /**
  * Vercel Serverless Function to dispatch real verification OTP emails directly to recipient
+ * via Brevo (formerly Sendinblue) Transactional REST API
  */
 export default async function handler(req, res) {
   // Set CORS headers
@@ -28,53 +29,71 @@ export default async function handler(req, res) {
 
     const cleanEmail = email.toLowerCase().trim();
     const recipientName = (name && name.trim()) || 'Traveler';
-    const apiKey = process.env.EMAIL_API_KEY || '';
+    const apiKey = process.env.BREVO_API_KEY || process.env.EMAIL_API_KEY || process.env.VITE_BREVO_API_KEY || '';
 
-    if (apiKey) {
-      try {
-        await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'api-key': apiKey
-          },
-          body: JSON.stringify({
-            sender: { name: 'Munnar Explorer App', email: 'notifications@munnartools.vercel.app' },
-            to: [{ email: cleanEmail, name: recipientName }],
-            subject: `🌿 Munnar Explorer Verification Code: ${otpCode}`,
-            htmlContent: `
-              <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
-                <div style="text-align: center; margin-bottom: 20px;">
-                  <h1 style="color: #047857; margin: 0; font-size: 24px;">🌿 Munnar Explorer</h1>
-                  <p style="color: #64748b; font-size: 13px; margin-top: 4px;">Trip Companion & Expense Tracker</p>
-                </div>
-                <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
-                  <p style="color: #166534; font-size: 14px; margin: 0 0 12px 0;">Hello <strong>${recipientName}</strong>! Your 6-digit verification code is:</p>
-                  <div style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #047857; background: #ffffff; padding: 12px 24px; border-radius: 8px; display: inline-block; border: 2px dashed #059669;">
-                    ${otpCode}
-                  </div>
-                  <p style="color: #15803d; font-size: 12px; margin: 12px 0 0 0;">Valid for 15 minutes. Do not share this code with anyone.</p>
-                </div>
-                <p style="color: #64748b; font-size: 12px; line-height: 1.5; margin: 0; text-align: center;">
-                  Enter this code on <a href="https://munnartools.vercel.app" style="color: #059669; font-weight: bold; text-decoration: none;">munnartools.vercel.app</a> to access your budget and trip expense tracker.
-                </p>
-                <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
-                <p style="color: #94a3b8; font-size: 11px; text-align: center; margin: 0;">
-                  Crafted with care by Bharathkumar E
-                </p>
+    if (!apiKey) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'BREVO_API_KEY is not configured in Vercel Environment Variables.' 
+      });
+    }
+
+    const brevoResponse = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'api-key': apiKey
+      },
+      body: JSON.stringify({
+        sender: { 
+          name: 'TripTools', 
+          email: 'bharathkumarelango02@gmail.com' 
+        },
+        to: [
+          { 
+            email: cleanEmail, 
+            name: recipientName 
+          }
+        ],
+        subject: `TripTools verification code: ${otpCode}`,
+        textContent: `Hello ${recipientName},\n\nYour TripTools verification code is: ${otpCode}\n\nThis code will expire in 15 minutes.\n\nTripTools Team`,
+        htmlContent: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background-color: #f8fafc; border-radius: 16px;">
+            <div style="background: #ffffff; padding: 28px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center;">
+              <h2 style="color: #0f172a; margin-top: 0; font-size: 20px; font-weight: 800;">TripTools Login Verification</h2>
+              <p style="color: #475569; font-size: 14px; line-height: 1.5; margin: 12px 0 20px;">
+                Hello <strong>${recipientName}</strong>,<br>Use the 6-digit one-time code below to sign in:
+              </p>
+              <div style="display: inline-block; background-color: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 14px 28px; margin: 8px 0 20px;">
+                <span style="font-size: 30px; font-weight: 900; letter-spacing: 6px; color: #16a34a; font-family: monospace;">${otpCode}</span>
               </div>
-            `
-          })
-        });
-      } catch (e) {
-        console.warn('API relay warning:', e);
-      }
+              <p style="color: #64748b; font-size: 12px; margin: 16px 0 0;">
+                Valid for 15 minutes. If you did not request this, you can safely ignore this email.
+              </p>
+            </div>
+            <div style="text-align: center; margin-top: 16px; color: #94a3b8; font-size: 11px;">
+              TripTools • Secure Cloud Verification
+            </div>
+          </div>
+        `
+      })
+    });
+
+    const data = await brevoResponse.json();
+
+    if (!brevoResponse.ok) {
+      console.error('Brevo API Error:', data);
+      return res.status(brevoResponse.status).json({ 
+        success: false, 
+        error: data.message || 'Brevo API dispatch failed' 
+      });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'OTP generated and dispatched'
+      messageId: data.messageId,
+      message: 'OTP delivered directly to primary inbox via Brevo'
     });
   } catch (err) {
     console.error('Serverless send-otp error:', err);
