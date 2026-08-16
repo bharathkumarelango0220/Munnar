@@ -9,6 +9,8 @@ import {
   FileText, 
   User, 
   LogIn,
+  Sun,
+  Moon,
   CheckCircle2,
   Sparkles
 } from 'lucide-react';
@@ -19,7 +21,9 @@ export default function Navbar() {
     setIsAuthModalOpen, 
     totalRemaining, 
     setActiveTab, 
-    activeTab 
+    activeTab,
+    theme,
+    toggleTheme
   } = useApp();
 
   const navLinks = [
@@ -66,7 +70,7 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* DESKTOP NAVIGATION CAPSULE (Neat, Balanced, Single-Word Tabs) */}
+          {/* DESKTOP NAVIGATION CAPSULE */}
           <nav className="hidden md:flex items-center p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 shadow-inner">
             {navLinks.map((tab) => {
               const Icon = tab.icon;
@@ -92,7 +96,7 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* RIGHT ACTIONS: BALANCE BADGE & AUTH */}
+          {/* RIGHT ACTIONS: THEME TOGGLE, BALANCE & AUTH */}
           <div className="flex items-center gap-2 shrink-0">
             
             {/* Quick Balance Pill */}
@@ -106,6 +110,20 @@ export default function Navbar() {
             >
               <Wallet className="w-3.5 h-3.5 text-emerald-600" />
               <span>₹{totalRemaining.toLocaleString('en-IN')} Left</span>
+            </button>
+
+            {/* DARK / LIGHT MODE SWITCH BUTTON */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-100 hover:bg-slate-200/80 text-slate-700 transition-all flex items-center justify-center active:scale-95 shadow-xs"
+              title={theme === 'dark' ? '☀️ Switch to Light Mode' : '🌙 Switch to Dark Mode'}
+              aria-label="Toggle Theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-700" />
+              )}
             </button>
 
             {/* User Auth Pill Button */}

@@ -66,6 +66,32 @@ export function AppProvider({ children }) {
   // Navigation
   const [activeTab, setActiveTab] = useState('intro');
 
+  // Theme State ('light' | 'dark')
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('triptools_theme');
+      if (saved) return saved;
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch (e) {
+      return 'light';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('triptools_theme', theme);
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } catch (e) {}
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   // User state (only stored persistently if verified login)
   const [user, setUser] = useState(() => {
     try {
@@ -358,7 +384,9 @@ export function AppProvider({ children }) {
         prefilledCategory,
         openAddExpenseForCategory,
         isCloudSynced,
-        resetAllData
+        resetAllData,
+        theme,
+        toggleTheme
       }}
     >
       {children}
