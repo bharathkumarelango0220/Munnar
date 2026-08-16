@@ -47,6 +47,12 @@ export async function signInWithGoogle() {
     };
   } catch (error) {
     console.error('Google Sign In error:', error);
+    if (error.code === 'auth/unauthorized-domain') {
+      return {
+        success: false,
+        error: 'Please add "munnartools.vercel.app" to Authorized Domains in your Firebase Console (Authentication > Settings > Authorized domains).'
+      };
+    }
     return {
       success: false,
       error: error.message || 'Failed to sign in with Google'
