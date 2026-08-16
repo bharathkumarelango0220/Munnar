@@ -20,47 +20,6 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import confetti from 'canvas-confetti';
-
-const TRAVEL_STYLES = [
-  {
-    id: 'budget',
-    title: '🎒 Backpacker / Budget',
-    subtitle: 'Fill with Homestay & Local mess rates',
-    badge: 'Budget Template',
-    badgeColor: 'bg-emerald-100 text-emerald-800',
-    stayPerNight: 1000,
-    foodPerDay: 400,
-    travelPerDay: 500,
-    ticketsPerDay: 250,
-    shoppingPerPerson: 600
-  },
-  {
-    id: 'comfort',
-    title: '🚗 Comfort / Family',
-    subtitle: 'Fill with 3-Star hotel & Cab rates',
-    badge: 'Family Template',
-    badgeColor: 'bg-teal-100 text-teal-800',
-    stayPerNight: 3000,
-    foodPerDay: 900,
-    travelPerDay: 1500,
-    ticketsPerDay: 600,
-    shoppingPerPerson: 1800
-  },
-  {
-    id: 'luxury',
-    title: '👑 Luxury / Premium',
-    subtitle: 'Fill with 5-Star resort & 4x4 Jeep rates',
-    badge: 'Luxury Template',
-    badgeColor: 'bg-purple-100 text-purple-800',
-    stayPerNight: 8000,
-    foodPerDay: 2200,
-    travelPerDay: 3200,
-    ticketsPerDay: 1500,
-    shoppingPerPerson: 4500
-  }
-];
-
 export default function TripCostPredictor() {
   const { saveTripCategories, setActiveTab, isLoggedIn } = useApp();
 
@@ -148,26 +107,6 @@ export default function TripCostPredictor() {
     storage.setItem('munnar_predictor_days_v3', days.toString());
     storage.setItem('munnar_predictor_travelers_v3', travelers.toString());
   }, [categoriesList, days, travelers, isLoggedIn]);
-
-  // Handle travel style preset selection
-  const handleSelectStyle = (style) => {
-    const updated = categoriesList.map((cat) => {
-      if (cat.id === 'rooms') return { ...cat, rate: style.stayPerNight };
-      if (cat.id === 'food') return { ...cat, rate: style.foodPerDay };
-      if (cat.id === 'bike') return { ...cat, rate: style.travelPerDay };
-      if (cat.id === 'tickets') return { ...cat, rate: style.ticketsPerDay };
-      if (cat.id === 'shopping') return { ...cat, rate: style.shoppingPerPerson };
-      return cat;
-    });
-
-    const activeDays = days === 0 ? 3 : days;
-    const activeTravelers = travelers === 0 ? 2 : travelers;
-    setDays(activeDays);
-    setTravelers(activeTravelers);
-
-    setCategoriesList(updated);
-    syncToAppContext(updated, activeDays, activeTravelers);
-  };
 
   // Reset all rates to 0
   const handleResetToZero = () => {
@@ -306,31 +245,7 @@ export default function TripCostPredictor() {
         </div>
       </div>
 
-      {/* Optional Templates */}
-      <div className="space-y-3">
-        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-          Quick Fill Templates (Optional)
-        </label>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-          {TRAVEL_STYLES.map((style) => (
-            <button
-              key={style.id}
-              type="button"
-              onClick={() => handleSelectStyle(style)}
-              className="p-4 rounded-3xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 bg-white text-left transition-all shadow-soft group"
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-extrabold text-sm text-slate-900 group-hover:text-emerald-800">{style.title}</span>
-                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${style.badgeColor}`}>
-                  {style.badge}
-                </span>
-              </div>
-              <p className="text-xs text-slate-500">{style.subtitle}</p>
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* STEP 1: Duration & Travelers Steppers */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

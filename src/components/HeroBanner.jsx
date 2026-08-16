@@ -116,16 +116,16 @@ export default function HeroBanner() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 text-xs">
             <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-              <span className="text-emerald-400 font-bold block">🎒 Backpacker Style</span>
-              <span className="text-[11px] text-slate-300">Homestays & bike petrol</span>
+              <span className="text-emerald-400 font-bold block">⚙️ Custom Categories</span>
+              <span className="text-[11px] text-slate-300">Add & delete any trip category</span>
             </div>
             <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-              <span className="text-teal-400 font-bold block">🚗 Comfort Family</span>
-              <span className="text-[11px] text-slate-300">3-Star hotels & cabs</span>
+              <span className="text-teal-400 font-bold block">🔢 Zero Default Control</span>
+              <span className="text-[11px] text-slate-300">Set exact custom budgets</span>
             </div>
             <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-              <span className="text-purple-400 font-bold block">👑 Luxury VIP</span>
-              <span className="text-[11px] text-slate-300">5-Star premium villas</span>
+              <span className="text-purple-400 font-bold block">⚡ Live Ledger Sync</span>
+              <span className="text-[11px] text-slate-300">Syncs directly to Expense Tracker</span>
             </div>
           </div>
         </div>
