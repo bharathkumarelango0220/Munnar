@@ -6,7 +6,11 @@ const activeOtpSessions = new Map();
 // Your EmailJS Configuration
 const EMAILJS_PUBLIC_KEY = '2xnO9HgXktDoEkhng';
 const EMAILJS_TEMPLATE_ID = 'template_a8m7w6t';
+
+// EmailJS Service IDs connected to your EmailJS account
 const EMAILJS_SERVICE_CANDIDATES = [
+  'service_bk264165@gmail.com',
+  'bk264165@gmail.com',
   'service_default',
   'default_service',
   'service_gmail',
@@ -14,8 +18,7 @@ const EMAILJS_SERVICE_CANDIDATES = [
 ];
 
 /**
- * Dispatches 6-digit email verification OTP directly via EmailJS to recipient's inbox
- * with comprehensive parameter mappings and fallback resilience
+ * Dispatches 6-digit email verification OTP directly via EmailJS to the recipient's inbox
  */
 export async function sendEmailOtp(email, fullName = 'Traveler') {
   if (!email || !email.includes('@')) {
@@ -70,7 +73,7 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
     let delivered = false;
     let lastError = null;
 
-    // Try service candidates
+    // Try sending through connected EmailJS services
     for (const serviceId of EMAILJS_SERVICE_CANDIDATES) {
       try {
         const response = await emailjs.send(
@@ -91,12 +94,18 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       }
     }
 
-    // Always succeed in setting up active verification session so users on any email ID can proceed
+    if (!delivered && lastError) {
+      const errorText = lastError?.text || lastError?.message || 'Email delivery failed';
+      console.error('EmailJS delivery failed:', errorText);
+      return {
+        success: false,
+        error: `Could not deliver OTP email (${errorText}). Please check your email address and retry.`
+      };
+    }
+
     return {
       success: true,
       email: cleanEmail,
-      otpCode,
-      delivered,
       expiresInMinutes: 15
     };
   } catch (error) {
@@ -107,16 +116,6 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       error: msg
     };
   }
-}
-
-/**
- * Helper to get the active OTP for a session if needed for developer testing
- */
-export function getActiveSessionOtp(email) {
-  if (!email) return '';
-  const cleanEmail = email.toLowerCase().trim();
-  const session = activeOtpSessions.get(cleanEmail);
-  return session ? session.code : '';
 }
 
 /**
