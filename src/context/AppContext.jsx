@@ -2,63 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import confetti from 'canvas-confetti';
 import { saveUserTripToCloud, loadUserTripFromCloud } from '../services/firebase';
 
-export const DEFAULT_CATEGORY_DEFINITIONS = {
-  rooms: {
-    id: 'rooms',
-    name: 'Rooms & Stays',
-    fullName: 'Rooms & Stays',
-    subtitle: 'Resorts, Homestays, Hotels, Tents',
-    icon: 'BedDouble',
-    color: 'blue',
-    badgeBg: 'bg-blue-50 text-blue-700 border-blue-200',
-    barColor: 'bg-blue-500',
-    accentColor: '#3b82f6'
-  },
-  food: {
-    id: 'food',
-    name: 'Food & Dining',
-    fullName: 'Food & Meals',
-    subtitle: 'Breakfast, Lunch, Dinner, Kerala Meals',
-    icon: 'UtensilsCrossed',
-    color: 'amber',
-    badgeBg: 'bg-amber-50 text-amber-700 border-amber-200',
-    barColor: 'bg-amber-500',
-    accentColor: '#f59e0b'
-  },
-  bike: {
-    id: 'bike',
-    name: 'Travel & Fuel',
-    fullName: 'Travel, Fuel & Cabs',
-    subtitle: 'Fuel, Rental, Tolls, Parking, Cabs',
-    icon: 'Car',
-    color: 'emerald',
-    badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    barColor: 'bg-emerald-500',
-    accentColor: '#10b981'
-  },
-  tickets: {
-    id: 'tickets',
-    name: 'Tickets & Safari',
-    fullName: 'Tickets & Passes',
-    subtitle: 'National Parks, Boating, Jeep Passes',
-    icon: 'Ticket',
-    color: 'purple',
-    badgeBg: 'bg-purple-50 text-purple-700 border-purple-200',
-    barColor: 'bg-purple-500',
-    accentColor: '#a855f7'
-  },
-  shopping: {
-    id: 'shopping',
-    name: 'Spices & Shopping',
-    fullName: 'Spices & Tea Shopping',
-    subtitle: 'Cardamom, Tea powder, Chocolates, Gifts',
-    icon: 'ShoppingBag',
-    color: 'rose',
-    badgeBg: 'bg-rose-50 text-rose-700 border-rose-200',
-    barColor: 'bg-rose-500',
-    accentColor: '#f43f5e'
-  }
-};
+export const DEFAULT_CATEGORY_DEFINITIONS = {};
 
 const AppContext = createContext();
 

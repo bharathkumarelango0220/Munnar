@@ -8,9 +8,24 @@ import {
   Plus,
   Minus,
   Trash2,
-  Tag
+  Tag,
+  Hotel,
+  UtensilsCrossed,
+  Car,
+  Ticket,
+  ShoppingBag,
+  FolderPlus,
+  ArrowRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+
+const QUICK_CATEGORY_PRESETS = [
+  { id: 'rooms', name: 'Hotel & Stay', rateType: 'roomsNights', icon: 'Hotel', color: 'blue' },
+  { id: 'food', name: 'Food & Dining', rateType: 'perPersonPerDay', icon: 'UtensilsCrossed', color: 'amber' },
+  { id: 'travel', name: 'Travel & Fuel', rateType: 'perDay', icon: 'Car', color: 'emerald' },
+  { id: 'tickets', name: 'Sightseeing & Safari', rateType: 'perPerson', icon: 'Ticket', color: 'purple' },
+  { id: 'shopping', name: 'Shopping & Spices', rateType: 'perPerson', icon: 'ShoppingBag', color: 'rose' }
+];
 
 export default function TripCostPredictor() {
   const { saveTripCategories, setActiveTab, isLoggedIn } = useApp();
@@ -36,23 +51,16 @@ export default function TripCostPredictor() {
     }
   });
 
-  // Active Category List (All default rates start at 0)
+  // Active Category List (Starts empty [] with ZERO default categories)
   const [categoriesList, setCategoriesList] = useState(() => {
     try {
       const saved = getStorage().getItem('munnar_predictor_active_cats_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {}
-
-    return [
-      { id: 'rooms', name: 'Rooms & Stays', rate: 0, rateType: 'roomsNights', icon: 'Hotel', color: 'blue' },
-      { id: 'food', name: 'Food & Dining', rate: 0, rateType: 'perPersonPerDay', icon: 'UtensilsCrossed', color: 'amber' },
-      { id: 'bike', name: 'Travel, Fuel & Cabs', rate: 0, rateType: 'perDay', icon: 'Car', color: 'emerald' },
-      { id: 'tickets', name: 'Tickets & Safari', rate: 0, rateType: 'perPersonPerDay', icon: 'Ticket', color: 'purple' },
-      { id: 'shopping', name: 'Spices & Shopping', rate: 0, rateType: 'perPerson', icon: 'ShoppingBag', color: 'rose' }
-    ];
+    return [];
   });
 
   const [newCatName, setNewCatName] = useState('');
@@ -119,6 +127,31 @@ export default function TripCostPredictor() {
     syncToAppContext(resetList, 0, 0);
   };
 
+  // Clear all categories
+  const handleClearAllCategories = () => {
+    setCategoriesList([]);
+    syncToAppContext([], days, travelers);
+  };
+
+  // Add Quick Preset Category
+  const handleAddPreset = (preset) => {
+    // Prevent duplicate presets
+    if (categoriesList.some((c) => c.name.toLowerCase() === preset.name.toLowerCase())) {
+      return;
+    }
+    const newCat = {
+      id: `${preset.id}_${Date.now()}`,
+      name: preset.name,
+      rate: 0,
+      rateType: preset.rateType,
+      icon: preset.icon,
+      color: preset.color
+    };
+    const updated = [...categoriesList, newCat];
+    setCategoriesList(updated);
+    syncToAppContext(updated, days, travelers);
+  };
+
   // Add Custom Category
   const handleAddCustomCategory = (e) => {
     e.preventDefault();
@@ -145,10 +178,6 @@ export default function TripCostPredictor() {
 
   // Delete category
   const handleDeleteCategory = (id) => {
-    if (categoriesList.length <= 1) {
-      alert('You must keep at least 1 expense category in your trip.');
-      return;
-    }
     const updated = categoriesList.filter((c) => c.id !== id);
     setCategoriesList(updated);
     syncToAppContext(updated, days, travelers);
@@ -229,14 +258,26 @@ export default function TripCostPredictor() {
             <span>Trip Cost & Category Setup</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            All-in-One Trip Cost Predictor 🧮💰
+            Trip Cost Predictor 🧮💰
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Every value starts at 0. Enter your custom amounts manually, add categories, or delete what you don't need!
+            Fresh clean slate with zero default categories. Add only the categories you need for your tour!
           </p>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
+          {categoriesList.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearAllCategories}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 text-xs font-bold transition-all shadow-xs"
+              title="Remove all categories"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Clear All</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={handleResetToZero}
@@ -348,26 +389,54 @@ export default function TripCostPredictor() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
-                2. Set Amounts for Your Categories ({categoriesList.length})
+                2. Your Trip Categories ({categoriesList.length})
               </h3>
-              <p className="text-[11px] text-slate-400">Type your amounts manually (all start at 0), or delete categories</p>
+              <p className="text-[11px] text-slate-400">Add categories freshly and set your custom rates</p>
             </div>
             
             <button
               type="button"
               onClick={() => setIsAddingCategory(!isAddingCategory)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold transition-all"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs"
             >
               <Plus className="w-3.5 h-3.5 stroke-[3]" />
               <span>+ Add Custom Category</span>
             </button>
           </div>
 
-          {/* Add Custom Category Box */}
+          {/* Quick Category Chips for Fast Adding */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 block">
+              Quick Add Category:
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              {QUICK_CATEGORY_PRESETS.map((preset) => {
+                const isAlreadyAdded = categoriesList.some((c) => c.name.toLowerCase() === preset.name.toLowerCase());
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    disabled={isAlreadyAdded}
+                    onClick={() => handleAddPreset(preset)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      isAlreadyAdded
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        : 'bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 shadow-xs'
+                    }`}
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>{preset.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Add Custom Category Form */}
           {isAddingCategory && (
             <form onSubmit={handleAddCustomCategory} className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-3 animate-slideDown">
               <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 block">
-                Add New Expense Category
+                Create New Custom Category
               </span>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -399,6 +468,7 @@ export default function TripCostPredictor() {
                   <option value="perPerson">Per Person Rate</option>
                   <option value="perDay">Per Day Rate</option>
                   <option value="perPersonPerDay">Per Person Per Day</option>
+                  <option value="roomsNights">Per Room Per Night</option>
                 </select>
               </div>
 
@@ -420,72 +490,85 @@ export default function TripCostPredictor() {
             </form>
           )}
 
-          {/* Categories List with 0 Default Inputs */}
-          <div className="space-y-3 divide-y divide-slate-100">
-            {calculatedItems.map((cat) => {
-              let subtitle = 'Fixed Flat Budget';
-              if (cat.rateType === 'roomsNights') subtitle = `${roomCount || 0} rooms × ${nights || 0} nights`;
-              if (cat.rateType === 'perPersonPerDay') subtitle = `₹${cat.rate || 0} × ${days || 0} days × ${travelers || 0} people`;
-              if (cat.rateType === 'perDay') subtitle = `₹${cat.rate || 0} × ${days || 0} days`;
-              if (cat.rateType === 'perPerson') subtitle = `₹${cat.rate || 0} × ${travelers || 0} people`;
+          {/* Empty State when 0 categories */}
+          {calculatedItems.length === 0 ? (
+            <div className="text-center py-10 px-4 rounded-2xl border-2 border-dashed border-slate-200 space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                <FolderPlus className="w-6 h-6" />
+              </div>
+              <h4 className="font-extrabold text-sm text-slate-900">No Categories Added Yet</h4>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                Click any of the quick presets above (like Hotel, Food, Travel) or click <strong>+ Add Custom Category</strong> to build your trip budget freshly!
+              </p>
+            </div>
+          ) : (
+            /* Categories List with 0 Default Inputs */
+            <div className="space-y-3 divide-y divide-slate-100">
+              {calculatedItems.map((cat) => {
+                let subtitle = 'Fixed Flat Budget';
+                if (cat.rateType === 'roomsNights') subtitle = `${roomCount || 0} rooms × ${nights || 0} nights`;
+                if (cat.rateType === 'perPersonPerDay') subtitle = `₹${cat.rate || 0} × ${days || 0} days × ${travelers || 0} people`;
+                if (cat.rateType === 'perDay') subtitle = `₹${cat.rate || 0} × ${days || 0} days`;
+                if (cat.rateType === 'perPerson') subtitle = `₹${cat.rate || 0} × ${travelers || 0} people`;
 
-              return (
-                <div key={cat.id} className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
-                      <Tag className="w-4 h-4" />
+                return (
+                  <div key={cat.id} className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
+                        <Tag className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-xs sm:text-sm text-slate-900 flex items-center gap-2">
+                          <span>{cat.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCategory(cat.id)}
+                            className="text-slate-300 hover:text-rose-600 transition-colors p-0.5"
+                            title={`Delete ${cat.name} category`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </h4>
+                        <p className="text-[11px] text-slate-400">{subtitle}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-xs sm:text-sm text-slate-900 flex items-center gap-2">
-                        <span>{cat.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteCategory(cat.id)}
-                          className="text-slate-300 hover:text-rose-600 transition-colors p-0.5"
-                          title={`Delete ${cat.name} category`}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </h4>
-                      <p className="text-[11px] text-slate-400">{subtitle}</p>
+
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                      <div className="relative">
+                        <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">₹</span>
+                        <input
+                          type="number"
+                          value={cat.rate === 0 ? '' : cat.rate}
+                          placeholder="0"
+                          onChange={(e) => handleUpdateCategoryRate(cat.id, e.target.value)}
+                          min="0"
+                          className="w-28 pl-6 pr-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-right text-slate-900 focus:outline-none focus:border-emerald-500 bg-white"
+                        />
+                      </div>
+                      <span className="text-xs font-black text-slate-900 w-24 text-right">
+                        = ₹{(cat.totalCost || 0).toLocaleString('en-IN')}
+                      </span>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+          )}
 
-                  <div className="flex items-center gap-3 self-end sm:self-auto">
-                    <div className="relative">
-                      <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">₹</span>
-                      <input
-                        type="number"
-                        min="0"
-                        value={cat.rate === 0 ? '' : cat.rate}
-                        placeholder="0"
-                        onChange={(e) => handleUpdateCategoryRate(cat.id, e.target.value)}
-                        className="w-28 pl-6 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-right focus:outline-none focus:border-emerald-500 bg-white"
-                        title="Enter category amount"
-                      />
-                    </div>
-                    <span className="text-sm font-black text-slate-900 w-24 text-right">
-                      ₹{(cat.totalCost || 0).toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
 
-        {/* Right Col: Grand Total Display Card */}
+        {/* Right Col: Cost Summary Card */}
         <div className="lg:col-span-1 space-y-4">
           <div className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-xl border border-emerald-500/20 space-y-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl -mr-12 -mt-12 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
-            <div className="relative z-10 space-y-5">
+            <div className="relative z-10 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-                  Total Predicted Trip Budget
+                  Total Predicted Cost
                 </span>
                 <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white/10 text-emerald-300 font-bold border border-white/10">
-                  {days}D / {travelers}P
+                  {days}D • {travelers}P
                 </span>
               </div>
 
@@ -493,36 +576,37 @@ export default function TripCostPredictor() {
                 <p className="text-4xl sm:text-5xl font-black tracking-tight text-white">
                   ₹{(totalEstimatedCost || 0).toLocaleString('en-IN')}
                 </p>
-                <p className="text-xs text-slate-300 mt-1 font-medium">
-                  {totalEstimatedCost === 0 
-                    ? 'Enter amounts above to calculate your total'
-                    : `Calculated for ${travelers} people across ${categoriesList.length} categories`}
+                <p className="text-xs text-slate-400 mt-1">
+                  Sum of your {categoriesList.length} custom categories
                 </p>
               </div>
 
-              {/* Breakdown Rows */}
-              <div className="pt-4 border-t border-white/10 space-y-2.5 text-xs">
+              <div className="pt-4 border-t border-white/10 space-y-2 text-xs">
                 <div className="flex justify-between text-slate-300">
-                  <span>Per Person Cost:</span>
+                  <span>Each Person Pays:</span>
                   <strong className="text-emerald-300 text-base font-black">
-                    ₹{(costPerPerson || 0).toLocaleString('en-IN')} / person
+                    ₹{(costPerPerson || 0).toLocaleString('en-IN')}
                   </strong>
                 </div>
 
                 <div className="flex justify-between text-slate-300">
-                  <span>Daily Burn Rate:</span>
-                  <strong className="text-white">₹{(costPerDay || 0).toLocaleString('en-IN')} / day</strong>
+                  <span>Daily Group Burn:</span>
+                  <strong className="text-white">
+                    ₹{(costPerDay || 0).toLocaleString('en-IN')} / day
+                  </strong>
                 </div>
               </div>
 
+              {/* Action Button */}
               <button
                 type="button"
                 onClick={handleSaveAndGoToTracker}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4 stroke-[3]" />
-                <span>Save & Go to Expense Tracker 🚀</span>
+                <span>Save to Expense Tracker 🚀</span>
               </button>
+
             </div>
           </div>
         </div>
