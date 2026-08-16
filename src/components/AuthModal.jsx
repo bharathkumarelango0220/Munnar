@@ -8,9 +8,7 @@ import {
   ArrowRight, 
   CheckCircle2, 
   RefreshCw, 
-  Sparkles, 
-  AlertCircle,
-  KeyRound
+  AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sendEmailOtp, verifyEmailOtp } from '../services/emailAuth';
@@ -27,7 +25,6 @@ export default function AuthModal() {
   
   // 6-digit Real Email OTP
   const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
-  const [issuedOtpCode, setIssuedOtpCode] = useState('');
   const [timer, setTimer] = useState(60);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,7 +60,6 @@ export default function AuthModal() {
       
       if (result.success) {
         setSentEmailAddress(formData.email.trim());
-        setIssuedOtpCode(result.otpCode || '');
         setError('');
         setStep('otp');
         setTimer(60);
@@ -100,7 +96,7 @@ export default function AuthModal() {
     const entered = otpCode.join('');
     
     if (entered.length < 6) {
-      setError('Please enter the complete 6-digit OTP code');
+      setError('Please enter the complete 6-digit OTP code sent to your email');
       return;
     }
 
@@ -112,7 +108,7 @@ export default function AuthModal() {
       const verification = verifyEmailOtp(sentEmailAddress || formData.email, entered);
 
       if (!verification.success) {
-        throw new Error(verification.error || '❌ Incorrect OTP code! Please enter the exact 6-digit code.');
+        throw new Error(verification.error || '❌ Incorrect OTP code! Please check your email inbox and enter the exact 6-digit code.');
       }
 
       // Save verified user profile & trigger cross-device cloud sync
@@ -153,7 +149,6 @@ export default function AuthModal() {
     try {
       const result = await sendEmailOtp(sentEmailAddress || formData.email, formData.name);
       if (result.success) {
-        setIssuedOtpCode(result.otpCode || '');
         setTimer(60);
         setOtpCode(['', '', '', '', '', '']);
       } else {
@@ -203,7 +198,7 @@ export default function AuthModal() {
           <p className="text-xs text-emerald-100/80 mt-1">
             {user 
               ? 'Your trip expenses and custom budget are safely cloud-synced.' 
-              : 'Enter your name and email to receive a 6-digit OTP code'}
+              : 'Enter your name and email to receive a 6-digit OTP code in your inbox'}
           </p>
         </div>
 
@@ -320,27 +315,14 @@ export default function AuthModal() {
                 <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-2 shadow-inner">
                   <Mail className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="font-bold text-slate-900 text-base">Enter 6-Digit Verification Code</h3>
+                <h3 className="font-bold text-slate-900 text-base">Check Your Email Inbox</h3>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  Sent to: <strong className="text-slate-900 font-bold block">{sentEmailAddress || formData.email}</strong>
+                  We sent a 6-digit OTP code to: <strong className="text-slate-900 font-bold block">{sentEmailAddress || formData.email}</strong>
+                </p>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  ✉️ Please check your email inbox and enter the 6-digit code below.
                 </p>
               </div>
-
-              {/* Instant Security Verification Card */}
-              {issuedOtpCode && (
-                <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-1.5 animate-fadeIn">
-                  <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider block flex items-center justify-center gap-1.5">
-                    <KeyRound className="w-3.5 h-3.5" />
-                    <span>Your Verification Passcode</span>
-                  </span>
-                  <div className="text-2xl font-black text-emerald-700 tracking-widest font-mono bg-white py-1.5 px-4 rounded-xl border border-emerald-300 inline-block shadow-xs">
-                    {issuedOtpCode}
-                  </div>
-                  <p className="text-[10px] text-emerald-600">
-                    Type this 6-digit code below to securely verify your account
-                  </p>
-                </div>
-              )}
 
               {/* 6 Digit inputs */}
               <div className="flex justify-center gap-2 my-3">
