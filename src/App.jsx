@@ -11,7 +11,7 @@ import ReportGenerator from './components/ReportGenerator';
 import TripTools from './components/TripTools';
 import CreatorCard from './components/CreatorCard';
 import WeatherWidget from './components/WeatherWidget';
-import GroupExpenseSplitter from './components/GroupExpenseSplitter';
+import WalletAndBudgetOptimizer from './components/WalletAndBudgetOptimizer';
 import FoodGuide from './components/FoodGuide';
 import AuthModal from './components/AuthModal';
 import AddExpenseModal from './components/AddExpenseModal';
@@ -26,7 +26,7 @@ import {
   Compass,
   ArrowUp,
   CloudSun,
-  Users,
+  Banknote,
   Utensils
 } from 'lucide-react';
 
@@ -71,7 +71,7 @@ export default function App() {
         <div className="transition-all duration-300">
           {activeTab === 'places' && <TouristPlaces />}
           {activeTab === 'tracker' && <ExpenseTracker />}
-          {activeTab === 'splitter' && <GroupExpenseSplitter />}
+          {activeTab === 'wallet' && <WalletAndBudgetOptimizer />}
           {activeTab === 'weather' && <WeatherWidget />}
           {activeTab === 'food' && <FoodGuide />}
           {activeTab === 'tools' && <TripTools />}
@@ -123,8 +123,8 @@ export default function App() {
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => { setActiveTab('splitter'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    👥 Group Bill Splitter & WhatsApp Share
+                  <button onClick={() => { setActiveTab('wallet'); scrollToTop(); }} className="hover:text-white transition-colors">
+                    💵 Cash vs UPI & Budget Reallocator
                   </button>
                 </li>
                 <li>

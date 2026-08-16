@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { 
   Compass, 
   Wallet, 
-  Users, 
+  Banknote, 
   Map, 
   Plus, 
   Sparkles,
@@ -17,7 +17,7 @@ export default function BottomNav() {
     { id: 'places', label: 'Places', icon: Compass },
     { id: 'tracker', label: 'Expenses', icon: Wallet },
     { id: 'add', label: 'Add ₹', icon: Plus, isAction: true },
-    { id: 'splitter', label: 'Split ₹', icon: Users },
+    { id: 'wallet', label: 'Cash & Save', icon: Banknote },
     { id: 'tools', label: 'Guide', icon: Layers },
   ];
 
