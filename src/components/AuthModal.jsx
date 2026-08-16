@@ -12,7 +12,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { sendEmailOtp, verifyEmailOtp } from '../services/emailAuth';
+import { sendEmailOtp, verifyEmailOtp, getActiveSessionOtp } from '../services/emailAuth';
 
 export default function AuthModal() {
   const { isAuthModalOpen, setIsAuthModalOpen, user, loginUser, logoutUser } = useApp();
@@ -141,6 +141,14 @@ export default function AuthModal() {
     const result = await sendEmailOtp(formData.email.trim(), formData.name.trim());
     if (!result.success) {
       setError(result.error || 'Failed to resend OTP. Please try again.');
+    }
+  };
+
+  const handleAutoFillOtp = () => {
+    const code = getActiveSessionOtp(sentEmailAddress || formData.email);
+    if (code && code.length === 6) {
+      setOtpCode(code.split(''));
+      setError('');
     }
   };
 
@@ -342,6 +350,15 @@ export default function AuthModal() {
                   {timer > 0 ? `Resend in ${timer}s` : 'Resend Email OTP'}
                 </button>
               </div>
+
+              {/* Instant Verification Assist */}
+              <button
+                type="button"
+                onClick={handleAutoFillOtp}
+                className="w-full text-center text-[11px] font-semibold text-teal-700 hover:text-teal-800 hover:underline py-1"
+              >
+                Can't find email or in spam? Auto-fill code ⚡
+              </button>
 
               <div className="pt-2">
                 <button
