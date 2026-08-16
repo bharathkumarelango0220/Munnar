@@ -8,7 +8,8 @@ import {
   X, 
   Send, 
   Zap, 
-  ArrowRight
+  ArrowRight,
+  Radio
 } from 'lucide-react';
 import { parseVoiceExpense, SAMPLE_VOICE_COMMANDS } from '../services/voiceAssistant';
 
@@ -25,61 +26,134 @@ export default function AIVoiceAssistantModal() {
   const [transcript, setTranscript] = useState('');
   const [inputText, setInputText] = useState('');
   const [parsedData, setParsedData] = useState(null);
+  const [audioLevel, setAudioLevel] = useState(1);
+  const [listeningSeconds, setListeningSeconds] = useState(0);
 
   const recognitionRef = useRef(null);
   const textInputRef = useRef(null);
+  const isListeningRef = useRef(false);
+  const mediaStreamRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const timerIntervalRef = useRef(null);
+
   const activeCategories = Object.values(categoryDefinitions || {});
 
-  // Initialize Speech Recognition on Mount
+  // Setup speech recognition instance
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       try {
         const recognition = new SpeechRecognition();
-        recognition.continuous = false;
+        recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = navigator.language || 'en-US';
 
         recognition.onstart = () => {
           setIsListening(true);
+          isListeningRef.current = true;
         };
 
         recognition.onresult = (event) => {
           let currentTranscript = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
+          for (let i = 0; i < event.results.length; i++) {
             currentTranscript += event.results[i][0].transcript;
           }
-          setTranscript(currentTranscript);
-          setInputText(currentTranscript);
-
-          if (event.results[0].isFinal) {
+          if (currentTranscript.trim()) {
+            setTranscript(currentTranscript);
+            setInputText(currentTranscript);
             handleProcessVoiceText(currentTranscript);
           }
         };
 
         recognition.onerror = (event) => {
-          console.log('Speech recognition completed/stopped:', event.error);
-          setIsListening(false);
+          console.log('Speech recognition notice:', event.error);
         };
 
         recognition.onend = () => {
-          setIsListening(false);
+          // If still marked as listening by user, auto restart
+          if (isListeningRef.current) {
+            try {
+              recognition.start();
+            } catch (e) {
+              console.log('Recognition restart wait');
+            }
+          } else {
+            setIsListening(false);
+          }
         };
 
         recognitionRef.current = recognition;
       } catch (e) {
-        console.log('Speech init fallback');
+        console.log('Speech API init error', e);
       }
     }
+
+    return () => {
+      stopListening();
+    };
   }, [categoryDefinitions]);
+
+  // Handle Listening Timer
+  useEffect(() => {
+    if (isListening) {
+      setListeningSeconds(0);
+      timerIntervalRef.current = setInterval(() => {
+        setListeningSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    }
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    };
+  }, [isListening]);
 
   if (!isVoiceAssistantOpen) return null;
 
-  // Start Voice Listening
-  const startListening = () => {
+  // Start Voice Listening with audio visualizer & mic stream
+  const startListening = async () => {
     setTranscript('');
     setParsedData(null);
+    setIsListening(true);
+    isListeningRef.current = true;
 
+    // 1. Request microphone stream for true audio activity
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaStreamRef.current = stream;
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          const audioCtx = new AudioContext();
+          audioContextRef.current = audioCtx;
+          const source = audioCtx.createMediaStreamSource(stream);
+          const analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 64;
+          source.connect(analyser);
+
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+          const updateAudioLevel = () => {
+            if (!isListeningRef.current) return;
+            analyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+              sum += dataArray[i];
+            }
+            const average = sum / dataArray.length;
+            const normalized = Math.min(Math.max(average / 15, 1), 3.5);
+            setAudioLevel(normalized);
+            animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
+          };
+          updateAudioLevel();
+        }
+      }
+    } catch (micErr) {
+      console.warn('Microphone stream notice:', micErr);
+    }
+
+    // 2. Start Speech Recognition
     if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
@@ -91,18 +165,37 @@ export default function AIVoiceAssistantModal() {
           }, 150);
         } catch (err) {}
       }
-    } else {
-      // Fallback: auto-focus input
-      textInputRef.current?.focus();
     }
   };
 
   // Stop Voice Listening
   const stopListening = () => {
+    isListeningRef.current = false;
+    setIsListening(false);
+    setAudioLevel(1);
+
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch (e) {}
     }
-    setIsListening(false);
+
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+    }
+
+    if (audioContextRef.current) {
+      try { audioContextRef.current.close(); } catch (e) {}
+      audioContextRef.current = null;
+    }
+
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+
+    // If there is text in input, auto process final result
+    if (inputText.trim()) {
+      handleProcessVoiceText(inputText);
+    }
   };
 
   // Parse Text via NLP Engine
@@ -160,11 +253,8 @@ export default function AIVoiceAssistantModal() {
   };
 
   const handleClose = () => {
-    if (recognitionRef.current && isListening) {
-      try { recognitionRef.current.stop(); } catch (e) {}
-    }
+    stopListening();
     setIsVoiceAssistantOpen(false);
-    setIsListening(false);
     setTranscript('');
     setInputText('');
     setParsedData(null);
@@ -188,7 +278,7 @@ export default function AIVoiceAssistantModal() {
                 AI Voice Expense Assistant
               </h3>
               <p className="text-[11px] text-emerald-300/80 font-medium">
-                Hands-Free Speech to Expense Logger
+                Continuous Speech to Expense Logger
               </p>
             </div>
           </div>
@@ -204,24 +294,38 @@ export default function AIVoiceAssistantModal() {
         {/* Modal Body */}
         <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-5">
 
-          {/* SECTION 1: MICROPHONE BUTTON & WAVE ANIMATION */}
+          {/* SECTION 1: DYNAMIC MICROPHONE WITH LIVE AUDIO WAVE VISUALIZER */}
           <div className="text-center py-2 space-y-3">
             
-            <div className="relative inline-block">
-              {/* Pulse rings when listening */}
+            <div className="relative inline-flex items-center justify-center">
+              
+              {/* Dynamic Sound Wave Rings */}
               {isListening && (
                 <>
-                  <div className="absolute inset-0 rounded-full bg-emerald-500/30 animate-ping"></div>
-                  <div className="absolute -inset-3 rounded-full bg-emerald-500/20 animate-pulse"></div>
+                  <div 
+                    className="absolute rounded-full bg-emerald-500/30 transition-transform duration-100 pointer-events-none"
+                    style={{
+                      width: `${80 * audioLevel}px`,
+                      height: `${80 * audioLevel}px`
+                    }}
+                  />
+                  <div 
+                    className="absolute rounded-full bg-emerald-500/20 transition-transform duration-150 pointer-events-none animate-ping"
+                    style={{
+                      width: `${100 * audioLevel}px`,
+                      height: `${100 * audioLevel}px`
+                    }}
+                  />
                 </>
               )}
 
+              {/* Main Mic Button */}
               <button
                 type="button"
                 onClick={isListening ? stopListening : startListening}
                 className={`relative z-10 w-20 h-20 sm:w-22 sm:h-22 rounded-full flex items-center justify-center text-white transition-all shadow-xl active:scale-95 ${
                   isListening
-                    ? 'bg-rose-600 shadow-rose-600/40 ring-4 ring-rose-300 animate-pulse'
+                    ? 'bg-rose-600 shadow-rose-600/40 ring-4 ring-rose-400/80 animate-pulse'
                     : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30 hover:scale-105'
                 }`}
               >
@@ -233,13 +337,28 @@ export default function AIVoiceAssistantModal() {
               </button>
             </div>
 
+            {/* Listening Status & Timer */}
             <div>
-              <span className="font-extrabold text-sm sm:text-base text-slate-900 block">
-                {isListening ? '🎙️ Listening... Speak naturally!' : 'Tap the Mic to Speak'}
-              </span>
-              <p className="text-xs text-slate-500 mt-0.5">
-                e.g. <em>"Spent 450 rupees for lunch at Saravana Bhavan with GPay"</em>
-              </p>
+              {isListening ? (
+                <div className="space-y-1.5 animate-fadeIn">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 font-extrabold text-xs">
+                    <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping" />
+                    <span>Listening... ({listeningSeconds}s)</span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Speak your expense phrase, then tap the red mic to finish!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-0.5">
+                  <span className="font-extrabold text-sm sm:text-base text-slate-900 block">
+                    Tap the Mic to Start Speaking
+                  </span>
+                  <p className="text-xs text-slate-500">
+                    e.g. <em>"Spent 450 rupees for lunch at Saravana Bhavan with GPay"</em>
+                  </p>
+                </div>
+              )}
             </div>
 
           </div>
@@ -256,7 +375,7 @@ export default function AIVoiceAssistantModal() {
                 value={inputText}
                 onChange={(e) => {
                   setInputText(e.target.value);
-                  if (e.target.value.trim().length > 3) {
+                  if (e.target.value.trim().length > 2) {
                     handleProcessVoiceText(e.target.value);
                   }
                 }}
