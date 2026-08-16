@@ -26,8 +26,8 @@ const TRAVEL_STYLES = [
   {
     id: 'budget',
     title: '🎒 Backpacker / Budget',
-    subtitle: 'Homestays, bike rides & local Kerala messes',
-    badge: 'Budget Friendly',
+    subtitle: 'Fill with Homestay & Local mess rates',
+    badge: 'Budget Template',
     badgeColor: 'bg-emerald-100 text-emerald-800',
     stayPerNight: 1000,
     foodPerDay: 400,
@@ -38,8 +38,8 @@ const TRAVEL_STYLES = [
   {
     id: 'comfort',
     title: '🚗 Comfort / Family',
-    subtitle: '3-Star hotels, private cab & family dining',
-    badge: 'Most Popular',
+    subtitle: 'Fill with 3-Star hotel & Cab rates',
+    badge: 'Family Template',
     badgeColor: 'bg-teal-100 text-teal-800',
     stayPerNight: 3000,
     foodPerDay: 900,
@@ -50,8 +50,8 @@ const TRAVEL_STYLES = [
   {
     id: 'luxury',
     title: '👑 Luxury / Premium',
-    subtitle: '5-Star hilltop resorts, 4x4 Jeeps & fine dining',
-    badge: 'VIP Experience',
+    subtitle: 'Fill with 5-Star resort & 4x4 Jeep rates',
+    badge: 'Luxury Template',
     badgeColor: 'bg-purple-100 text-purple-800',
     stayPerNight: 8000,
     foodPerDay: 2200,
@@ -62,27 +62,45 @@ const TRAVEL_STYLES = [
 ];
 
 export default function TripCostPredictor() {
-  const { saveTripCategories, setActiveTab } = useApp();
+  const { saveTripCategories, setActiveTab, isLoggedIn } = useApp();
 
-  const [selectedStyle, setSelectedStyle] = useState('comfort');
-  const [days, setDays] = useState(3);
-  const [travelers, setTravelers] = useState(2);
+  const getStorage = () => (isLoggedIn ? localStorage : sessionStorage);
 
-  // Active Category List (User can delete default ones or add new ones)
+  // Days & Travelers (starts 0 by default)
+  const [days, setDays] = useState(() => {
+    try {
+      const saved = getStorage().getItem('munnar_predictor_days_v3');
+      return saved !== null ? parseInt(saved) || 0 : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
+
+  const [travelers, setTravelers] = useState(() => {
+    try {
+      const saved = getStorage().getItem('munnar_predictor_travelers_v3');
+      return saved !== null ? parseInt(saved) || 0 : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
+
+  // Active Category List (All default rates start at 0)
   const [categoriesList, setCategoriesList] = useState(() => {
-    const saved = localStorage.getItem('munnar_predictor_active_cats_v2');
-    if (saved) {
-      try {
+    try {
+      const saved = getStorage().getItem('munnar_predictor_active_cats_v3');
+      if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch (e) {}
-    }
+      }
+    } catch (e) {}
+
     return [
-      { id: 'rooms', name: 'Rooms & Stays', rate: 3000, rateType: 'roomsNights', icon: 'Hotel', color: 'blue' },
-      { id: 'food', name: 'Food & Dining', rate: 900, rateType: 'perPersonPerDay', icon: 'UtensilsCrossed', color: 'amber' },
-      { id: 'bike', name: 'Travel, Fuel & Cabs', rate: 1500, rateType: 'perDay', icon: 'Car', color: 'emerald' },
-      { id: 'tickets', name: 'Tickets & Safari', rate: 600, rateType: 'perPersonPerDay', icon: 'Ticket', color: 'purple' },
-      { id: 'shopping', name: 'Spices & Shopping', rate: 1800, rateType: 'perPerson', icon: 'ShoppingBag', color: 'rose' }
+      { id: 'rooms', name: 'Rooms & Stays', rate: 0, rateType: 'roomsNights', icon: 'Hotel', color: 'blue' },
+      { id: 'food', name: 'Food & Dining', rate: 0, rateType: 'perPersonPerDay', icon: 'UtensilsCrossed', color: 'amber' },
+      { id: 'bike', name: 'Travel, Fuel & Cabs', rate: 0, rateType: 'perDay', icon: 'Car', color: 'emerald' },
+      { id: 'tickets', name: 'Tickets & Safari', rate: 0, rateType: 'perPersonPerDay', icon: 'Ticket', color: 'purple' },
+      { id: 'shopping', name: 'Spices & Shopping', rate: 0, rateType: 'perPerson', icon: 'ShoppingBag', color: 'rose' }
     ];
   });
 
@@ -91,20 +109,20 @@ export default function TripCostPredictor() {
   const [newCatRateType, setNewCatRateType] = useState('fixed');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
 
-  // Helper to sync state to AppContext & localStorage
+  // Sync to AppContext
   const syncToAppContext = (cats, currentDays, currentTravelers) => {
     const categoriesMap = {};
     const budgetsMap = {};
 
-    const roomCount = Math.ceil(currentTravelers / 2);
-    const nights = Math.max(1, currentDays - 1);
+    const roomCount = Math.ceil(currentTravelers / 2) || 0;
+    const nights = Math.max(0, currentDays > 1 ? currentDays - 1 : currentDays);
 
     cats.forEach((item) => {
       let totalCost = item.rate || 0;
-      if (item.rateType === 'roomsNights') totalCost = (item.rate || 0) * nights * roomCount;
-      if (item.rateType === 'perPersonPerDay') totalCost = (item.rate || 0) * currentDays * currentTravelers;
-      if (item.rateType === 'perDay') totalCost = (item.rate || 0) * currentDays;
-      if (item.rateType === 'perPerson') totalCost = (item.rate || 0) * currentTravelers;
+      if (item.rateType === 'roomsNights') totalCost = (item.rate || 0) * (nights || 1) * (roomCount || 1);
+      if (item.rateType === 'perPersonPerDay') totalCost = (item.rate || 0) * (currentDays || 1) * (currentTravelers || 1);
+      if (item.rateType === 'perDay') totalCost = (item.rate || 0) * (currentDays || 1);
+      if (item.rateType === 'perPerson') totalCost = (item.rate || 0) * (currentTravelers || 1);
 
       categoriesMap[item.id] = {
         id: item.id,
@@ -123,14 +141,16 @@ export default function TripCostPredictor() {
     saveTripCategories(categoriesMap, budgetsMap);
   };
 
-  // Persist category list
+  // Persist category list & stepper values
   useEffect(() => {
-    localStorage.setItem('munnar_predictor_active_cats_v2', JSON.stringify(categoriesList));
-  }, [categoriesList]);
+    const storage = getStorage();
+    storage.setItem('munnar_predictor_active_cats_v3', JSON.stringify(categoriesList));
+    storage.setItem('munnar_predictor_days_v3', days.toString());
+    storage.setItem('munnar_predictor_travelers_v3', travelers.toString());
+  }, [categoriesList, days, travelers, isLoggedIn]);
 
   // Handle travel style preset selection
   const handleSelectStyle = (style) => {
-    setSelectedStyle(style.id);
     const updated = categoriesList.map((cat) => {
       if (cat.id === 'rooms') return { ...cat, rate: style.stayPerNight };
       if (cat.id === 'food') return { ...cat, rate: style.foodPerDay };
@@ -139,8 +159,23 @@ export default function TripCostPredictor() {
       if (cat.id === 'shopping') return { ...cat, rate: style.shoppingPerPerson };
       return cat;
     });
+
+    const activeDays = days === 0 ? 3 : days;
+    const activeTravelers = travelers === 0 ? 2 : travelers;
+    setDays(activeDays);
+    setTravelers(activeTravelers);
+
     setCategoriesList(updated);
-    syncToAppContext(updated, days, travelers);
+    syncToAppContext(updated, activeDays, activeTravelers);
+  };
+
+  // Reset all rates to 0
+  const handleResetToZero = () => {
+    const resetList = categoriesList.map((cat) => ({ ...cat, rate: 0 }));
+    setDays(0);
+    setTravelers(0);
+    setCategoriesList(resetList);
+    syncToAppContext(resetList, 0, 0);
   };
 
   // Add Custom Category
@@ -148,7 +183,6 @@ export default function TripCostPredictor() {
     e.preventDefault();
     if (!newCatName.trim()) return;
     const rateNum = parseFloat(newCatRate) || 0;
-    if (rateNum <= 0) return;
 
     const newId = `cat_${Date.now()}`;
     const newCat = {
@@ -174,7 +208,7 @@ export default function TripCostPredictor() {
     });
   };
 
-  // Delete ANY category (immediately updates Expense Tracker as well!)
+  // Delete category
   const handleDeleteCategory = (id) => {
     if (categoriesList.length <= 1) {
       alert('You must keep at least 1 expense category in your trip.');
@@ -197,29 +231,30 @@ export default function TripCostPredictor() {
     syncToAppContext(updated, days, travelers);
   };
 
-  // Steppers handlers with real-time sync
+  // Stepper handlers
   const handleDaysChange = (newDays) => {
-    const val = Math.max(1, newDays);
+    const val = Math.max(0, newDays);
     setDays(val);
     syncToAppContext(categoriesList, val, travelers);
   };
 
   const handleTravelersChange = (newTravelers) => {
-    const val = Math.max(1, newTravelers);
+    const val = Math.max(0, newTravelers);
     setTravelers(val);
     syncToAppContext(categoriesList, days, val);
   };
 
   // Calculations
-  const roomCount = Math.ceil(travelers / 2);
-  const nights = Math.max(1, days - 1);
+  const roomCount = Math.ceil(travelers / 2) || 0;
+  const nights = Math.max(0, days > 1 ? days - 1 : days);
 
   const calculateCategoryTotal = (cat) => {
     const r = cat.rate || 0;
-    if (cat.rateType === 'roomsNights') return r * nights * roomCount;
-    if (cat.rateType === 'perPersonPerDay') return r * days * travelers;
-    if (cat.rateType === 'perDay') return r * days;
-    if (cat.rateType === 'perPerson') return r * travelers;
+    if (r === 0) return 0;
+    if (cat.rateType === 'roomsNights') return r * (nights || 1) * (roomCount || 1);
+    if (cat.rateType === 'perPersonPerDay') return r * (days || 1) * (travelers || 1);
+    if (cat.rateType === 'perDay') return r * (days || 1);
+    if (cat.rateType === 'perPerson') return r * (travelers || 1);
     return r;
   };
 
@@ -229,8 +264,8 @@ export default function TripCostPredictor() {
   }));
 
   const totalEstimatedCost = calculatedItems.reduce((sum, item) => sum + item.totalCost, 0);
-  const costPerPerson = Math.round(totalEstimatedCost / (travelers || 1));
-  const costPerDay = Math.round(totalEstimatedCost / (days || 1));
+  const costPerPerson = travelers > 0 ? Math.round(totalEstimatedCost / travelers) : 0;
+  const costPerDay = days > 0 ? Math.round(totalEstimatedCost / days) : 0;
 
   // Save to Expense Tracker & Redirect
   const handleSaveAndGoToTracker = () => {
@@ -252,58 +287,58 @@ export default function TripCostPredictor() {
             All-in-One Trip Cost Predictor 🧮💰
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Deleting or adding categories here instantly syncs with your Expense Tracker and Reports.
+            Every value starts at 0. Enter your custom amounts manually, or pick a template to quick-fill!
           </p>
         </div>
 
-        <button
-          onClick={handleSaveAndGoToTracker}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 active:scale-95 transition-all self-start sm:self-auto"
-        >
-          <Sparkles className="w-4 h-4 stroke-[2.5]" />
-          <span>Save & Go to Expense Tracker 🚀</span>
-        </button>
-      </div>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={handleResetToZero}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition-all shadow-xs"
+            title="Reset all values to 0"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset to 0</span>
+          </button>
 
-      {/* STEP 1: Select Travel Style */}
-      <div className="space-y-3">
-        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-          1. Select Travel Style Preset
-        </label>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-          {TRAVEL_STYLES.map((style) => {
-            const isSelected = selectedStyle === style.id;
-            return (
-              <button
-                key={style.id}
-                type="button"
-                onClick={() => handleSelectStyle(style)}
-                className={`p-4 sm:p-5 rounded-3xl border text-left transition-all relative ${
-                  isSelected 
-                    ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20 shadow-md' 
-                    : 'border-slate-200 hover:border-slate-300 bg-white shadow-soft'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-extrabold text-sm sm:text-base text-slate-900">{style.title}</span>
-                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${style.badgeColor}`}>
-                    {style.badge}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500">{style.subtitle}</p>
-
-                <div className="mt-3 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs text-slate-700 font-semibold">
-                  <span>~₹{style.stayPerNight}/night</span>
-                  <span>~₹{style.foodPerDay}/day food</span>
-                </div>
-              </button>
-            );
-          })}
+          <button
+            onClick={handleSaveAndGoToTracker}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 active:scale-95 transition-all"
+          >
+            <Sparkles className="w-4 h-4 stroke-[2.5]" />
+            <span>Save & Go to Expense Tracker 🚀</span>
+          </button>
         </div>
       </div>
 
-      {/* STEP 2: Duration & Travelers Steppers */}
+      {/* Optional Templates */}
+      <div className="space-y-3">
+        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+          Quick Fill Templates (Optional)
+        </label>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          {TRAVEL_STYLES.map((style) => (
+            <button
+              key={style.id}
+              type="button"
+              onClick={() => handleSelectStyle(style)}
+              className="p-4 rounded-3xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 bg-white text-left transition-all shadow-soft group"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-extrabold text-sm text-slate-900 group-hover:text-emerald-800">{style.title}</span>
+                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${style.badgeColor}`}>
+                  {style.badge}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">{style.subtitle}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* STEP 1: Duration & Travelers Steppers */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         
         {/* Days Stepper */}
@@ -328,9 +363,10 @@ export default function TripCostPredictor() {
             </button>
             <input
               type="number"
-              value={days}
-              onChange={(e) => handleDaysChange(parseInt(e.target.value) || 1)}
-              min="1"
+              value={days === 0 ? '' : days}
+              placeholder="0"
+              onChange={(e) => handleDaysChange(parseInt(e.target.value) || 0)}
+              min="0"
               className="w-14 h-10 px-1 rounded-xl border border-slate-300 text-center font-black text-sm text-slate-900 focus:outline-none focus:border-emerald-500 bg-white"
             />
             <button
@@ -366,9 +402,10 @@ export default function TripCostPredictor() {
             </button>
             <input
               type="number"
-              value={travelers}
-              onChange={(e) => handleTravelersChange(parseInt(e.target.value) || 1)}
-              min="1"
+              value={travelers === 0 ? '' : travelers}
+              placeholder="0"
+              onChange={(e) => handleTravelersChange(parseInt(e.target.value) || 0)}
+              min="0"
               className="w-14 h-10 px-1 rounded-xl border border-slate-300 text-center font-black text-sm text-slate-900 focus:outline-none focus:border-emerald-500 bg-white"
             />
             <button
@@ -392,9 +429,9 @@ export default function TripCostPredictor() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
-                2. Customize & Manage Categories ({categoriesList.length})
+                2. Set Amounts for Your Categories ({categoriesList.length})
               </h3>
-              <p className="text-[11px] text-slate-400">Click 🗑️ to delete any category (instantly updates Expenses Tracker)</p>
+              <p className="text-[11px] text-slate-400">Type your amounts manually (all start at 0), or delete categories</p>
             </div>
             
             <button
@@ -429,8 +466,7 @@ export default function TripCostPredictor() {
                   placeholder="Rate (₹)"
                   value={newCatRate}
                   onChange={(e) => setNewCatRate(e.target.value)}
-                  required
-                  min="1"
+                  min="0"
                   className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-black focus:outline-none focus:border-emerald-500 bg-white"
                 />
 
@@ -464,14 +500,14 @@ export default function TripCostPredictor() {
             </form>
           )}
 
-          {/* Categories List with Instant Deletion & Edit */}
+          {/* Categories List with 0 Default Inputs */}
           <div className="space-y-3 divide-y divide-slate-100">
             {calculatedItems.map((cat) => {
               let subtitle = 'Fixed Flat Budget';
-              if (cat.rateType === 'roomsNights') subtitle = `${roomCount} rooms × ${nights} nights`;
-              if (cat.rateType === 'perPersonPerDay') subtitle = `₹${cat.rate} × ${days} days × ${travelers} people`;
-              if (cat.rateType === 'perDay') subtitle = `₹${cat.rate} × ${days} days`;
-              if (cat.rateType === 'perPerson') subtitle = `₹${cat.rate} × ${travelers} people`;
+              if (cat.rateType === 'roomsNights') subtitle = `${roomCount || 0} rooms × ${nights || 0} nights`;
+              if (cat.rateType === 'perPersonPerDay') subtitle = `₹${cat.rate} × ${days || 0} days × ${travelers || 0} people`;
+              if (cat.rateType === 'perDay') subtitle = `₹${cat.rate} × ${days || 0} days`;
+              if (cat.rateType === 'perPerson') subtitle = `₹${cat.rate} × ${travelers || 0} people`;
 
               return (
                 <div key={cat.id} className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -496,13 +532,17 @@ export default function TripCostPredictor() {
                   </div>
 
                   <div className="flex items-center gap-3 self-end sm:self-auto">
-                    <input
-                      type="number"
-                      value={cat.rate}
-                      onChange={(e) => handleUpdateCategoryRate(cat.id, e.target.value)}
-                      className="w-24 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-right focus:outline-none focus:border-emerald-500 bg-white"
-                      title="Rate value"
-                    />
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">₹</span>
+                      <input
+                        type="number"
+                        value={cat.rate === 0 ? '' : cat.rate}
+                        placeholder="0"
+                        onChange={(e) => handleUpdateCategoryRate(cat.id, e.target.value)}
+                        className="w-28 pl-6 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-right focus:outline-none focus:border-emerald-500 bg-white"
+                        title="Enter category amount"
+                      />
+                    </div>
                     <span className="text-sm font-black text-slate-900 w-24 text-right">
                       ₹{cat.totalCost.toLocaleString('en-IN')}
                     </span>
@@ -521,7 +561,7 @@ export default function TripCostPredictor() {
             <div className="relative z-10 space-y-5">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-                  Grand Total Trip Estimate
+                  Total Predicted Trip Budget
                 </span>
                 <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white/10 text-emerald-300 font-bold border border-white/10">
                   {days}D / {travelers}P
@@ -533,7 +573,9 @@ export default function TripCostPredictor() {
                   ₹{totalEstimatedCost.toLocaleString('en-IN')}
                 </p>
                 <p className="text-xs text-slate-300 mt-1 font-medium">
-                  Total predicted trip budget for {travelers} {travelers === 1 ? 'person' : 'people'} ({categoriesList.length} Categories)
+                  {totalEstimatedCost === 0 
+                    ? 'Enter amounts above to calculate your total'
+                    : `Calculated for ${travelers} people across ${categoriesList.length} categories`}
                 </p>
               </div>
 

@@ -16,6 +16,8 @@ import {
   Sparkles
 } from 'lucide-react';
 
+import { useApp } from '../context/AppContext';
+
 const SINGLE_VEHICLE_PRESETS = [
   { id: 'bike', label: 'Motorcycle / Bike', icon: Bike, defaultMileage: 32, fuelType: 'petrol' },
   { id: 'scooter', label: 'Scooter / Activa', icon: Bike, defaultMileage: 40, fuelType: 'petrol' },
@@ -25,24 +27,68 @@ const SINGLE_VEHICLE_PRESETS = [
 ];
 
 export default function FuelCalculator() {
+  const { isLoggedIn } = useApp();
+  const getStorage = () => (isLoggedIn ? localStorage : sessionStorage);
+
   const [calcMode, setCalcMode] = useState('single'); // 'single' or 'multi'
 
   // Single Vehicle State
   const [selectedVehicle, setSelectedVehicle] = useState('bike');
-  const [distanceKm, setDistanceKm] = useState('');
-  const [customMileage, setCustomMileage] = useState('32');
-  const [fuelPrice, setFuelPrice] = useState('105');
+  const [distanceKm, setDistanceKm] = useState(() => {
+    try {
+      return getStorage().getItem('munnar_fuel_dist_v3') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+  const [customMileage, setCustomMileage] = useState(() => {
+    try {
+      return getStorage().getItem('munnar_fuel_mileage_v3') || '32';
+    } catch (e) {
+      return '32';
+    }
+  });
+  const [fuelPrice, setFuelPrice] = useState(() => {
+    try {
+      return getStorage().getItem('munnar_fuel_price_v3') || '105';
+    } catch (e) {
+      return '105';
+    }
+  });
   const [isGhatRoadMode, setIsGhatRoadMode] = useState(true); // 18% mountain incline adjustment
-  const [passengerCount, setPassengerCount] = useState(2);
+  const [passengerCount, setPassengerCount] = useState(() => {
+    try {
+      const saved = getStorage().getItem('munnar_fuel_pass_v3');
+      return saved !== null ? parseInt(saved) || 0 : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
 
   // Multi-Bike Fleet State
-  const [multiDistanceKm, setMultiDistanceKm] = useState('');
+  const [multiDistanceKm, setMultiDistanceKm] = useState(() => {
+    try {
+      return getStorage().getItem('munnar_fuel_multi_dist_v3') || '';
+    } catch (e) {
+      return '';
+    }
+  });
   const [multiFuelPrice, setMultiFuelPrice] = useState('105');
-  const [multiPassengerCount, setMultiPassengerCount] = useState(2);
+  const [multiPassengerCount, setMultiPassengerCount] = useState(0);
   const [bikes, setBikes] = useState([
     { id: 'b1', name: 'Bike 1', model: 'Royal Enfield Classic 350', mileage: '30' },
     { id: 'b2', name: 'Bike 2', model: 'KTM Duke 390', mileage: '25' }
   ]);
+
+  // Persist single fuel inputs
+  React.useEffect(() => {
+    const storage = getStorage();
+    storage.setItem('munnar_fuel_dist_v3', distanceKm);
+    storage.setItem('munnar_fuel_mileage_v3', customMileage);
+    storage.setItem('munnar_fuel_price_v3', fuelPrice);
+    storage.setItem('munnar_fuel_pass_v3', passengerCount.toString());
+    storage.setItem('munnar_fuel_multi_dist_v3', multiDistanceKm);
+  }, [distanceKm, customMileage, fuelPrice, passengerCount, multiDistanceKm, isLoggedIn]);
 
   // Single Vehicle Calculation
   const singleDist = parseFloat(distanceKm) || 0;
