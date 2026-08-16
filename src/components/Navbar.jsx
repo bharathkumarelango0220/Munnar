@@ -82,7 +82,7 @@ export default function Navbar() {
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              💵 Cash & Budget
+              📱 GPay vs Cash
             </button>
             <button
               onClick={() => setActiveTab('weather')}

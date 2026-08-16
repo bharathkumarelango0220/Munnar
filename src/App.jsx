@@ -11,7 +11,7 @@ import ReportGenerator from './components/ReportGenerator';
 import TripTools from './components/TripTools';
 import CreatorCard from './components/CreatorCard';
 import WeatherWidget from './components/WeatherWidget';
-import WalletAndBudgetOptimizer from './components/WalletAndBudgetOptimizer';
+import CashAndGpayTracker from './components/CashAndGpayTracker';
 import FoodGuide from './components/FoodGuide';
 import AuthModal from './components/AuthModal';
 import AddExpenseModal from './components/AddExpenseModal';
@@ -71,7 +71,7 @@ export default function App() {
         <div className="transition-all duration-300">
           {activeTab === 'places' && <TouristPlaces />}
           {activeTab === 'tracker' && <ExpenseTracker />}
-          {activeTab === 'wallet' && <WalletAndBudgetOptimizer />}
+          {activeTab === 'wallet' && <CashAndGpayTracker />}
           {activeTab === 'weather' && <WeatherWidget />}
           {activeTab === 'food' && <FoodGuide />}
           {activeTab === 'tools' && <TripTools />}
