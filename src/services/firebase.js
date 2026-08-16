@@ -34,6 +34,7 @@ const googleProvider = new GoogleAuthProvider();
 
 /**
  * 100% Free Firebase Official Transactional Email Dispatch (Zero Spam, Google MX Servers)
+ * Uses native allowlisted domain fallbacks to eliminate (auth/unauthorized-continue-uri)
  */
 export async function sendFirebaseEmailAuth(email) {
   if (!email || !email.includes('@')) {
@@ -41,30 +42,41 @@ export async function sendFirebaseEmailAuth(email) {
   }
 
   const cleanEmail = email.toLowerCase().trim();
-  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://munnartools.vercel.app';
   
-  const actionCodeSettings = {
-    url: `${currentOrigin}?email_auth=${encodeURIComponent(cleanEmail)}`,
-    handleCodeInApp: true
-  };
+  // Allowed domain URI candidate cascade
+  const tryOrigins = [
+    `https://triptools-a4440.firebaseapp.com?email_auth=${encodeURIComponent(cleanEmail)}`,
+    `https://munnartools.vercel.app?email_auth=${encodeURIComponent(cleanEmail)}`,
+    typeof window !== 'undefined' && window.location.origin ? `${window.location.origin}?email_auth=${encodeURIComponent(cleanEmail)}` : null
+  ].filter(Boolean);
 
-  try {
-    await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
+  let lastError = null;
+
+  for (const testUrl of tryOrigins) {
     try {
-      localStorage.setItem('emailForSignIn', cleanEmail);
-    } catch (e) {}
-    console.log(`Firebase official email dispatched to ${cleanEmail}`);
-    return {
-      success: true,
-      message: 'Official Firebase verification email sent!'
-    };
-  } catch (error) {
-    console.warn('Firebase Email Link dispatch notice:', error?.message);
-    return {
-      success: false,
-      error: error?.message || 'Firebase email dispatch error'
-    };
+      const actionCodeSettings = {
+        url: testUrl,
+        handleCodeInApp: true
+      };
+      await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
+      try {
+        localStorage.setItem('emailForSignIn', cleanEmail);
+      } catch (e) {}
+      console.log(`Firebase official email dispatched to ${cleanEmail} via ${testUrl}`);
+      return {
+        success: true,
+        message: 'Official Firebase verification email sent!'
+      };
+    } catch (error) {
+      lastError = error;
+      console.warn(`Firebase trial with ${testUrl} notice:`, error?.message);
+    }
   }
+
+  return {
+    success: false,
+    error: lastError?.message || 'Firebase email dispatch error'
+  };
 }
 
 /**
