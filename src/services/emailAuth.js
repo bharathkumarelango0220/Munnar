@@ -19,6 +19,7 @@ const EMAILJS_SERVICE_CANDIDATES = [
 
 /**
  * Dispatches 6-digit email verification OTP directly via EmailJS to the recipient's inbox
+ * with maximum inbox deliverability formatting (anti-spam optimization)
  */
 export async function sendEmailOtp(email, fullName = 'Traveler') {
   if (!email || !email.includes('@')) {
@@ -43,11 +44,24 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       attempts: 0
     });
 
+    const emailSubject = `${otpCode} is your TripTools verification code`;
+    const emailBody = `Hello ${recipientName},
+
+Use this one-time verification code to sign in to your TripTools account:
+
+[ ${otpCode} ]
+
+This code is valid for 15 minutes. If you did not request this verification, you can safely ignore this email.
+
+Best regards,
+TripTools Team
+https://munnartools.vercel.app`;
+
     const templateParams = {
       to_email: cleanEmail,
       email: cleanEmail,
       user_email: cleanEmail,
-      reply_to: cleanEmail,
+      reply_to: 'bharathkumarelango02@gmail.com',
       to: cleanEmail,
       dest_email: cleanEmail,
       recipient: cleanEmail,
@@ -58,13 +72,15 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       to_name: recipientName,
       name: recipientName,
       user_name: recipientName,
-      from_name: 'TripTools Security',
+      from_name: 'TripTools',
       otp_code: otpCode,
       otp: otpCode,
       passcode: otpCode,
       code: otpCode,
-      subject: `Your TripTools Login OTP: ${otpCode}`,
-      message: `Hello ${recipientName}! Your 6-digit TripTools verification OTP code is: ${otpCode}. Valid for 15 minutes.`
+      subject: emailSubject,
+      message: emailBody,
+      body: emailBody,
+      content: emailBody
     };
 
     // Initialize EmailJS
