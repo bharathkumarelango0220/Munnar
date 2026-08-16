@@ -7,15 +7,8 @@ import {
   CheckCircle2, 
   X, 
   Send, 
-  AlertCircle, 
-  Tag, 
-  Calendar, 
-  Clock, 
-  CreditCard, 
   Zap, 
-  ArrowRight,
-  Info,
-  RotateCcw
+  ArrowRight
 } from 'lucide-react';
 import { parseVoiceExpense, SAMPLE_VOICE_COMMANDS } from '../services/voiceAssistant';
 
@@ -32,13 +25,12 @@ export default function AIVoiceAssistantModal() {
   const [transcript, setTranscript] = useState('');
   const [inputText, setInputText] = useState('');
   const [parsedData, setParsedData] = useState(null);
-  const [infoMessage, setInfoMessage] = useState('');
-  const [speechSupported, setSpeechSupported] = useState(true);
 
   const recognitionRef = useRef(null);
+  const textInputRef = useRef(null);
   const activeCategories = Object.values(categoryDefinitions || {});
 
-  // Initialize Speech Recognition on Mount with network error fallbacks
+  // Initialize Speech Recognition on Mount
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -50,7 +42,6 @@ export default function AIVoiceAssistantModal() {
 
         recognition.onstart = () => {
           setIsListening(true);
-          setInfoMessage('');
         };
 
         recognition.onresult = (event) => {
@@ -67,12 +58,7 @@ export default function AIVoiceAssistantModal() {
         };
 
         recognition.onerror = (event) => {
-          console.warn('Speech recognition notice:', event.error);
-          if (event.error === 'not-allowed') {
-            setInfoMessage('Microphone permission was denied. You can type your voice phrase or tap any sample below!');
-          } else if (event.error === 'network') {
-            setInfoMessage('Browser speech service offline. You can type or tap any 1-click test phrase to parse instantly!');
-          }
+          console.log('Speech recognition completed/stopped:', event.error);
           setIsListening(false);
         };
 
@@ -82,10 +68,8 @@ export default function AIVoiceAssistantModal() {
 
         recognitionRef.current = recognition;
       } catch (e) {
-        setSpeechSupported(false);
+        console.log('Speech init fallback');
       }
-    } else {
-      setSpeechSupported(false);
     }
   }, [categoryDefinitions]);
 
@@ -93,7 +77,6 @@ export default function AIVoiceAssistantModal() {
 
   // Start Voice Listening
   const startListening = () => {
-    setInfoMessage('');
     setTranscript('');
     setParsedData(null);
 
@@ -106,12 +89,11 @@ export default function AIVoiceAssistantModal() {
           setTimeout(() => {
             try { recognitionRef.current.start(); } catch (err) {}
           }, 150);
-        } catch (err) {
-          setInfoMessage('Please type your expense phrase or select a demo sample below.');
-        }
+        } catch (err) {}
       }
     } else {
-      setInfoMessage('Speech recognition not available in this browser. Please type or select a sample phrase below.');
+      // Fallback: auto-focus input
+      textInputRef.current?.focus();
     }
   };
 
@@ -137,7 +119,6 @@ export default function AIVoiceAssistantModal() {
         time: result.time,
         note: result.notes
       });
-      setInfoMessage('');
     }
   };
 
@@ -161,7 +142,6 @@ export default function AIVoiceAssistantModal() {
   const handleConfirmAndSave = (e) => {
     e.preventDefault();
     if (!parsedData || !parsedData.amount || Number(parsedData.amount) <= 0) {
-      setInfoMessage('Please provide a valid expense amount.');
       return;
     }
 
@@ -188,7 +168,6 @@ export default function AIVoiceAssistantModal() {
     setTranscript('');
     setInputText('');
     setParsedData(null);
-    setInfoMessage('');
   };
 
   return (
@@ -224,13 +203,6 @@ export default function AIVoiceAssistantModal() {
 
         {/* Modal Body */}
         <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-5">
-          
-          {infoMessage && (
-            <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2 animate-fadeIn">
-              <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
-              <span>{infoMessage}</span>
-            </div>
-          )}
 
           {/* SECTION 1: MICROPHONE BUTTON & WAVE ANIMATION */}
           <div className="text-center py-2 space-y-3">
@@ -279,6 +251,7 @@ export default function AIVoiceAssistantModal() {
             </label>
             <div className="relative flex items-center">
               <input
+                ref={textInputRef}
                 type="text"
                 value={inputText}
                 onChange={(e) => {
