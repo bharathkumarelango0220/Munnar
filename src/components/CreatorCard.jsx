@@ -24,7 +24,6 @@ import {
   Database,
   Palette,
   Terminal,
-  Github,
   Calendar,
   Briefcase
 } from 'lucide-react';
@@ -118,7 +117,7 @@ export default function CreatorCard() {
           </div>
 
           {/* Contact Direct Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             {/* Phone / WhatsApp */}
             <div className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between space-y-3 hover:border-emerald-500/40 transition-colors">
@@ -170,36 +169,7 @@ export default function CreatorCard() {
                 >
                   bharathkumarelango02@gmail.com
                 </a>
-                <span className="text-[11px] text-slate-400">Also: bk264165@gmail.com</span>
-              </div>
-            </div>
-
-            {/* GitHub & Portfolio */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between space-y-3 hover:border-emerald-500/40 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold">
-                  <Github className="w-4 h-4" />
-                  <span>GitHub Profile</span>
-                </div>
-                <a
-                  href="https://github.com/bharathkumarelango0220"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              </div>
-              <div>
-                <a
-                  href="https://github.com/bharathkumarelango0220"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs sm:text-sm font-black text-emerald-300 hover:underline block truncate"
-                >
-                  github.com/bharathkumarelango0220
-                </a>
-                <span className="text-[11px] text-slate-400">Open-source code & projects</span>
+                <span className="text-[11px] text-slate-400">Direct Developer Inquiries</span>
               </div>
             </div>
 

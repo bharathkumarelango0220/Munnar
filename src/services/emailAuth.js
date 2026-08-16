@@ -7,8 +7,6 @@ const activeOtpSessions = new Map();
 const EMAILJS_PUBLIC_KEY = '2xnO9HgXktDoEkhng';
 const EMAILJS_TEMPLATE_ID = 'template_a8m7w6t';
 const EMAILJS_SERVICE_CANDIDATES = [
-  'bk264165@gmail.com',
-  'service_bk264165@gmail.com',
   'gmail',
   'service_gmail',
   'default_service',
