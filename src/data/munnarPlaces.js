@@ -14,7 +14,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Endangered Nilgiri Tahr", "Highest Peak Anamudi view", "Eco-Safari Buses", "Orchidarium & Tea Cafe"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Eravikulam+National+Park+Munnar+Kerala",
     coordinates: { lat: 10.1518, lng: 77.0644 },
-    imageUrl: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Nilgiri_Tahr_at_Eravikulam_National_Park.jpg",
     tip: "Book tickets online 2-3 days in advance on the forest department website to avoid standing in long ticket counter queues."
   },
   {
@@ -32,7 +32,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Highest Elevation Tea Estate in World", "Epic Sunrise Cloud Bed", "Rugged Off-Road 4x4 Jeep Ride", "Orthodox Tea Tasting"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Kolukkumalai+Tea+Estate+Sunrise+Munnar",
     coordinates: { lat: 10.0827, lng: 77.2286 },
-    imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Kolukkumalai%20sunrise%20view.jpg",
     tip: "Hire an approved 4x4 Jeep from Suryanelli base camp at 4:30 AM sharp to catch the legendary cloud-bed sunrise."
   },
   {
@@ -50,7 +50,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Speed Boating & Family Boats", "Elephant Sighting Zone", "Scenic Tea Valley Views", "Souvenir & Spice Stalls"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Mattupetty+Dam+Munnar+Kerala",
     coordinates: { lat: 10.1065, lng: 77.1245 },
-    imageUrl: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Mattupetty%20Dam%20Munnar%20Kerala.JPG",
     tip: "Take the 15-minute speed boat ride for thrilling mountain turns and watch for wild elephants grazing near the water."
   },
   {
@@ -68,7 +68,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Historic Ropeway Terminal Ruins", "Borders Kerala & Tamil Nadu", "Valley Cloud Inversions", "Fresh Forest Honey & Tea Stalls"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Top+Station+Munnar+Kerala",
     coordinates: { lat: 10.1247, lng: 77.2443 },
-    imageUrl: "https://images.unsplash.com/photo-1609342122563-a43ac8917a3a?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Munnar%20Top%20station.jpg",
     tip: "Drive via Mattupetty and Kundala Lake route early in the morning when the roads are mist-draped and quiet."
   },
   {
@@ -86,7 +86,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Live Tea Manufacturing Demo", "Historical 1905 Tea Roller & Artifacts", "Tea Tasting Sessions", "Factory Outlet for Spices & Tea"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Tea+Museum+KDHP+Nallathanni+Munnar",
     coordinates: { lat: 10.0898, lng: 77.0573 },
-    imageUrl: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=800&q=80",
     tip: "Do not miss the 30-minute documentary film screening that showcases the resilient history of tea planters in Munnar."
   },
   {
@@ -104,7 +104,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Symmetrical Terraced Tea Slopes", "Traditional Tea Plucker Costume Rentals", "Fast Roadside Photography", "Cardamom & Spices Stalls"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Photo+Point+Munnar+Kerala",
     coordinates: { lat: 10.0984, lng: 77.0863 },
-    imageUrl: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=80",
     tip: "Stop here for 15-20 minutes on your way to Mattupetty Dam to capture iconic Munnar tea garden photos."
   },
   {
@@ -122,7 +122,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Asia's First Arch Dam", "Kashmiri Style Shikara Boats", "Cherry Blossom Trees (Seasonal)", "Lakeside Horse Riding"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Kundala+Lake+Arch+Dam+Munnar",
     coordinates: { lat: 10.1332, lng: 77.1952 },
-    imageUrl: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Kundala%20Dam%20and%20Lake.JPG",
     tip: "Rent a Shikara boat in the morning mist for great couple or group travel photographs."
   },
   {
@@ -140,7 +140,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Picturesque Waterfall Cascades", "Wooden Bridge Viewpoint", "Hill Trekking Trails", "Fresh Tea Stalls nearby"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Attukal+Waterfalls+Munnar+Kerala",
     coordinates: { lat: 10.0549, lng: 77.0428 },
-    imageUrl: "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Attukad%20Waterfalls1.jpg",
     tip: "The road to Attukal is narrow and winding—ideal for bike riders, but drive carefully during rains."
   },
   {
@@ -158,7 +158,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Mesmerizing Sunset View", "Panoramic View of Tea & Cardamom", "Muthirappuzha River Gorge", "Roadside Kerala Chai & Banana Fritters"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Pothamedu+View+Point+Munnar+Kerala",
     coordinates: { lat: 10.0594, lng: 77.0601 },
-    imageUrl: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80",
     tip: "Grab hot Kerala Parippu Vada or Banana Fritters (Pazham Pori) with piping hot ginger cardamom tea at the cliffside stalls."
   },
   {
@@ -176,7 +176,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Natural Freshwater Rock Pool", "Safe Bathing & Dipping Area", "Scenic Drive through Sandalwood Forests", "Forest Department Eco-Cafeteria"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Lakkam+Waterfalls+Munnar+Marayoor",
     coordinates: { lat: 10.2312, lng: 77.1354 },
-    imageUrl: "https://images.unsplash.com/photo-1546853020-ca4909aef454?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Lakkam%20Waterfalls%20IMG20260627113059.jpg",
     tip: "Carry a change of dry clothes if you plan to dip in the clear refreshing stream."
   },
   {
@@ -194,7 +194,7 @@ export const MUNNAR_PLACES = [
     highlights: ["South India's Highest Mountain Peak", "Home to Asian Elephants & Gaurs", "Stunning Trekker Skyline", "Pristine Evergreen Shola Forests"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Anamudi+Peak+Munnar+Kerala",
     coordinates: { lat: 10.1704, lng: 77.0641 },
-    imageUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Anamudi%20mountain%20Munnar.jpg",
     tip: "Direct trekking to the summit is restricted to preserve flora, but you get breathtaking views from the Rajamalai base ridge."
   },
   {
@@ -212,7 +212,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Elephant Safari Rides", "Elephant Fruit Feeding", "Family Photo Souvenirs", "Woodland Trail"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Carmelagiri+Elephant+Park+Munnar",
     coordinates: { lat: 10.1118, lng: 77.1009 },
-    imageUrl: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?auto=format&fit=crop&w=800&q=80",
     tip: "A fun 20-minute quick stop for kids and families traveling along the Mattupetty circuit."
   },
   {
@@ -230,7 +230,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Heart-Shaped Mountain Gap", "Endless Green Valley Vistas", "Trekking Trails & Natural Springs", "Popular Motorbike Pitstop"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Lockhart+Gap+Viewpoint+Munnar",
     coordinates: { lat: 10.0381, lng: 77.1264 },
-    imageUrl: "https://images.unsplash.com/photo-1508873696983-2df5293cb32f?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://images.unsplash.com/photo-1508873696983-2df5293cb32f?auto=format&fit=crop&w=800&q=80",
     tip: "Favorite pitstop for motorcycle road trips. Fresh breeze, misty valleys, and breathtaking mountain curves."
   },
   {
@@ -248,7 +248,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Exotic Floral Landscapes", "Tree Houses & Rope Walkways", "Zipline & Boating over River", "Kids Play Area & Roller Skating"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Blossom+Hydel+Park+Munnar",
     coordinates: { lat: 10.0682, lng: 77.0543 },
-    imageUrl: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
     tip: "Ideal evening stroll destination after full-day sightseeing to relax and enjoy blooming flowers."
   },
   {
@@ -266,7 +266,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Natural Fragrant Sandalwood Forest", "Prehistoric Stone Age Dolmens", "Organic Marayoor Jaggery (Sharkara)", "Chinnar Wildlife Sanctuary Border"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Marayoor+Sandalwood+Forest+Munnar",
     coordinates: { lat: 10.2789, lng: 77.1583 },
-    imageUrl: "https://images.unsplash.com/photo-1511497584788-87676104235f?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Dolmens%20at%20Marayoor.jpg",
     tip: "Taste fresh hot sugarcane syrup and buy authentic GI-tagged Marayoor Jaggery directly from local farmers."
   },
   {
@@ -284,7 +284,7 @@ export const MUNNAR_PLACES = [
     highlights: ["Multi-Tiered Waterfall View", "Wooden Suspension Walking Bridge", "Chengulam Dam Boating", "Quiet & Less Crowded"],
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Ripple+Waterfalls+Sree+Narayanapuram+Munnar",
     coordinates: { lat: 9.9882, lng: 77.0142 },
-    imageUrl: "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=800&q=75",
+    imageUrl: "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=800&q=80",
     tip: "Great serene alternative if you want to escape large tourist crowds."
   }
 ];
