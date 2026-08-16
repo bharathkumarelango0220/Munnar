@@ -9,8 +9,7 @@ import { auth } from './firebase';
 const activeOtpSessions = new Map();
 
 /**
- * Dispatches real email verification OTP to any traveler's email address on the 1st attempt
- * Zero activation emails, 100% free forever
+ * Dispatches real email verification OTP to any traveler's email address
  */
 export async function sendEmailOtp(email, fullName = 'Traveler') {
   if (!email || !email.includes('@')) {
@@ -34,59 +33,55 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       attempts: 0
     });
 
-    // 1. Direct Web3Forms delivery (Sends message directly to the recipient with zero activation emails)
-    const web3FormsPromise = fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        access_key: 'a29fa03e-86e4-4d69-95e2-63dbb1086202',
-        email: cleanEmail,
-        from_name: 'Munnar Explorer App',
-        subject: `🌿 Munnar Explorer Verification Code: ${otpCode}`,
-        message: `Hello ${fullName}!\n\nYour 6-digit verification code is:\n\n👉 ${otpCode}\n\nEnter this code on https://munnartools.vercel.app to access your Munnar trip budget & expense tracker.\n\nCode expires in 15 minutes.\n\nCrafted by Bharathkumar E.`
-      })
-    }).catch((e) => console.warn('Web3Forms delivery note:', e));
+    let emailSent = false;
+    let errorMessage = '';
 
-    // 2. Direct EmailJS delivery
-    const emailJsPromise = fetch('https://api.emailjs.com/api/v1.0/email/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        service_id: 'default_service',
-        template_id: 'template_munnar',
-        user_id: 'public_user',
-        template_params: {
-          to_email: cleanEmail,
-          to_name: fullName,
-          otp_code: otpCode,
-          app_url: 'https://munnartools.vercel.app'
-        }
-      })
-    }).catch(() => {});
-
-    // 3. Dispatch Google Firebase Email Authentication in parallel
+    // 1. Dispatch Google Firebase Official Email
     try {
       const actionCodeSettings = {
         url: (typeof window !== 'undefined' ? window.location.origin : 'https://munnartools.vercel.app') + `?verify_email=${encodeURIComponent(cleanEmail)}`,
         handleCodeInApp: true
       };
-      sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings).catch(() => {});
+      await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
+      emailSent = true;
       if (typeof window !== 'undefined') {
         window.localStorage.setItem('munnar_email_for_signin', cleanEmail);
       }
     } catch (fbErr) {
-      // non-blocking
+      console.warn('Firebase Email dispatch notice:', fbErr);
+      if (fbErr.code === 'auth/operation-not-allowed') {
+        errorMessage = 'Firebase Email Link is pending. Please enable "Email link (passwordless sign-in)" in Firebase Console.';
+      } else if (fbErr.code === 'auth/unauthorized-domain') {
+        errorMessage = 'Domain not authorized in Firebase. Please add munnartools.vercel.app to Firebase authorized domains.';
+      }
     }
 
-    await Promise.race([web3FormsPromise, emailJsPromise]);
+    // 2. Dispatch via Email relay endpoint
+    try {
+      await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: 'default_service',
+          template_id: 'template_munnar',
+          user_id: 'public_user',
+          template_params: {
+            to_email: cleanEmail,
+            to_name: fullName,
+            otp_code: otpCode,
+            app_url: 'https://munnartools.vercel.app'
+          }
+        })
+      });
+    } catch (e) {
+      // non-blocking
+    }
 
     return {
       success: true,
       email: cleanEmail,
       otpCode,
+      note: errorMessage,
       expiresInMinutes: 15
     };
   } catch (error) {
