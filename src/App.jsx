@@ -9,6 +9,7 @@ import Introduction from './components/Introduction';
 import ExpenseTracker from './components/ExpenseTracker';
 import ReportGenerator from './components/ReportGenerator';
 import TripCostPredictor from './components/TripCostPredictor';
+import BudgetSimulator from './components/BudgetSimulator';
 import BudgetAnalytics from './components/BudgetAnalytics';
 import FuelCalculator from './components/FuelCalculator';
 import CreatorCard from './components/CreatorCard';
@@ -68,6 +69,7 @@ export default function App() {
             {activeTab === 'intro' && <Introduction />}
             {activeTab === 'fuel' && <FuelCalculator />}
             {activeTab === 'predictor' && <TripCostPredictor />}
+            {activeTab === 'simulator' && <BudgetSimulator />}
             {activeTab === 'tracker' && <ExpenseTracker />}
             {activeTab === 'analytics' && <BudgetAnalytics />}
             {activeTab === 'reports' && <ReportGenerator />}

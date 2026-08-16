@@ -19,6 +19,7 @@ import {
   Plus,
   BarChart3,
   TrendingUp,
+  Sliders,
   AlertTriangle
 } from 'lucide-react';
 
@@ -126,6 +127,51 @@ export default function HeroBanner() {
             <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
               <span className="text-purple-400 font-bold block">⚡ Live Ledger Sync</span>
               <span className="text-[11px] text-slate-300">Syncs directly to Expense Tracker</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2.5. BUDGET SIMULATOR TAB BANNER
+  if (activeTab === 'simulator') {
+    return (
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 text-white shadow-xl border border-teal-500/30 p-5 sm:p-7 md:p-8 animate-fadeIn">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative z-10 space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 border border-teal-400/30 text-xs font-bold uppercase tracking-wider">
+              <Sliders className="w-3.5 h-3.5" />
+              Scenario Modeler Studio
+            </span>
+            <span className="text-xs text-slate-400 font-medium">
+              Real-Time What-If Financial Projections
+            </span>
+          </div>
+
+          <div className="max-w-2xl">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
+              Smart 'What-If' Trip Budget Simulator 🧮🔮
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
+              Explore alternative scenarios: change accommodation tiers, transport modes, dining styles, and see live per-person savings!
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 text-xs">
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+              <span className="text-teal-400 font-bold block">🏨 Accommodation Matrix</span>
+              <span className="text-[11px] text-slate-300">Hostel, Homestay, Hotel & Villa</span>
+            </div>
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+              <span className="text-emerald-400 font-bold block">👥 Group Size Dynamics</span>
+              <span className="text-[11px] text-slate-300">Solo to 12-person group splits</span>
+            </div>
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+              <span className="text-purple-400 font-bold block">💡 AI Cost Optimization</span>
+              <span className="text-[11px] text-slate-300">Smart savings suggestions</span>
             </div>
           </div>
         </div>

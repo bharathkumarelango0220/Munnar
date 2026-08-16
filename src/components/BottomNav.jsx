@@ -6,6 +6,7 @@ import {
   Fuel, 
   Calculator, 
   BarChart3, 
+  Sliders,
   Code
 } from 'lucide-react';
 
@@ -16,6 +17,7 @@ export default function BottomNav() {
     { id: 'intro', label: 'Overview', icon: Plane },
     { id: 'fuel', label: 'Fuel', icon: Fuel },
     { id: 'predictor', label: 'Predictor', icon: Calculator },
+    { id: 'simulator', label: 'Simulator', icon: Sliders },
     { id: 'tracker', label: 'Expenses', icon: Wallet },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'creator', label: 'Creator', icon: Code },
@@ -23,7 +25,7 @@ export default function BottomNav() {
 
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-2xl safe-bottom">
-      <div className="grid grid-cols-6 h-16 max-w-lg mx-auto items-center px-1">
+      <div className="grid grid-cols-7 h-16 max-w-lg mx-auto items-center px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
