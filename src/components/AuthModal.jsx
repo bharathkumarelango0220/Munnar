@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   X, 
-  Smartphone, 
   User, 
   Mail, 
   ShieldCheck, 
@@ -10,8 +9,7 @@ import {
   CheckCircle2, 
   RefreshCw, 
   Sparkles, 
-  AlertCircle,
-  Inbox
+  AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sendEmailOtp, verifyEmailOtp } from '../services/emailAuth';
@@ -22,7 +20,6 @@ export default function AuthModal() {
   const [step, setStep] = useState('details'); // 'details' | 'otp' | 'success'
   const [formData, setFormData] = useState({
     name: user?.name || '',
-    phone: user?.phone || '',
     email: user?.email || '',
     tripName: user?.tripName || 'Munnar Expedition 2026'
   });
@@ -49,11 +46,6 @@ export default function AuthModal() {
     e.preventDefault();
     if (!formData.name.trim()) {
       setError('Please enter your full name');
-      return;
-    }
-    const cleanPhone = formData.phone.replace(/\D/g, '');
-    if (!cleanPhone || cleanPhone.length < 10) {
-      setError('Please enter a valid 10-digit mobile number');
       return;
     }
     if (!formData.email || !formData.email.includes('@')) {
@@ -123,7 +115,6 @@ export default function AuthModal() {
       // Save verified user profile & trigger cross-device cloud sync
       await loginUser({
         name: formData.name.trim(),
-        phone: formData.phone.trim(),
         email: formData.email.trim(),
         tripName: formData.tripName
       });
@@ -184,7 +175,7 @@ export default function AuthModal() {
           <p className="text-emerald-100/90 text-xs mt-0.5">
             {user && user.isVerified 
               ? 'Manage your trip profile & verified account' 
-              : 'Enter your details to receive a 6-digit OTP code in your email inbox'}
+              : 'Enter your name and email to receive a 6-digit OTP code'}
           </p>
         </div>
 
@@ -207,7 +198,7 @@ export default function AuthModal() {
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900 text-base">{user.name}</h3>
-                    <p className="text-xs text-slate-600 font-medium">+91 {user.phone} • {user.email}</p>
+                    <p className="text-xs text-slate-600 font-medium">{user.email}</p>
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 mt-1">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                       Email Verified & Cloud Synced
@@ -248,7 +239,7 @@ export default function AuthModal() {
               </div>
             </div>
           ) : step === 'details' ? (
-            /* Step 1: Collect Name, Phone & Email */
+            /* Step 1: Collect Name & Email (Phone option removed) */
             <form onSubmit={handleSendOtp} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
@@ -263,27 +254,6 @@ export default function AuthModal() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Mobile Number
-                </label>
-                <div className="relative">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 text-slate-500 font-bold text-xs">
-                    <Smartphone className="w-4 h-4 text-slate-400" />
-                    <span>+91</span>
-                  </div>
-                  <input
-                    type="tel"
-                    required
-                    maxLength={10}
-                    placeholder="Enter 10-digit mobile number"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
-                    className="w-full pl-16 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium tracking-wide"
                   />
                 </div>
               </div>
