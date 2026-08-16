@@ -21,6 +21,7 @@ import {
   Tag,
   Calculator,
   Camera,
+  Mic,
   Check
 } from 'lucide-react';
 
@@ -40,6 +41,7 @@ export default function ExpenseTracker() {
     resetAllData,
     setIsAddExpenseModalOpen, 
     setIsReceiptScannerOpen,
+    setIsVoiceAssistantOpen,
     openAddExpenseForCategory,
     deleteExpense, 
     setActiveTab 
@@ -80,6 +82,15 @@ export default function ExpenseTracker() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={() => setIsVoiceAssistantOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white text-xs font-black shadow-md shadow-teal-600/25 transition-all active:scale-95"
+            title="Speak naturally to log an expense hands-free"
+          >
+            <Mic className="w-3.5 h-3.5" />
+            <span>🎙️ AI Voice Log</span>
+          </button>
+
           <button
             onClick={() => setIsReceiptScannerOpen(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-md shadow-emerald-600/25 transition-all active:scale-95"

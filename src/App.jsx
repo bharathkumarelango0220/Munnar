@@ -16,6 +16,7 @@ import AuthModal from './components/AuthModal';
 import AddExpenseModal from './components/AddExpenseModal';
 import SetBudgetModal from './components/SetBudgetModal';
 import AIReceiptScannerModal from './components/AIReceiptScannerModal';
+import AIVoiceAssistantModal from './components/AIVoiceAssistantModal';
 import { 
   Heart, 
   ExternalLink, 
@@ -195,6 +196,7 @@ export default function App() {
       <AddExpenseModal />
       <SetBudgetModal />
       <AIReceiptScannerModal />
+      <AIVoiceAssistantModal />
     </div>
   );
 }
