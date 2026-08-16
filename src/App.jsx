@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from './context/AppContext';
+import { checkEmailLinkSignIn } from './services/emailAuth';
+import confetti from 'canvas-confetti';
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
 import HeroBanner from './components/HeroBanner';
@@ -23,7 +25,25 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  const { activeTab, setActiveTab } = useApp();
+  const { activeTab, setActiveTab, loginUser } = useApp();
+
+  useEffect(() => {
+    // Check if user arrived via official Google Email verification link
+    checkEmailLinkSignIn().then((res) => {
+      if (res && res.success && res.email) {
+        loginUser({
+          name: res.email.split('@')[0],
+          email: res.email,
+          tripName: 'Munnar Tour 2026'
+        });
+        confetti({
+          particleCount: 60,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+      }
+    });
+  }, [loginUser]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
