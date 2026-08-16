@@ -11,7 +11,7 @@ import ReportGenerator from './components/ReportGenerator';
 import TripTools from './components/TripTools';
 import CreatorCard from './components/CreatorCard';
 import WeatherWidget from './components/WeatherWidget';
-import CashAndGpayTracker from './components/CashAndGpayTracker';
+import FuelCalculator from './components/FuelCalculator';
 import FoodGuide from './components/FoodGuide';
 import AuthModal from './components/AuthModal';
 import AddExpenseModal from './components/AddExpenseModal';
@@ -26,7 +26,7 @@ import {
   Compass,
   ArrowUp,
   CloudSun,
-  Banknote,
+  Fuel,
   Utensils
 } from 'lucide-react';
 
@@ -71,7 +71,7 @@ export default function App() {
         <div className="transition-all duration-300">
           {activeTab === 'places' && <TouristPlaces />}
           {activeTab === 'tracker' && <ExpenseTracker />}
-          {activeTab === 'wallet' && <CashAndGpayTracker />}
+          {activeTab === 'fuel' && <FuelCalculator />}
           {activeTab === 'weather' && <WeatherWidget />}
           {activeTab === 'food' && <FoodGuide />}
           {activeTab === 'tools' && <TripTools />}
@@ -104,7 +104,7 @@ export default function App() {
                 <span className="font-black text-lg tracking-tight">MunnarGo</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Free mobile-first tourist companion, 6-category expense tracker, group bill splitter & live weather radar for everyone traveling to Munnar, Kerala.
+                Free mobile-first tourist companion, 6-category expense tracker, fuel calculator & live weather radar for everyone traveling to Munnar, Kerala.
               </p>
             </div>
 
@@ -123,8 +123,8 @@ export default function App() {
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => { setActiveTab('wallet'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    💵 Cash vs UPI & Budget Reallocator
+                  <button onClick={() => { setActiveTab('fuel'); scrollToTop(); }} className="hover:text-white transition-colors">
+                    ⛽ Ghat Road Fuel & Mileage Calculator
                   </button>
                 </li>
                 <li>
