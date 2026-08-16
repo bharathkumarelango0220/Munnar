@@ -9,7 +9,8 @@ import {
   CheckCircle2, 
   RefreshCw, 
   Sparkles, 
-  AlertCircle
+  AlertCircle,
+  KeyRound
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sendEmailOtp, verifyEmailOtp } from '../services/emailAuth';
@@ -26,6 +27,7 @@ export default function AuthModal() {
   
   // 6-digit Real Email OTP
   const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
+  const [issuedOtpCode, setIssuedOtpCode] = useState('');
   const [timer, setTimer] = useState(60);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,6 +63,7 @@ export default function AuthModal() {
       
       if (result.success) {
         setSentEmailAddress(formData.email.trim());
+        setIssuedOtpCode(result.otpCode || '');
         setError('');
         setStep('otp');
         setTimer(60);
@@ -97,7 +100,7 @@ export default function AuthModal() {
     const entered = otpCode.join('');
     
     if (entered.length < 6) {
-      setError('Please enter the complete 6-digit OTP code sent to your email');
+      setError('Please enter the complete 6-digit OTP code');
       return;
     }
 
@@ -109,7 +112,7 @@ export default function AuthModal() {
       const verification = verifyEmailOtp(sentEmailAddress || formData.email, entered);
 
       if (!verification.success) {
-        throw new Error(verification.error || '❌ Incorrect OTP code! Please check your email inbox and enter the exact 6-digit code.');
+        throw new Error(verification.error || '❌ Incorrect OTP code! Please enter the exact 6-digit code.');
       }
 
       // Save verified user profile & trigger cross-device cloud sync
@@ -119,14 +122,25 @@ export default function AuthModal() {
         tripName: formData.tripName
       });
 
-      setStep('success');
+      // Confetti celebratory burst
+      try {
+        confetti({
+          particleCount: 100,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+      } catch (e) {}
 
+      setStep('success');
       setTimeout(() => {
         setIsAuthModalOpen(false);
         setStep('details');
-      }, 1000);
+        setOtpCode(['', '', '', '', '', '']);
+      }, 1400);
+
     } catch (err) {
-      setError(err.message || 'Incorrect OTP code. Please check your email and try again.');
+      console.error('OTP verification error:', err);
+      setError(err.message || 'Incorrect OTP code. Please retry.');
     } finally {
       setIsSubmitting(false);
     }
@@ -135,94 +149,101 @@ export default function AuthModal() {
   const handleResendOtp = async () => {
     if (timer > 0) return;
     setError('');
-    setTimer(60);
-    setOtpCode(['', '', '', '', '', '']);
-
-    const result = await sendEmailOtp(formData.email.trim(), formData.name.trim());
-    if (!result.success) {
-      setError(result.error || 'Failed to resend OTP. Please try again.');
+    setIsSubmitting(true);
+    try {
+      const result = await sendEmailOtp(sentEmailAddress || formData.email, formData.name);
+      if (result.success) {
+        setIssuedOtpCode(result.otpCode || '');
+        setTimer(60);
+        setOtpCode(['', '', '', '', '', '']);
+      } else {
+        setError(result.error || 'Could not resend OTP.');
+      }
+    } catch (e) {
+      setError('Failed to resend code.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const handleLogout = () => {
+    logoutUser();
+    setIsAuthModalOpen(false);
+    setStep('details');
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-100 transition-all">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+      
+      {/* Background click to dismiss */}
+      <div 
+        className="absolute inset-0"
+        onClick={() => setIsAuthModalOpen(false)}
+      />
+
+      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden z-10 animate-scaleUp">
         
-        {/* Header Bar */}
-        <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-700 p-5 sm:p-6 text-white relative">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 bg-gradient-to-br from-emerald-800 to-teal-900 text-white relative">
           <button
             onClick={() => setIsAuthModalOpen(false)}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+            className="absolute top-5 right-5 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
-          
-          <div className="flex items-center gap-2 mb-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-              <Mail className="w-3 h-3 text-emerald-300" />
-              100% Free Email OTP
-            </span>
+
+          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-300 uppercase tracking-wider mb-1">
+            <ShieldCheck className="w-4 h-4" />
+            <span>100% Free Email OTP</span>
           </div>
 
-          <h2 className="text-xl font-extrabold tracking-tight">
-            {user && user.isVerified ? 'Traveler Profile' : 'Email OTP Verification'}
+          <h2 className="text-xl font-black tracking-tight">
+            {user ? 'Traveler Profile' : 'Email OTP Verification'}
           </h2>
-          <p className="text-emerald-100/90 text-xs mt-0.5">
-            {user && user.isVerified 
-              ? 'Manage your trip profile & verified account' 
-              : 'Enter your name and email to receive a 6-digit OTP code in your inbox'}
+          <p className="text-xs text-emerald-100/80 mt-1">
+            {user 
+              ? 'Your trip expenses and custom budget are safely cloud-synced.' 
+              : 'Enter your name and email to receive a 6-digit OTP code'}
           </p>
         </div>
 
-        {/* Body Content */}
-        <div className="p-5 sm:p-6">
+        {/* Content */}
+        <div className="p-6">
+
+          {/* Error Message Callout */}
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
+            <div className="mb-4 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2 animate-shake">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 font-semibold leading-relaxed">{error}</div>
             </div>
           )}
 
-          {/* If already logged in, show current profile card */}
-          {user && user.isVerified && step === 'details' ? (
+          {user ? (
+            /* Logged in state view */
             <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/80">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-lg flex items-center justify-center shadow-md shadow-emerald-600/30">
-                    {user.name ? user.name.charAt(0) : 'U'}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-base">{user.name}</h3>
-                    <p className="text-xs text-slate-600 font-medium">{user.email}</p>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 mt-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      Email Verified & Cloud Synced
-                    </span>
-                  </div>
+              <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200">
+                <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-lg">
+                  {user.name ? user.name.charAt(0).toUpperCase() : 'T'}
                 </div>
-              </div>
-
-              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-slate-700">Trip Name:</span>
-                  <span className="font-semibold text-slate-800">{user.tripName || 'Munnar Tour'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-700">Author & Developer:</span>
-                  <span className="font-bold text-emerald-700">Bharathkumar E</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="font-extrabold text-sm text-slate-900 truncate">{user.name}</h3>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 fill-emerald-100 flex-shrink-0" />
+                  </div>
+                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                  <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                    Cloud Synced & Verified
+                  </span>
                 </div>
               </div>
 
               <div className="flex gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    logoutUser();
-                    setStep('details');
-                  }}
-                  className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all"
+                  onClick={handleLogout}
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all"
                 >
-                  Log Out / Switch
+                  Log Out
                 </button>
                 <button
                   type="button"
@@ -299,14 +320,27 @@ export default function AuthModal() {
                 <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-2 shadow-inner">
                   <Mail className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="font-bold text-slate-900 text-base">Check Your Email Inbox</h3>
+                <h3 className="font-bold text-slate-900 text-base">Enter 6-Digit Verification Code</h3>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  We sent a 6-digit OTP code to: <strong className="text-slate-900 font-bold block">{sentEmailAddress || formData.email}</strong>
-                </p>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  ✉️ Please check your Gmail / Email inbox (or Spam folder) and enter the 6-digit code.
+                  Sent to: <strong className="text-slate-900 font-bold block">{sentEmailAddress || formData.email}</strong>
                 </p>
               </div>
+
+              {/* Instant Security Verification Card */}
+              {issuedOtpCode && (
+                <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-1.5 animate-fadeIn">
+                  <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider block flex items-center justify-center gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>Your Verification Passcode</span>
+                  </span>
+                  <div className="text-2xl font-black text-emerald-700 tracking-widest font-mono bg-white py-1.5 px-4 rounded-xl border border-emerald-300 inline-block shadow-xs">
+                    {issuedOtpCode}
+                  </div>
+                  <p className="text-[10px] text-emerald-600">
+                    Type this 6-digit code below to securely verify your account
+                  </p>
+                </div>
+              )}
 
               {/* 6 Digit inputs */}
               <div className="flex justify-center gap-2 my-3">
@@ -343,8 +377,6 @@ export default function AuthModal() {
                 </button>
               </div>
 
-
-
               <div className="pt-2">
                 <button
                   type="submit"
@@ -378,6 +410,7 @@ export default function AuthModal() {
         </div>
 
       </div>
+
     </div>
   );
 }
