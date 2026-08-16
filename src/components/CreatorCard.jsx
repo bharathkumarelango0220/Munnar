@@ -287,38 +287,38 @@ export default function CreatorCard() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 space-y-3">
+          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
               <Globe className="w-5 h-5" />
             </div>
             <h3 className="font-extrabold text-base text-slate-900">
               Business & Portfolio Websites
             </h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-slate-500 leading-relaxed">
               High-converting, lightning-fast landing pages with custom branding, animations, and lead capture forms.
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 space-y-3">
+          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
             <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold">
               <Zap className="w-5 h-5" />
             </div>
             <h3 className="font-extrabold text-base text-slate-900">
               Web Applications & Tools
             </h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-slate-500 leading-relaxed">
               Dynamic calculators, travel companions, budget trackers, dashboards, and automated business workflows.
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 space-y-3">
+          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
             <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <h3 className="font-extrabold text-base text-slate-900">
               Fullstack & Cloud Integrations
             </h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-slate-500 leading-relaxed">
               Firebase user auth, cloud databases, live real-time sync, PDF exports, and payment gateway integration.
             </p>
           </div>

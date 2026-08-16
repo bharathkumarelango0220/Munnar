@@ -96,6 +96,15 @@ html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
 }
 
 /* 4. Form Inputs & Select Controls */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 html.dark input,
 html.dark select,
 html.dark textarea {
