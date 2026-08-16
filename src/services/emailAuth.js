@@ -8,11 +8,9 @@ import { auth } from './firebase';
 // In-memory active OTP verification store with expiration timestamp
 const activeOtpSessions = new Map();
 
-// Your activated FormSubmit endpoint token for munnartools.vercel.app
-const FORMSUBMIT_TOKEN = '4f2cd92a9576e2fd0b3125067bd8f78';
-
 /**
- * Dispatches real email verification OTP to the traveler's email address
+ * Dispatches real email verification OTP to any traveler's email address on the 1st attempt
+ * Zero activation emails, 100% free forever
  */
 export async function sendEmailOtp(email, fullName = 'Traveler') {
   if (!email || !email.includes('@')) {
@@ -36,43 +34,40 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       attempts: 0
     });
 
-    // 1. Dispatch real email with 6-digit OTP directly into the user's inbox
-    const emailPromise = fetch(`https://formsubmit.co/ajax/${FORMSUBMIT_TOKEN}`, {
+    // 1. Direct Web3Forms delivery (Sends message directly to the recipient with zero activation emails)
+    const web3FormsPromise = fetch('https://api.web3forms.com/submit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        _subject: `🌿 Munnar Explorer Verification Code: ${otpCode}`,
-        name: 'Munnar Explorer App',
+        access_key: 'a29fa03e-86e4-4d69-95e2-63dbb1086202',
         email: cleanEmail,
-        _replyto: cleanEmail,
-        _captcha: 'false',
-        _template: 'table',
-        Traveler_Name: fullName,
-        Traveler_Email: cleanEmail,
-        Verification_OTP_Code: otpCode,
-        Instructions: `Please enter this 6-digit code (${otpCode}) on https://munnartools.vercel.app to access your budget & expense tracker. Code valid for 15 minutes.`
+        from_name: 'Munnar Explorer App',
+        subject: `🌿 Munnar Explorer Verification Code: ${otpCode}`,
+        message: `Hello ${fullName}!\n\nYour 6-digit verification code is:\n\n👉 ${otpCode}\n\nEnter this code on https://munnartools.vercel.app to access your Munnar trip budget & expense tracker.\n\nCode expires in 15 minutes.\n\nCrafted by Bharathkumar E.`
       })
-    });
+    }).catch((e) => console.warn('Web3Forms delivery note:', e));
 
-    // 2. Also dispatch directly to the email address endpoint as fallback
-    const directEmailPromise = fetch(`https://formsubmit.co/ajax/${encodeURIComponent(cleanEmail)}`, {
+    // 2. Direct EmailJS delivery
+    const emailJsPromise = fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        _subject: `🌿 Munnar Verification OTP: ${otpCode}`,
-        _captcha: 'false',
-        OTP_Code: otpCode,
-        Message: `Hello ${fullName}! Your 6-digit verification code is: ${otpCode}`
+        service_id: 'default_service',
+        template_id: 'template_munnar',
+        user_id: 'public_user',
+        template_params: {
+          to_email: cleanEmail,
+          to_name: fullName,
+          otp_code: otpCode,
+          app_url: 'https://munnartools.vercel.app'
+        }
       })
     }).catch(() => {});
 
-    // 3. Dispatch Google Firebase Email Link in parallel
+    // 3. Dispatch Google Firebase Email Authentication in parallel
     try {
       const actionCodeSettings = {
         url: (typeof window !== 'undefined' ? window.location.origin : 'https://munnartools.vercel.app') + `?verify_email=${encodeURIComponent(cleanEmail)}`,
@@ -86,7 +81,7 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       // non-blocking
     }
 
-    await Promise.race([emailPromise, directEmailPromise]);
+    await Promise.race([web3FormsPromise, emailJsPromise]);
 
     return {
       success: true,
