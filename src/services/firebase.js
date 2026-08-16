@@ -2,7 +2,9 @@ import { initializeApp, getApps } from 'firebase/app';
 import { 
   getAuth, 
   RecaptchaVerifier, 
-  signInWithPhoneNumber 
+  signInWithPhoneNumber,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { 
   getFirestore, 
@@ -24,6 +26,33 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+const googleProvider = new GoogleAuthProvider();
+
+/**
+ * 100% Free 1-Click Google Sign-In with Zero Spam & Instant Cloud Sync
+ */
+export async function signInWithGoogle() {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const u = result.user;
+    return {
+      success: true,
+      user: {
+        name: u.displayName || u.email.split('@')[0],
+        email: u.email,
+        photoURL: u.photoURL,
+        isVerified: true
+      }
+    };
+  } catch (error) {
+    console.error('Google Sign In error:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to sign in with Google'
+    };
+  }
+}
 
 /**
  * Initializes a clean reCAPTCHA instance for Firebase Phone Auth
@@ -59,53 +88,60 @@ export function setupRecaptcha(containerId = 'recaptcha-container') {
     });
 
     return window.recaptchaVerifier;
-  } catch (error) {
-    console.error('Recaptcha setup error:', error);
+  } catch (err) {
+    console.error('reCAPTCHA initialization error:', err);
     return null;
   }
 }
 
 /**
- * Dispatches real SMS OTP to the provided phone number (+91...)
+ * Sends a real 6-digit SMS OTP to any phone number worldwide
  */
-export async function sendFirebaseOtp(phoneNumber, containerId = 'recaptcha-container') {
-  const cleanDigits = phoneNumber.replace(/\D/g, '');
-  const formattedPhone = cleanDigits.length === 10 ? `+91${cleanDigits}` : `+${cleanDigits}`;
-  
+export async function sendPhoneOtp(phoneNumber) {
   try {
-    const verifier = setupRecaptcha(containerId);
-    if (!verifier) {
-      throw new Error('Unable to initialize reCAPTCHA security verifier. Please refresh the page.');
-    }
-    
-    // Request Firebase to dispatch SMS OTP to the carrier network
-    const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, verifier);
-    
-    return {
-      success: true,
-      confirmationResult,
-      isRealSms: true
-    };
-  } catch (error) {
-    console.error('Firebase Phone Auth Detailed Error:', error);
-    
-    let userFriendlyMsg = error.message;
-    if (error.code === 'auth/operation-not-allowed') {
-      userFriendlyMsg = 'Firebase is still activating Phone Auth for your project. Please verify Phone is Enabled in Firebase Console and that munnartools.vercel.app is added to Authorized Domains.';
-    } else if (error.code === 'auth/unauthorized-domain') {
-      userFriendlyMsg = 'Your domain is not authorized. Go to Firebase Console > Authentication > Settings > Authorized domains > Add munnartools.vercel.app.';
-    } else if (error.code === 'auth/invalid-phone-number') {
-      userFriendlyMsg = 'Invalid phone number format. Please enter a valid 10-digit mobile number (+91...).';
-    } else if (error.code === 'auth/too-many-requests') {
-      userFriendlyMsg = 'Too many SMS requests sent to this number. Please wait 1-2 minutes before retrying.';
-    } else if (error.code === 'auth/captcha-check-failed') {
-      userFriendlyMsg = 'reCAPTCHA check failed. Please disable ad-blockers and try again.';
+    const appVerifier = setupRecaptcha('recaptcha-container');
+    if (!appVerifier) {
+      throw new Error('Could not initialize security verifier. Please refresh page.');
     }
 
+    const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+    window.confirmationResult = confirmationResult;
+
+    return {
+      success: true,
+      message: '6-digit SMS OTP sent to your phone!'
+    };
+  } catch (error) {
+    console.error('Phone OTP send error:', error);
     return {
       success: false,
-      error: userFriendlyMsg,
-      errorCode: error.code
+      error: error.message || 'Failed to send SMS OTP. Please check the phone number.'
+    };
+  }
+}
+
+/**
+ * Verifies the 6-digit SMS OTP code entered by user
+ */
+export async function verifyPhoneOtp(otpCode) {
+  if (!window.confirmationResult) {
+    return {
+      success: false,
+      error: 'OTP session expired. Please request a new code.'
+    };
+  }
+
+  try {
+    const result = await window.confirmationResult.confirm(otpCode);
+    return {
+      success: true,
+      user: result.user
+    };
+  } catch (error) {
+    console.error('SMS OTP verification error:', error);
+    return {
+      success: false,
+      error: 'Incorrect SMS OTP code. Please check your phone message and retry.'
     };
   }
 }
