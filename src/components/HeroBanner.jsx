@@ -16,7 +16,10 @@ import {
   FileSpreadsheet,
   Code,
   ArrowRight,
-  Plus
+  Plus,
+  BarChart3,
+  TrendingUp,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function HeroBanner() {
@@ -194,8 +197,8 @@ export default function HeroBanner() {
     );
   }
 
-  // 4. ROUTE OPTIMIZER TAB BANNER
-  if (activeTab === 'route') {
+  // 4. BUDGET ANALYTICS & OVERSPENDING RADAR TAB BANNER
+  if (activeTab === 'analytics') {
     return (
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 text-white shadow-xl border border-teal-500/30 p-5 sm:p-7 md:p-8 animate-fadeIn">
         <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -203,35 +206,35 @@ export default function HeroBanner() {
         <div className="relative z-10 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 border border-teal-400/30 text-xs font-bold uppercase tracking-wider">
-              <Navigation className="w-3.5 h-3.5" />
-              Smart Route Optimizer
+              <BarChart3 className="w-3.5 h-3.5" />
+              Budget Intelligence & Radar
             </span>
             <span className="text-xs text-slate-400 font-medium">
-              Zero Backtracking Heuristic Engine
+              Overspending Anomalies & Trip Health Ratings
             </span>
           </div>
 
           <div className="max-w-2xl">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
-              Shortest Mountain Route Sequence & GPS 🗺️⚡
+              Trip Budget Analytics & Spending Radar 📊🎯
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
-              Select your destinations. Our algorithm sequences them into the <strong>shortest single-direction driving loop</strong> so you never waste fuel on hairpin turns.
+              Visualize budget allocations vs real-time spending with category limit gauges, financial efficiency scores (A+ to C-), and instant overspending warnings.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 text-xs">
             <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-              <strong className="text-teal-300 block font-bold">1-Direction Sequence</strong>
-              <span className="text-[11px] text-slate-400">Zero backtracking loops</span>
+              <strong className="text-teal-300 block font-bold">🏆 Health Grade Engine</strong>
+              <span className="text-[11px] text-slate-400">A+ Master Saver to Warning alerts</span>
             </div>
             <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-              <strong className="text-emerald-300 block font-bold">Multi-Stop Google Maps</strong>
-              <span className="text-[11px] text-slate-400">1-Tap GPS turn-by-turn</span>
+              <strong className="text-emerald-300 block font-bold">📈 Category Gauges</strong>
+              <span className="text-[11px] text-slate-400">Allocated vs Spent visual meters</span>
             </div>
             <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-              <strong className="text-white block font-bold">Time Optimization</strong>
-              <span className="text-[11px] text-slate-400">Beat mountain fog & traffic</span>
+              <strong className="text-white block font-bold">🚨 Anomaly Radar</strong>
+              <span className="text-[11px] text-slate-400">Detects overbudget limits</span>
             </div>
           </div>
         </div>

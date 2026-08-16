@@ -9,7 +9,7 @@ import Introduction from './components/Introduction';
 import ExpenseTracker from './components/ExpenseTracker';
 import ReportGenerator from './components/ReportGenerator';
 import TripCostPredictor from './components/TripCostPredictor';
-import RouteOptimizer from './components/RouteOptimizer';
+import BudgetAnalytics from './components/BudgetAnalytics';
 import FuelCalculator from './components/FuelCalculator';
 import CreatorCard from './components/CreatorCard';
 import AuthModal from './components/AuthModal';
@@ -75,7 +75,7 @@ export default function App() {
           {activeTab === 'fuel' && <FuelCalculator />}
           {activeTab === 'predictor' && <TripCostPredictor />}
           {activeTab === 'tracker' && <ExpenseTracker />}
-          {activeTab === 'route' && <RouteOptimizer />}
+          {activeTab === 'analytics' && <BudgetAnalytics />}
           {activeTab === 'reports' && <ReportGenerator />}
           {activeTab === 'creator' && <CreatorCard />}
         </div>
@@ -134,8 +134,8 @@ export default function App() {
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => { setActiveTab('route'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    🗺️ Smart Route Optimizer (Zero Backtrack)
+                  <button onClick={() => { setActiveTab('analytics'); scrollToTop(); }} className="hover:text-white transition-colors">
+                    📊 Budget Analytics & Radar
                   </button>
                 </li>
                 <li>

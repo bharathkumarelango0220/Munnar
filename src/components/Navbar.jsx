@@ -126,16 +126,16 @@ export default function Navbar() {
             </button>
             <button
               onClick={() => {
-                setActiveTab('route');
+                setActiveTab('analytics');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'route'
+                activeTab === 'analytics'
                   ? 'bg-white text-emerald-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              🗺️ Route Optimizer
+              📊 Analytics & Radar
             </button>
             <button
               onClick={() => {

@@ -7,6 +7,7 @@ import {
   Map, 
   FileSpreadsheet, 
   Code, 
+  BarChart3, 
   Sparkles, 
   ArrowRight, 
   CheckCircle2, 
@@ -56,14 +57,14 @@ export default function Introduction() {
       highlights: ['Live remaining budget counters', 'Overspending warning alerts', 'Dynamic category binding', 'Filter by cash / UPI / card']
     },
     {
-      id: 'route',
-      title: 'Smart Route Optimizer',
-      icon: Map,
-      tag: 'Zero Backtracking',
+      id: 'analytics',
+      title: 'Budget Analytics & Radar',
+      icon: BarChart3,
+      tag: 'Trip Health Score (A+ to C-)',
       color: 'from-blue-500 to-indigo-600',
       badgeBg: 'bg-blue-50 text-blue-700 border-blue-200',
-      description: 'Select your destinations and let the shortest-path algorithm sequence them into a single-direction driving loop so you never waste fuel driving back and forth.',
-      highlights: ['Shortest single-direction loop', '1-Tap Google Maps multi-stop navigation', 'Driving time & fog estimations', 'Fuel & hairpin bend savings']
+      description: 'Visualize allocated budgets against real-time spending with category limit gauges, trip savings grades, payment mode splits, and instant overspending alert radars.',
+      highlights: ['Financial health score (A+ to C-)', 'Allocated vs spent progress meters', 'Smart overspending anomaly alerts', 'Cash vs UPI payment splits']
     },
     {
       id: 'reports',

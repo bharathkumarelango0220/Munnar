@@ -5,7 +5,7 @@ import {
   Wallet, 
   Fuel, 
   Calculator, 
-  Map, 
+  BarChart3, 
   Code
 } from 'lucide-react';
 
@@ -17,7 +17,7 @@ export default function BottomNav() {
     { id: 'fuel', label: 'Fuel', icon: Fuel },
     { id: 'predictor', label: 'Predictor', icon: Calculator },
     { id: 'tracker', label: 'Expenses', icon: Wallet },
-    { id: 'route', label: 'Route', icon: Map },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'creator', label: 'Creator', icon: Code },
   ];
 
