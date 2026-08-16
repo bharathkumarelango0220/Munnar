@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Fuel, 
   Bike, 
@@ -15,23 +15,12 @@ import {
   Sparkles
 } from 'lucide-react';
 
-const BIKE_MODELS_PRESETS = [
-  { name: 'Royal Enfield Classic 350 / Hunter', defaultMileage: 32 },
-  { name: 'Royal Enfield Himalayan 450', defaultMileage: 28 },
-  { name: 'KTM Duke / RC 390', defaultMileage: 25 },
-  { name: 'Yamaha MT-15 / R15', defaultMileage: 45 },
-  { name: 'Bajaj Pulsar NS 200 / Dominar', defaultMileage: 33 },
-  { name: 'Hero Xpulse 200 4V', defaultMileage: 36 },
-  { name: 'TVS Apache RTR 200', defaultMileage: 35 },
-  { name: 'Honda Activa / Access 125', defaultMileage: 42 }
-];
-
 const SINGLE_VEHICLE_PRESETS = [
-  { id: 'bike', label: 'Motorcycle / Bike', icon: Bike, defaultMileage: 32, fuelType: 'petrol' },
-  { id: 'scooter', label: 'Scooter / Activa', icon: Bike, defaultMileage: 40, fuelType: 'petrol' },
-  { id: 'hatchback', label: 'Hatchback / Sedan', icon: Car, defaultMileage: 16, fuelType: 'petrol' },
-  { id: 'suv', label: 'SUV / Thar / Innova', icon: Car, defaultMileage: 13, fuelType: 'diesel' },
-  { id: 'ev', label: 'Electric Vehicle (EV)', icon: Zap, defaultMileage: 7, fuelType: 'ev' }
+  { id: 'bike', label: 'Motorcycle / Bike', icon: Bike, defaultMileage: 32, fuelType: 'petrol', maxPassengers: 2 },
+  { id: 'scooter', label: 'Scooter / Activa', icon: Bike, defaultMileage: 40, fuelType: 'petrol', maxPassengers: 2 },
+  { id: 'hatchback', label: 'Hatchback / Sedan', icon: Car, defaultMileage: 16, fuelType: 'petrol', maxPassengers: 5 },
+  { id: 'suv', label: 'SUV / Thar / Innova', icon: Car, defaultMileage: 13, fuelType: 'diesel', maxPassengers: 7 },
+  { id: 'ev', label: 'Electric Vehicle (EV)', icon: Zap, defaultMileage: 7, fuelType: 'ev', maxPassengers: 5 }
 ];
 
 export default function FuelCalculator() {
@@ -48,10 +37,28 @@ export default function FuelCalculator() {
   // Multi-Bike Fleet State
   const [multiDistanceKm, setMultiDistanceKm] = useState('');
   const [multiFuelPrice, setMultiFuelPrice] = useState('105');
+  const [multiPassengerCount, setMultiPassengerCount] = useState(2);
   const [bikes, setBikes] = useState([
-    { id: 'b1', name: 'Bike 1 (Royal Enfield)', model: 'Royal Enfield Classic 350', mileage: 30, rider: 'Rider 1' },
-    { id: 'b2', name: 'Bike 2 (KTM Duke)', model: 'KTM Duke / RC 390', mileage: 25, rider: 'Rider 2' }
+    { id: 'b1', name: 'Bike 1', model: 'Royal Enfield Classic 350', mileage: '30' },
+    { id: 'b2', name: 'Bike 2', model: 'KTM Duke 390', mileage: '25' }
   ]);
+
+  // Keep multiPassengerCount synchronized when bikes are added/removed
+  useEffect(() => {
+    if (multiPassengerCount < bikes.length) {
+      setMultiPassengerCount(bikes.length);
+    }
+  }, [bikes.length]);
+
+  // Adjust single passenger count if vehicle changes to bike/scooter
+  const currentVehiclePreset = SINGLE_VEHICLE_PRESETS.find(p => p.id === selectedVehicle) || SINGLE_VEHICLE_PRESETS[0];
+  const maxSinglePassengers = currentVehiclePreset.maxPassengers;
+
+  useEffect(() => {
+    if (passengerCount > maxSinglePassengers) {
+      setPassengerCount(maxSinglePassengers);
+    }
+  }, [selectedVehicle, maxSinglePassengers]);
 
   // Single Vehicle Calculation
   const singleDist = parseFloat(distanceKm) || 0;
@@ -83,6 +90,7 @@ export default function FuelCalculator() {
   const totalFleetLitres = bikeCalculations.reduce((sum, b) => sum + b.litres, 0);
   const totalFleetCost = bikeCalculations.reduce((sum, b) => sum + b.cost, 0);
   const avgCostPerBike = bikes.length > 0 ? Math.round(totalFleetCost / bikes.length) : 0;
+  const multiPerPersonCost = Math.round(totalFleetCost / (multiPassengerCount || 1));
 
   // Add a new bike to multi-bike list
   const handleAddBike = () => {
@@ -93,9 +101,8 @@ export default function FuelCalculator() {
       {
         id: newId,
         name: `Bike ${nextIndex}`,
-        model: 'Royal Enfield Classic 350',
-        mileage: 32,
-        rider: `Rider ${nextIndex}`
+        model: `Bike ${nextIndex}`,
+        mileage: '32'
       }
     ]);
   };
@@ -319,7 +326,7 @@ export default function FuelCalculator() {
 
             </div>
 
-            {/* Step 3: Passenger Count */}
+            {/* Step 3: Passenger Count (Max 2 for Bikes, up to 7 for Cars/SUVs) */}
             <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-soft flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-2xl bg-teal-50 text-teal-700 border border-teal-200">
@@ -327,27 +334,31 @@ export default function FuelCalculator() {
                 </div>
                 <div>
                   <h4 className="font-bold text-xs sm:text-sm text-slate-900">
-                    Number of Passengers / Riders
+                    Number of Riders / Passengers
                   </h4>
                   <p className="text-[11px] text-slate-500">
-                    Calculate per-person fuel cost
+                    {maxSinglePassengers === 2 
+                      ? 'Single bike capacity (1 Solo Rider or 2 with Pillion)' 
+                      : `Car capacity (1 to ${maxSinglePassengers} passengers)`}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 self-start sm:self-auto">
-                {[1, 2, 3, 4, 5, 6].map((num) => (
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                {Array.from({ length: maxSinglePassengers }, (_, i) => i + 1).map((num) => (
                   <button
                     key={num}
                     type="button"
                     onClick={() => setPassengerCount(num)}
-                    className={`w-9 h-9 rounded-xl font-black text-xs transition-all ${
+                    className={`px-4 py-2 rounded-xl font-black text-xs transition-all ${
                       passengerCount === num 
                         ? 'bg-emerald-600 text-white shadow-xs' 
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    {num}
+                    {maxSinglePassengers === 2 
+                      ? (num === 1 ? '1 (Solo)' : '2 (Pillion)') 
+                      : `${num} Person`}
                   </button>
                 ))}
               </div>
@@ -396,7 +407,7 @@ export default function FuelCalculator() {
                   </div>
 
                   <div className="flex justify-between text-slate-300 pt-2 border-t border-white/10">
-                    <span>Per Person ({passengerCount} People):</span>
+                    <span>Per Person ({passengerCount} {passengerCount === 1 ? 'Person' : 'People'}):</span>
                     <strong className="text-emerald-300 text-sm font-black">
                       ₹{singlePerPerson.toLocaleString('en-IN')} / person
                     </strong>
@@ -501,6 +512,42 @@ export default function FuelCalculator() {
               </div>
 
             </div>
+
+            {/* Split Fuel Among Number of Persons in Group */}
+            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-teal-50 text-teal-700 border border-teal-200">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">
+                    Total People Splitting Group Fuel ({multiPassengerCount} Persons)
+                  </h4>
+                  <p className="text-[11px] text-slate-500">
+                    Includes all riders and pillion passengers in the group
+                  </p>
+                </div>
+              </div>
+
+              {/* Person count selector */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {Array.from({ length: Math.max(8, bikes.length * 2) }, (_, i) => i + 1).slice(0, 12).map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => setMultiPassengerCount(num)}
+                    className={`w-8 h-8 rounded-xl font-black text-xs transition-all ${
+                      multiPassengerCount === num 
+                        ? 'bg-emerald-600 text-white shadow-xs' 
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+            </div>
+
           </div>
 
           {/* OVERALL GROUP FLEET TOTAL SUMMARY CARD */}
@@ -519,12 +566,12 @@ export default function FuelCalculator() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               
               {/* Total Group Cost */}
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-xs text-slate-300 font-medium">Total Group Fuel Expense</span>
-                <p className="text-3xl sm:text-4xl font-black text-emerald-300 mt-1">
+                <span className="text-xs text-slate-300 font-medium">Total Group Fuel Cost</span>
+                <p className="text-2xl sm:text-3xl font-black text-emerald-300 mt-1">
                   ₹{totalFleetCost.toLocaleString('en-IN')}
                 </p>
                 <span className="text-[11px] text-slate-400 mt-0.5 block">For all {bikes.length} bikes</span>
@@ -533,16 +580,25 @@ export default function FuelCalculator() {
               {/* Total Litres */}
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
                 <span className="text-xs text-slate-300 font-medium">Total Petrol Required</span>
-                <p className="text-3xl sm:text-4xl font-black text-white mt-1">
-                  {totalFleetLitres.toFixed(1)} <span className="text-lg font-bold text-slate-300">Litres</span>
+                <p className="text-2xl sm:text-3xl font-black text-white mt-1">
+                  {totalFleetLitres.toFixed(1)} <span className="text-base font-bold text-slate-300">Litres</span>
                 </p>
                 <span className="text-[11px] text-slate-400 mt-0.5 block">Combined consumption</span>
               </div>
 
+              {/* Per-Person Split */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-xs text-slate-300 font-medium">Per-Person Split ({multiPassengerCount} People)</span>
+                <p className="text-2xl sm:text-3xl font-black text-emerald-400 mt-1">
+                  ₹{multiPerPersonCost.toLocaleString('en-IN')}
+                </p>
+                <span className="text-[11px] text-slate-400 mt-0.5 block">Fair share per person</span>
+              </div>
+
               {/* Avg Per Bike */}
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-xs text-slate-300 font-medium">Average Cost per Bike / Rider</span>
-                <p className="text-3xl sm:text-4xl font-black text-teal-300 mt-1">
+                <span className="text-xs text-slate-300 font-medium">Average Cost per Bike</span>
+                <p className="text-2xl sm:text-3xl font-black text-teal-300 mt-1">
                   ₹{avgCostPerBike.toLocaleString('en-IN')}
                 </p>
                 <span className="text-[11px] text-slate-400 mt-0.5 block">Per bike average</span>
@@ -551,7 +607,7 @@ export default function FuelCalculator() {
             </div>
           </div>
 
-          {/* INDIVIDUAL BIKES LIST & CUSTOM MILEAGE PER BIKE */}
+          {/* INDIVIDUAL BIKES LIST & MANUAL TEXT NAME & MILEAGE */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
@@ -576,20 +632,15 @@ export default function FuelCalculator() {
                   className="bg-white rounded-3xl p-5 border border-slate-200 shadow-soft space-y-4 hover:border-emerald-300 transition-colors"
                 >
                   
-                  {/* Bike Header */}
+                  {/* Bike Header & Delete Button */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <Bike className="w-4 h-4" />
                       </div>
-                      <div>
-                        <input
-                          type="text"
-                          value={bike.name}
-                          onChange={(e) => handleUpdateBike(bike.id, 'name', e.target.value)}
-                          className="font-black text-sm text-slate-900 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-emerald-500"
-                        />
-                      </div>
+                      <span className="font-black text-xs uppercase tracking-wider text-emerald-800">
+                        Bike #{index + 1}
+                      </span>
                     </div>
 
                     {bikes.length > 1 && (
@@ -604,34 +655,24 @@ export default function FuelCalculator() {
                     )}
                   </div>
 
-                  {/* Bike Model & Custom Mileage Inputs */}
+                  {/* Free Manual Bike Name & Custom Mileage Inputs */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        Select Bike Model:
+                        Bike Name / Model:
                       </label>
-                      <select
+                      <input
+                        type="text"
                         value={bike.model}
-                        onChange={(e) => {
-                          const selected = BIKE_MODELS_PRESETS.find(m => m.name === e.target.value);
-                          handleUpdateBike(bike.id, 'model', e.target.value);
-                          if (selected) {
-                            handleUpdateBike(bike.id, 'mileage', selected.defaultMileage);
-                          }
-                        }}
-                        className="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:border-emerald-500 bg-white"
-                      >
-                        {BIKE_MODELS_PRESETS.map((m) => (
-                          <option key={m.name} value={m.name}>
-                            {m.name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(e) => handleUpdateBike(bike.id, 'model', e.target.value)}
+                        placeholder="e.g. Royal Enfield, Duke 390, MT-15"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-500 bg-white"
+                      />
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        Custom Mileage (km/L):
+                        Mileage (km/L):
                       </label>
                       <input
                         type="number"
@@ -639,7 +680,7 @@ export default function FuelCalculator() {
                         onChange={(e) => handleUpdateBike(bike.id, 'mileage', e.target.value)}
                         placeholder="e.g. 30"
                         min="1"
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-black text-slate-900 focus:outline-none focus:border-emerald-500"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-black text-slate-900 focus:outline-none focus:border-emerald-500 bg-white"
                       />
                     </div>
                   </div>
