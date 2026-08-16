@@ -20,6 +20,7 @@ import {
   Sliders,
   Tag,
   Calculator,
+  Camera,
   Check
 } from 'lucide-react';
 
@@ -38,6 +39,7 @@ export default function ExpenseTracker() {
     isBudgetConfigured,
     resetAllData,
     setIsAddExpenseModalOpen, 
+    setIsReceiptScannerOpen,
     openAddExpenseForCategory,
     deleteExpense, 
     setActiveTab 
@@ -79,6 +81,15 @@ export default function ExpenseTracker() {
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           <button
+            onClick={() => setIsReceiptScannerOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-md shadow-emerald-600/25 transition-all active:scale-95"
+            title="Scan paper bill or receipt using AI Vision"
+          >
+            <Camera className="w-3.5 h-3.5" />
+            <span>📸 AI Scan Receipt</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('predictor')}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-xs"
           >
@@ -89,10 +100,10 @@ export default function ExpenseTracker() {
           {hasCategories && (
             <button
               onClick={() => setIsAddExpenseModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition-all active:scale-95"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
-              <span>+ Add Expense</span>
+              <span>+ Add Manual</span>
             </button>
           )}
         </div>

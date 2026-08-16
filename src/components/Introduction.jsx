@@ -53,8 +53,8 @@ export default function Introduction() {
       tag: 'Real-Time Budget Ledger',
       color: 'from-amber-500 to-orange-600',
       badgeBg: 'bg-amber-50 text-amber-700 border-amber-200',
-      description: 'Log and monitor daily spending against your customized budgets with live remaining balance alerts, category breakdown meters, and payment method filters.',
-      highlights: ['Live remaining budget counters', 'Overspending warning alerts', 'Dynamic category binding', 'Filter by cash / UPI / card']
+      description: 'Log and monitor daily spending against your customized budgets with AI Bill & Receipt Vision Scanner, live remaining balance alerts, and payment filters.',
+      highlights: ['AI Smart Receipt Vision Scanner 📸', 'Live remaining budget counters', 'Overspending warning alerts', 'Filter by cash / UPI / card']
     },
     {
       id: 'analytics',

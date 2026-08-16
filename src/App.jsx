@@ -15,6 +15,7 @@ import CreatorCard from './components/CreatorCard';
 import AuthModal from './components/AuthModal';
 import AddExpenseModal from './components/AddExpenseModal';
 import SetBudgetModal from './components/SetBudgetModal';
+import AIReceiptScannerModal from './components/AIReceiptScannerModal';
 import { 
   Heart, 
   ExternalLink, 
@@ -193,6 +194,7 @@ export default function App() {
       <AuthModal />
       <AddExpenseModal />
       <SetBudgetModal />
+      <AIReceiptScannerModal />
     </div>
   );
 }
