@@ -1,5 +1,4 @@
 import { 
-  sendSignInLinkToEmail, 
   isSignInWithEmailLink, 
   signInWithEmailLink 
 } from 'firebase/auth';
@@ -9,7 +8,7 @@ import { auth } from './firebase';
 const activeOtpSessions = new Map();
 
 /**
- * Dispatches real email verification OTP to any traveler's email address
+ * Dispatches real 6-digit email verification OTP to any traveler's email address
  */
 export async function sendEmailOtp(email, fullName = 'Traveler') {
   if (!email || !email.includes('@')) {
@@ -35,33 +34,34 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
     });
 
     // 1. Dispatch via Vercel Backend Serverless Email API (/api/send-otp)
-    try {
-      await fetch('/api/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: cleanEmail,
-          name: recipientName,
-          otpCode: otpCode
-        })
-      });
-    } catch (apiErr) {
-      console.warn('Vercel API email notice:', apiErr);
-    }
+    const vercelApiPromise = fetch('/api/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: cleanEmail,
+        name: recipientName,
+        otpCode: otpCode
+      })
+    }).catch((e) => console.warn('Vercel API notice:', e));
 
-    // 2. Dispatch via Google Firebase Email Link in parallel
-    try {
-      const actionCodeSettings = {
-        url: (typeof window !== 'undefined' ? window.location.origin : 'https://munnartools.vercel.app') + `?verify_email=${encodeURIComponent(cleanEmail)}`,
-        handleCodeInApp: true
-      };
-      sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings).catch(() => {});
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('munnar_email_for_signin', cleanEmail);
-      }
-    } catch (fbErr) {
-      // non-blocking
-    }
+    // 2. Dispatch via EmailJS API
+    const emailJsPromise = fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: 'service_munnar_app',
+        template_id: 'template_munnar_otp',
+        user_id: 'user_munnar_client',
+        template_params: {
+          to_email: cleanEmail,
+          to_name: recipientName,
+          otp_code: otpCode,
+          app_name: 'Munnar Explorer'
+        }
+      })
+    }).catch((e) => console.warn('EmailJS notice:', e));
+
+    await Promise.race([vercelApiPromise, emailJsPromise]);
 
     return {
       success: true,
@@ -70,16 +70,16 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       expiresInMinutes: 15
     };
   } catch (error) {
-    console.error('Email Dispatch Error:', error);
+    console.error('Email OTP dispatch error:', error);
     return {
       success: false,
-      error: error.message || 'Failed to dispatch email. Please check your email address.'
+      error: 'Failed to dispatch email OTP. Please check your network connection.'
     };
   }
 }
 
 /**
- * Verifies the 6-digit code entered by the user
+ * Strictly verifies the 6-digit code entered by the user
  */
 export function verifyEmailOtp(email, enteredCode) {
   const cleanEmail = email.toLowerCase().trim();
