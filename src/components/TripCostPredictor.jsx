@@ -11,14 +11,15 @@ import {
   Ticket, 
   ShoppingBag, 
   RotateCcw,
-  TrendingUp,
   Plus,
   Minus,
   Trash2,
   Tag,
-  ArrowRight
+  ArrowRight,
+  PlusCircle,
+  HelpCircle
 } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useApp, DEFAULT_CATEGORY_DEFINITIONS } from '../context/AppContext';
 import confetti from 'canvas-confetti';
 
 const TRAVEL_STYLES = [
@@ -61,63 +62,74 @@ const TRAVEL_STYLES = [
 ];
 
 export default function TripCostPredictor() {
-  const { setBudgets } = useApp();
+  const { saveTripCategories, setActiveTab } = useApp();
 
   const [selectedStyle, setSelectedStyle] = useState('comfort');
   const [days, setDays] = useState(3);
   const [travelers, setTravelers] = useState(2);
 
-  // Custom adjustments per default category
-  const activePreset = TRAVEL_STYLES.find((s) => s.id === selectedStyle) || TRAVEL_STYLES[1];
-
-  const [customStay, setCustomStay] = useState(activePreset.stayPerNight);
-  const [customFood, setCustomFood] = useState(activePreset.foodPerDay);
-  const [customTravel, setCustomTravel] = useState(activePreset.travelPerDay);
-  const [customTickets, setCustomTickets] = useState(activePreset.ticketsPerDay);
-  const [customShopping, setCustomShopping] = useState(activePreset.shoppingPerPerson);
-
-  // User-Defined Custom Categories
-  const [customCategories, setCustomCategories] = useState(() => {
-    const saved = localStorage.getItem('munnar_predictor_custom_cats');
-    return saved ? JSON.parse(saved) : [];
+  // Active Category List (User can delete default ones or add new ones)
+  const [categoriesList, setCategoriesList] = useState(() => {
+    const saved = localStorage.getItem('munnar_predictor_active_cats_v2');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return [
+      { id: 'rooms', name: 'Rooms & Stays', rate: 3000, rateType: 'roomsNights', icon: 'Hotel', color: 'blue' },
+      { id: 'food', name: 'Food & Dining', rate: 900, rateType: 'perPersonPerDay', icon: 'UtensilsCrossed', color: 'amber' },
+      { id: 'bike', name: 'Travel, Fuel & Cabs', rate: 1500, rateType: 'perDay', icon: 'Car', color: 'emerald' },
+      { id: 'tickets', name: 'Tickets & Safari', rate: 600, rateType: 'perPersonPerDay', icon: 'Ticket', color: 'purple' },
+      { id: 'shopping', name: 'Spices & Shopping', rate: 1800, rateType: 'perPerson', icon: 'ShoppingBag', color: 'rose' }
+    ];
   });
 
   const [newCatName, setNewCatName] = useState('');
-  const [newCatAmount, setNewCatAmount] = useState('');
-  const [newCatType, setNewCatType] = useState('fixed'); // 'fixed', 'perPerson', 'perDay'
+  const [newCatRate, setNewCatRate] = useState('');
+  const [newCatRateType, setNewCatRateType] = useState('fixed'); // 'fixed', 'perPerson', 'perDay', 'perPersonPerDay'
   const [isAddingCategory, setIsAddingCategory] = useState(false);
 
-  // Persist custom categories
+  // Persist category list
   useEffect(() => {
-    localStorage.setItem('munnar_predictor_custom_cats', JSON.stringify(customCategories));
-  }, [customCategories]);
+    localStorage.setItem('munnar_predictor_active_cats_v2', JSON.stringify(categoriesList));
+  }, [categoriesList]);
 
+  // Handle travel style preset selection
   const handleSelectStyle = (style) => {
     setSelectedStyle(style.id);
-    setCustomStay(style.stayPerNight);
-    setCustomFood(style.foodPerDay);
-    setCustomTravel(style.travelPerDay);
-    setCustomTickets(style.ticketsPerDay);
-    setCustomShopping(style.shoppingPerPerson);
+    setCategoriesList((prev) =>
+      prev.map((cat) => {
+        if (cat.id === 'rooms') return { ...cat, rate: style.stayPerNight };
+        if (cat.id === 'food') return { ...cat, rate: style.foodPerDay };
+        if (cat.id === 'bike') return { ...cat, rate: style.travelPerDay };
+        if (cat.id === 'tickets') return { ...cat, rate: style.ticketsPerDay };
+        if (cat.id === 'shopping') return { ...cat, rate: style.shoppingPerPerson };
+        return cat;
+      })
+    );
   };
 
   // Add Custom Category
   const handleAddCustomCategory = (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
-    const amt = parseFloat(newCatAmount) || 0;
-    if (amt <= 0) return;
+    const rateNum = parseFloat(newCatRate) || 0;
+    if (rateNum <= 0) return;
 
+    const newId = `cat_${Date.now()}`;
     const newCat = {
-      id: `cc_${Date.now()}`,
+      id: newId,
       name: newCatName.trim(),
-      amount: amt,
-      rateType: newCatType
+      rate: rateNum,
+      rateType: newCatRateType,
+      icon: 'Tag',
+      color: 'teal'
     };
 
-    setCustomCategories([...customCategories, newCat]);
+    setCategoriesList([...categoriesList, newCat]);
     setNewCatName('');
-    setNewCatAmount('');
+    setNewCatRate('');
     setIsAddingCategory(false);
 
     confetti({
@@ -127,68 +139,71 @@ export default function TripCostPredictor() {
     });
   };
 
-  // Remove Custom Category
-  const handleRemoveCustomCategory = (id) => {
-    setCustomCategories(customCategories.filter((c) => c.id !== id));
+  // Delete ANY category (default or custom)
+  const handleDeleteCategory = (id) => {
+    if (categoriesList.length <= 1) {
+      alert('You must keep at least 1 expense category in your trip.');
+      return;
+    }
+    setCategoriesList(categoriesList.filter((c) => c.id !== id));
   };
 
-  // Update existing custom category amount
-  const handleUpdateCustomAmount = (id, newAmt) => {
-    setCustomCategories(
-      customCategories.map((c) => {
+  // Update category rate value
+  const handleUpdateCategoryRate = (id, newRate) => {
+    setCategoriesList(
+      categoriesList.map((c) => {
         if (c.id === id) {
-          return { ...c, amount: parseFloat(newAmt) || 0 };
+          return { ...c, rate: parseFloat(newRate) || 0 };
         }
         return c;
       })
     );
   };
 
-  // Base Calculations
+  // Calculations
   const roomCount = Math.ceil(travelers / 2); // 2 people per room average
-  const totalStayCost = customStay * Math.max(1, days - 1) * roomCount; // nights = days - 1
-  const totalFoodCost = customFood * days * travelers;
-  const totalTravelCost = customTravel * days;
-  const totalTicketsCost = customTickets * days * travelers;
-  const totalShoppingCost = customShopping * travelers;
+  const nights = Math.max(1, days - 1);
 
-  // Custom Categories Calculations
-  const customCategoriesCost = customCategories.reduce((sum, cat) => {
-    let cost = cat.amount;
-    if (cat.rateType === 'perPerson') cost = cat.amount * travelers;
-    if (cat.rateType === 'perDay') cost = cat.amount * days;
-    return sum + cost;
-  }, 0);
+  const calculateCategoryTotal = (cat) => {
+    const r = cat.rate || 0;
+    if (cat.rateType === 'roomsNights') return r * nights * roomCount;
+    if (cat.rateType === 'perPersonPerDay') return r * days * travelers;
+    if (cat.rateType === 'perDay') return r * days;
+    if (cat.rateType === 'perPerson') return r * travelers;
+    return r; // fixed
+  };
 
-  const totalEstimatedCost = 
-    totalStayCost + 
-    totalFoodCost + 
-    totalTravelCost + 
-    totalTicketsCost + 
-    totalShoppingCost + 
-    customCategoriesCost;
+  const calculatedItems = categoriesList.map((cat) => ({
+    ...cat,
+    totalCost: calculateCategoryTotal(cat)
+  }));
 
+  const totalEstimatedCost = calculatedItems.reduce((sum, item) => sum + item.totalCost, 0);
   const costPerPerson = Math.round(totalEstimatedCost / (travelers || 1));
   const costPerDay = Math.round(totalEstimatedCost / (days || 1));
 
-  // 1-Tap apply to expense tracker budget
-  const handleApplyToBudget = () => {
-    setBudgets({
-      rooms: totalStayCost,
-      food: totalFoodCost,
-      snacks: Math.round(totalFoodCost * 0.25),
-      bike: totalTravelCost,
-      tickets: totalTicketsCost,
-      unexpected: totalShoppingCost + customCategoriesCost
+  // Save to Expense Tracker & Redirect
+  const handleSaveAndGoToTracker = () => {
+    const categoriesMap = {};
+    const budgetsMap = {};
+
+    calculatedItems.forEach((item) => {
+      categoriesMap[item.id] = {
+        id: item.id,
+        name: item.name,
+        fullName: item.name,
+        subtitle: `Configured in Trip Predictor`,
+        icon: item.icon || 'Tag',
+        color: item.color || 'emerald',
+        badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        barColor: 'bg-emerald-500',
+        accentColor: '#10b981'
+      };
+      budgetsMap[item.id] = item.totalCost;
     });
 
-    confetti({
-      particleCount: 50,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
-
-    alert(`🎉 Successfully applied ₹${totalEstimatedCost.toLocaleString('en-IN')} as your trip budget in the Expenses Tracker!`);
+    saveTripCategories(categoriesMap, budgetsMap);
+    setActiveTab('tracker');
   };
 
   return (
@@ -199,29 +214,29 @@ export default function TripCostPredictor() {
         <div>
           <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">
             <Calculator className="w-4 h-4 text-emerald-600" />
-            <span>Trip Budget Predictor</span>
+            <span>Trip Cost & Category Setup</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            All-in-One Total Trip Cost Predictor 🧮💰
+            All-in-One Trip Cost Predictor 🧮💰
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Estimate total costs for Stays, Food, Fuel/Cab, Tickets, Shopping, and your own custom expense categories.
+            Customize, add, or delete your trip expense categories, calculate your predicted budget, and start tracking!
           </p>
         </div>
 
         <button
-          onClick={handleApplyToBudget}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all self-start sm:self-auto"
+          onClick={handleSaveAndGoToTracker}
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 active:scale-95 transition-all self-start sm:self-auto"
         >
           <Sparkles className="w-4 h-4 stroke-[2.5]" />
-          <span>Apply to Expense Tracker</span>
+          <span>Save & Go to Expense Tracker 🚀</span>
         </button>
       </div>
 
       {/* STEP 1: Select Travel Style */}
       <div className="space-y-3">
         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-          1. Select Your Travel Style
+          1. Select Travel Style Preset
         </label>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
@@ -267,7 +282,7 @@ export default function TripCostPredictor() {
             </div>
             <div>
               <h4 className="font-bold text-xs sm:text-sm text-slate-900">Trip Duration</h4>
-              <p className="text-[11px] text-slate-500">{days} Days ({Math.max(1, days - 1)} Nights)</p>
+              <p className="text-[11px] text-slate-500">{days} Days ({nights} Nights)</p>
             </div>
           </div>
 
@@ -343,13 +358,17 @@ export default function TripCostPredictor() {
         {/* Left 2 Cols: Category Adjustments & Breakdown */}
         <div className="lg:col-span-2 bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-soft space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
-              Predicted Category Cost Breakdown
-            </h3>
+            <div>
+              <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
+                2. Customize & Manage Your Categories ({categoriesList.length})
+              </h3>
+              <p className="text-[11px] text-slate-400">Click 🗑️ to delete any category, or add your custom categories!</p>
+            </div>
+            
             <button
               type="button"
               onClick={() => setIsAddingCategory(!isAddingCategory)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold transition-all"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold transition-all"
             >
               <Plus className="w-3.5 h-3.5 stroke-[3]" />
               <span>+ Add Custom Category</span>
@@ -360,13 +379,13 @@ export default function TripCostPredictor() {
           {isAddingCategory && (
             <form onSubmit={handleAddCustomCategory} className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-3 animate-slideDown">
               <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 block">
-                Add Your Custom Expense Category
+                Add New Expense Category
               </span>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <input
                   type="text"
-                  placeholder="Category Name (e.g. Campfire, Zipline, Drone)"
+                  placeholder="Category Name (e.g. Campfire, Zipline, Guide)"
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   required
@@ -375,22 +394,23 @@ export default function TripCostPredictor() {
 
                 <input
                   type="number"
-                  placeholder="Amount (₹)"
-                  value={newCatAmount}
-                  onChange={(e) => setNewCatAmount(e.target.value)}
+                  placeholder="Rate (₹)"
+                  value={newCatRate}
+                  onChange={(e) => setNewCatRate(e.target.value)}
                   required
                   min="1"
                   className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-black focus:outline-none focus:border-emerald-500 bg-white"
                 />
 
                 <select
-                  value={newCatType}
-                  onChange={(e) => setNewCatType(e.target.value)}
+                  value={newCatRateType}
+                  onChange={(e) => setNewCatRateType(e.target.value)}
                   className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:border-emerald-500 bg-white"
                 >
                   <option value="fixed">Fixed Flat Total</option>
                   <option value="perPerson">Per Person Rate</option>
                   <option value="perDay">Per Day Rate</option>
+                  <option value="perPersonPerDay">Per Person Per Day</option>
                 </select>
               </div>
 
@@ -412,149 +432,19 @@ export default function TripCostPredictor() {
             </form>
           )}
 
-          <div className="space-y-3.5 divide-y divide-slate-100">
-            
-            {/* 1. Rooms & Stays */}
-            <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200">
-                  <Hotel className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">Rooms & Stays</h4>
-                  <p className="text-[11px] text-slate-400">{roomCount} rooms × {Math.max(1, days - 1)} nights</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 self-end sm:self-auto">
-                <input
-                  type="number"
-                  value={customStay}
-                  onChange={(e) => setCustomStay(parseInt(e.target.value) || 0)}
-                  className="w-24 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-right"
-                  title="Price per room/night"
-                />
-                <span className="text-sm font-black text-slate-900 w-24 text-right">
-                  ₹{totalStayCost.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-
-            {/* 2. Food & Dining */}
-            <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-200">
-                  <UtensilsCrossed className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">Food & Dining</h4>
-                  <p className="text-[11px] text-slate-400">Breakfast, Lunch & Dinner for {travelers} people</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 self-end sm:self-auto">
-                <input
-                  type="number"
-                  value={customFood}
-                  onChange={(e) => setCustomFood(parseInt(e.target.value) || 0)}
-                  className="w-24 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-right"
-                  title="Daily food per person"
-                />
-                <span className="text-sm font-black text-slate-900 w-24 text-right">
-                  ₹{totalFoodCost.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-
-            {/* 3. Travel / Fuel / Cab */}
-            <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <Car className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">Travel, Fuel & Cabs</h4>
-                  <p className="text-[11px] text-slate-400">Bike petrol or sightseeing taxi for {days} days</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 self-end sm:self-auto">
-                <input
-                  type="number"
-                  value={customTravel}
-                  onChange={(e) => setCustomTravel(parseInt(e.target.value) || 0)}
-                  className="w-24 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-right"
-                  title="Daily vehicle expense"
-                />
-                <span className="text-sm font-black text-slate-900 w-24 text-right">
-                  ₹{totalTravelCost.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-
-            {/* 4. Tickets & Safaris */}
-            <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-purple-50 text-purple-700 border border-purple-200">
-                  <Ticket className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">Tickets & Jeep Safari</h4>
-                  <p className="text-[11px] text-slate-400">Eravikulam bus, boating, passes</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 self-end sm:self-auto">
-                <input
-                  type="number"
-                  value={customTickets}
-                  onChange={(e) => setCustomTickets(parseInt(e.target.value) || 0)}
-                  className="w-24 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-right"
-                  title="Daily tickets per person"
-                />
-                <span className="text-sm font-black text-slate-900 w-24 text-right">
-                  ₹{totalTicketsCost.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-
-            {/* 5. Spices & Shopping */}
-            <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-rose-50 text-rose-700 border border-rose-200">
-                  <ShoppingBag className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">Spices & Tea Shopping</h4>
-                  <p className="text-[11px] text-slate-400">Cardamom, tea powder, chocolates</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 self-end sm:self-auto">
-                <input
-                  type="number"
-                  value={customShopping}
-                  onChange={(e) => setCustomShopping(parseInt(e.target.value) || 0)}
-                  className="w-24 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-right"
-                  title="Shopping per person"
-                />
-                <span className="text-sm font-black text-slate-900 w-24 text-right">
-                  ₹{totalShoppingCost.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-
-            {/* Custom User Categories */}
-            {customCategories.map((cat) => {
-              let calculatedCatTotal = cat.amount;
-              let subtitle = 'Fixed flat expense';
-              if (cat.rateType === 'perPerson') {
-                calculatedCatTotal = cat.amount * travelers;
-                subtitle = `₹${cat.amount} × ${travelers} people`;
-              } else if (cat.rateType === 'perDay') {
-                calculatedCatTotal = cat.amount * days;
-                subtitle = `₹${cat.amount} × ${days} days`;
-              }
+          {/* Categories List with Delete & Edit on EVERY item */}
+          <div className="space-y-3 divide-y divide-slate-100">
+            {calculatedItems.map((cat) => {
+              let subtitle = 'Fixed Flat Budget';
+              if (cat.rateType === 'roomsNights') subtitle = `${roomCount} rooms × ${nights} nights`;
+              if (cat.rateType === 'perPersonPerDay') subtitle = `₹${cat.rate} × ${days} days × ${travelers} people`;
+              if (cat.rateType === 'perDay') subtitle = `₹${cat.rate} × ${days} days`;
+              if (cat.rateType === 'perPerson') subtitle = `₹${cat.rate} × ${travelers} people`;
 
               return (
                 <div key={cat.id} className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-teal-50 text-teal-700 border border-teal-200">
+                    <div className="p-2 rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
                       <Tag className="w-4 h-4" />
                     </div>
                     <div>
@@ -562,9 +452,9 @@ export default function TripCostPredictor() {
                         <span>{cat.name}</span>
                         <button
                           type="button"
-                          onClick={() => handleRemoveCustomCategory(cat.id)}
-                          className="text-slate-300 hover:text-rose-600 transition-colors"
-                          title="Remove custom category"
+                          onClick={() => handleDeleteCategory(cat.id)}
+                          className="text-slate-300 hover:text-rose-600 transition-colors p-0.5"
+                          title={`Delete ${cat.name} category`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -572,21 +462,22 @@ export default function TripCostPredictor() {
                       <p className="text-[11px] text-slate-400">{subtitle}</p>
                     </div>
                   </div>
+
                   <div className="flex items-center gap-3 self-end sm:self-auto">
                     <input
                       type="number"
-                      value={cat.amount}
-                      onChange={(e) => handleUpdateCustomAmount(cat.id, e.target.value)}
-                      className="w-24 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-right"
+                      value={cat.rate}
+                      onChange={(e) => handleUpdateCategoryRate(cat.id, e.target.value)}
+                      className="w-24 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-right focus:outline-none focus:border-emerald-500 bg-white"
+                      title="Rate value"
                     />
-                    <span className="text-sm font-black text-teal-700 w-24 text-right">
-                      ₹{calculatedCatTotal.toLocaleString('en-IN')}
+                    <span className="text-sm font-black text-slate-900 w-24 text-right">
+                      ₹{cat.totalCost.toLocaleString('en-IN')}
                     </span>
                   </div>
                 </div>
               );
             })}
-
           </div>
         </div>
 
@@ -610,7 +501,7 @@ export default function TripCostPredictor() {
                   ₹{totalEstimatedCost.toLocaleString('en-IN')}
                 </p>
                 <p className="text-xs text-slate-300 mt-1 font-medium">
-                  Total predicted trip budget for {travelers} {travelers === 1 ? 'person' : 'people'}
+                  Total predicted trip budget for {travelers} {travelers === 1 ? 'person' : 'people'} ({categoriesList.length} Categories)
                 </p>
               </div>
 
@@ -627,24 +518,15 @@ export default function TripCostPredictor() {
                   <span>Daily Burn Rate:</span>
                   <strong className="text-white">₹{costPerDay.toLocaleString('en-IN')} / day</strong>
                 </div>
-
-                {customCategories.length > 0 && (
-                  <div className="flex justify-between text-slate-300 pt-2 border-t border-white/10">
-                    <span>Custom Extras ({customCategories.length}):</span>
-                    <strong className="text-teal-300 font-bold">
-                      +₹{customCategoriesCost.toLocaleString('en-IN')}
-                    </strong>
-                  </div>
-                )}
               </div>
 
               <button
                 type="button"
-                onClick={handleApplyToBudget}
+                onClick={handleSaveAndGoToTracker}
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4 stroke-[3]" />
-                <span>Save as My Trip Budget</span>
+                <span>Save & Go to Expense Tracker 🚀</span>
               </button>
             </div>
           </div>

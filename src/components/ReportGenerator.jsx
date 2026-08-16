@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { useApp, CATEGORY_DEFINITIONS } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { 
@@ -27,6 +27,7 @@ export default function ReportGenerator() {
     user, 
     budgets, 
     expenses, 
+    categoryDefinitions,
     categoryStats, 
     totalBudget, 
     totalSpent, 
@@ -36,6 +37,7 @@ export default function ReportGenerator() {
   } = useApp();
 
   const printRef = useRef();
+  const activeCategories = Object.values(categoryDefinitions || {});
 
   const travelerName = user?.name || 'Guest Traveler';
   const travelerPhone = user?.phone ? `+91 ${user.phone}` : 'Not linked';
@@ -98,7 +100,7 @@ export default function ReportGenerator() {
       doc.setTextColor(21, 128, 61);
       doc.text('1. Category Budget vs. Actual Spend Summary', 14, 70);
 
-      const categoryRows = Object.values(CATEGORY_DEFINITIONS).map((cat) => {
+      const categoryRows = activeCategories.map((cat) => {
         const stat = categoryStats[cat.id] || { allocated: 0, spent: 0, remaining: 0, percentUsed: 0 };
         return [
           cat.name,
@@ -146,7 +148,7 @@ export default function ReportGenerator() {
       doc.text('2. Itemized Chronological Expense Ledger', 14, finalY);
 
       const expenseRows = expenses.map((exp, idx) => {
-        const catName = CATEGORY_DEFINITIONS[exp.category]?.name || exp.category;
+        const catName = categoryDefinitions[exp.category]?.name || exp.category;
         return [
           (idx + 1).toString(),
           `${exp.date} ${exp.time || ''}`,
@@ -209,7 +211,7 @@ export default function ReportGenerator() {
     // Category Summary
     csvContent += `CATEGORY SUMMARY\r\n`;
     csvContent += `Category,Allocated Budget (INR),Total Spent (INR),Remaining Balance (INR),Percentage Used\r\n`;
-    Object.values(CATEGORY_DEFINITIONS).forEach((cat) => {
+    activeCategories.forEach((cat) => {
       const stat = categoryStats[cat.id] || { allocated: 0, spent: 0, remaining: 0, percentUsed: 0 };
       csvContent += `"${cat.name}",${stat.allocated},${stat.spent},${stat.remaining},${stat.percentUsed}%\r\n`;
     });
@@ -219,7 +221,7 @@ export default function ReportGenerator() {
     csvContent += `ITEMIZED TRANSACTIONS\r\n`;
     csvContent += `ID,Date,Time,Category,Title,Payment Mode,Note,Amount (INR)\r\n`;
     expenses.forEach((exp, idx) => {
-      const catName = CATEGORY_DEFINITIONS[exp.category]?.name || exp.category;
+      const catName = categoryDefinitions[exp.category]?.name || exp.category;
       csvContent += `${idx + 1},"${exp.date}","${exp.time || ''}","${catName}","${exp.title.replace(/"/g, '""')}","${exp.paymentMode}","${(exp.note || '').replace(/"/g, '""')}",${exp.amount}\r\n`;
     });
 
@@ -238,7 +240,7 @@ export default function ReportGenerator() {
   };
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 animate-fadeIn">
       
       {/* Top Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -248,55 +250,56 @@ export default function ReportGenerator() {
             <span>Trip Document & Reports</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            Downloadable Trip Expense Report
+            Official Travel Expense Report 📑
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Full itemized breakdown showing spending per category, total allocated vs. remaining balance.
+            Download your customized Munnar trip statement in PDF & CSV spreadsheet format.
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={handleDownloadPDF}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/30 transition-all active:scale-95"
-          >
-            <Download className="w-4 h-4 stroke-[2.5]" />
-            <span>Download PDF</span>
-          </button>
-
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold transition-all shadow-xs"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-xs"
           >
-            <FileSpreadsheet className="w-4 h-4 text-teal-400" />
+            <Download className="w-4 h-4 text-emerald-600" />
             <span>Export CSV</span>
           </button>
 
           <button
             onClick={handlePrint}
-            className="p-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors hidden sm:flex"
-            title="Print Document"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-xs"
           >
-            <Printer className="w-4 h-4" />
+            <Printer className="w-4 h-4 text-slate-600" />
+            <span>Print</span>
+          </button>
+
+          <button
+            onClick={handleDownloadPDF}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all active:scale-95"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download PDF</span>
           </button>
         </div>
       </div>
 
-      {/* Printable / Screen Report Document */}
+      {/* Printable Report Document Card */}
       <div 
         ref={printRef}
-        className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-soft space-y-6 print:shadow-none print:border-none print:p-0"
+        className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl space-y-6 print:shadow-none print:border-none print:p-0"
       >
         
-        {/* Report Document Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b-2 border-slate-100">
+        {/* Document Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b border-slate-100">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Munnar Explorer Official Trip Report</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 uppercase tracking-widest">
+                Official Trip Audit
+              </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-2">
               Expense Summary & Itemized Audit
             </h1>
             <p className="text-xs text-slate-500 mt-1">
@@ -354,14 +357,14 @@ export default function ReportGenerator() {
           </div>
         </div>
 
-        {/* Section 1: 6 Categories Comparison Table */}
+        {/* Section 1: Categories Comparison Table */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-extrabold text-sm sm:text-base text-slate-900 flex items-center gap-2">
               <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">1</span>
               <span>Category Budget vs. Spend Comparison</span>
             </h3>
-            <span className="text-xs font-semibold text-slate-500">6 Defined Categories</span>
+            <span className="text-xs font-semibold text-slate-500">{activeCategories.length} Categories</span>
           </div>
 
           <div className="overflow-x-auto rounded-2xl border border-slate-200">
@@ -377,7 +380,7 @@ export default function ReportGenerator() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
-                {Object.values(CATEGORY_DEFINITIONS).map((cat) => {
+                {activeCategories.map((cat) => {
                   const stat = categoryStats[cat.id] || { allocated: 0, spent: 0, remaining: 0, percentUsed: 0 };
                   
                   return (
@@ -450,51 +453,53 @@ export default function ReportGenerator() {
           <div className="flex items-center justify-between">
             <h3 className="font-extrabold text-sm sm:text-base text-slate-900 flex items-center gap-2">
               <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">2</span>
-              <span>Itemized Expenses Ledger</span>
+              <span>Chronological Expense Ledger</span>
             </h3>
             <span className="text-xs font-semibold text-slate-500">{expenses.length} Records</span>
           </div>
 
           <div className="overflow-x-auto rounded-2xl border border-slate-200">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[11px] border-b border-slate-200">
+              <thead className="bg-slate-100/90 text-slate-700 font-bold uppercase text-[11px] border-b border-slate-200">
                 <tr>
-                  <th className="py-3 px-3">#</th>
-                  <th className="py-3 px-3">Date & Time</th>
-                  <th className="py-3 px-3">Category</th>
-                  <th className="py-3 px-3">Expense Details & Note</th>
-                  <th className="py-3 px-3">Mode</th>
-                  <th className="py-3 px-3 text-right">Amount (₹)</th>
+                  <th className="py-3 px-3 sm:px-4">#</th>
+                  <th className="py-3 px-3 sm:px-4">Date & Time</th>
+                  <th className="py-3 px-3 sm:px-4">Category</th>
+                  <th className="py-3 px-3 sm:px-4">Description / Notes</th>
+                  <th className="py-3 px-3 sm:px-4 text-center">Mode</th>
+                  <th className="py-3 px-3 sm:px-4 text-right">Amount</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+              <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
                 {expenses.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-6 text-center text-slate-400">
+                    <td colSpan="6" className="py-8 text-center text-slate-400 text-xs">
                       No expenses logged yet.
                     </td>
                   </tr>
                 ) : (
                   expenses.map((exp, idx) => {
-                    const catName = CATEGORY_DEFINITIONS[exp.category]?.name || exp.category;
+                    const cat = categoryDefinitions[exp.category] || { name: exp.category };
                     return (
-                      <tr key={exp.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="py-2.5 px-3 text-slate-400 font-bold">{idx + 1}</td>
-                        <td className="py-2.5 px-3 whitespace-nowrap text-slate-600 font-medium">
-                          {exp.date} {exp.time ? `• ${exp.time}` : ''}
+                      <tr key={exp.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3 px-3 sm:px-4 text-slate-400 font-mono text-xs">{idx + 1}</td>
+                        <td className="py-3 px-3 sm:px-4 whitespace-nowrap text-xs text-slate-500">
+                          {exp.date} {exp.time ? `(${exp.time})` : ''}
                         </td>
-                        <td className="py-2.5 px-3 font-bold text-slate-800">
-                          {catName}
+                        <td className="py-3 px-3 sm:px-4 font-bold text-slate-900">
+                          {cat.name}
                         </td>
-                        <td className="py-2.5 px-3">
-                          <span className="font-semibold text-slate-900 block">{exp.title}</span>
-                          {exp.note && (
-                            <span className="text-[11px] text-slate-600 italic block">Note: {exp.note}</span>
-                          )}
+                        <td className="py-3 px-3 sm:px-4">
+                          <p className="font-semibold text-slate-900">{exp.title}</p>
+                          {exp.note && <p className="text-[11px] text-slate-500 italic mt-0.5">"{exp.note}"</p>}
                         </td>
-                        <td className="py-2.5 px-3 text-slate-600 font-semibold">{exp.paymentMode}</td>
-                        <td className="py-2.5 px-3 text-right font-black text-slate-900">
-                          ₹{exp.amount.toLocaleString('en-IN')}
+                        <td className="py-3 px-3 sm:px-4 text-center">
+                          <span className="inline-block px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">
+                            {exp.paymentMode || 'UPI'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 sm:px-4 text-right font-black text-slate-900">
+                          ₹{Number(exp.amount).toLocaleString('en-IN')}
                         </td>
                       </tr>
                     );
@@ -505,43 +510,21 @@ export default function ReportGenerator() {
           </div>
         </div>
 
-        {/* Footer Attribution & Promotion */}
-        <div className="pt-6 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        {/* Report Sign-off & Developer Badge */}
+        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold">
-              B
-            </div>
-            <div>
-              <p className="font-bold text-slate-800">Designed & Developed by Bharathkumar E</p>
-              <p className="text-[11px] text-slate-600">Available free for all Munnar travelers & friends</p>
-            </div>
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Digital Certificate of Authenticity • MunnarGo System</span>
           </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <a 
-              href="tel:8220802736" 
-              className="text-emerald-700 font-bold hover:underline"
-            >
-              📞 8220802736
-            </a>
-            <span>•</span>
-            <a 
-              href="mailto:bharathkumarelango02@gmail.com" 
-              className="text-emerald-700 font-bold hover:underline"
-            >
-              ✉️ bharathkumarelango02@gmail.com
-            </a>
-            <span>•</span>
-            <a 
-              href="https://apexassure.vercel.app/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-emerald-700 font-bold hover:underline inline-flex items-center gap-1"
-            >
-              🌐 apexassure.vercel.app
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
+          <a
+            href="https://apexassure.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-700 font-bold hover:underline flex items-center gap-1"
+          >
+            <span>Developed by Bharathkumar E</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
 
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useApp, CATEGORY_DEFINITIONS } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 import { 
   X, 
   Plus, 
@@ -8,23 +8,9 @@ import {
   CreditCard, 
   FileText, 
   Check, 
-  Bike, 
-  UtensilsCrossed, 
-  Coffee, 
-  BedDouble, 
-  Ticket, 
-  ShieldAlert,
+  Tag,
   Sparkles
 } from 'lucide-react';
-
-const ICON_MAP = {
-  Bike,
-  UtensilsCrossed,
-  Coffee,
-  BedDouble,
-  Ticket,
-  ShieldAlert
-};
 
 export default function AddExpenseModal() {
   const { 
@@ -32,10 +18,14 @@ export default function AddExpenseModal() {
     setIsAddExpenseModalOpen, 
     addExpense, 
     prefilledCategory, 
-    categoryStats 
+    categoryStats,
+    categoryDefinitions
   } = useApp();
 
-  const [category, setCategory] = useState(prefilledCategory || 'bike');
+  const activeCategories = Object.values(categoryDefinitions || {});
+  const defaultCatId = prefilledCategory || (activeCategories[0]?.id || 'other');
+
+  const [category, setCategory] = useState(defaultCatId);
   const [amount, setAmount] = useState('');
   const [title, setTitle] = useState('');
   const [paymentMode, setPaymentMode] = useState('UPI');
@@ -46,8 +36,10 @@ export default function AddExpenseModal() {
   useEffect(() => {
     if (prefilledCategory) {
       setCategory(prefilledCategory);
+    } else if (activeCategories.length > 0 && (!category || !categoryDefinitions[category])) {
+      setCategory(activeCategories[0].id);
     }
-  }, [prefilledCategory, isAddExpenseModalOpen]);
+  }, [prefilledCategory, isAddExpenseModalOpen, categoryDefinitions]);
 
   if (!isAddExpenseModalOpen) return null;
 
@@ -68,7 +60,7 @@ export default function AddExpenseModal() {
     }
 
     addExpense({
-      category,
+      category: category || activeCategories[0]?.id || 'other',
       amount: numAmount,
       title: title.trim(),
       paymentMode,
@@ -76,7 +68,6 @@ export default function AddExpenseModal() {
       date
     });
 
-    // Reset and close
     setAmount('');
     setTitle('');
     setNote('');
@@ -127,22 +118,22 @@ export default function AddExpenseModal() {
           {/* Amount Input */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Expense Amount (₹)
+              Expense Amount (₹ INR) *
             </label>
             <div className="relative">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xl">
-                ₹
-              </div>
+              <span className="absolute left-4 top-3 text-lg font-black text-emerald-700">₹</span>
               <input
                 type="number"
-                step="any"
-                min="1"
                 required
-                autoFocus
-                placeholder="0"
+                min="1"
+                step="any"
+                placeholder="0.00"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-slate-200 text-2xl font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-300"
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  setError('');
+                }}
+                className="w-full pl-9 pr-4 py-3 rounded-2xl border-2 border-slate-200 text-xl font-black text-slate-900 focus:outline-none focus:border-emerald-500 transition-colors shadow-xs"
               />
             </div>
 
@@ -161,49 +152,50 @@ export default function AddExpenseModal() {
             </div>
           </div>
 
-          {/* Category Selector (6 Options) */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-              Select Category (6 Core Options)
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {Object.values(CATEGORY_DEFINITIONS).map((cat) => {
-                const IconComponent = ICON_MAP[cat.icon] || Sparkles;
-                const isSelected = category === cat.id;
-                const stat = categoryStats[cat.id] || { remaining: 0 };
+          {/* Category Selector */}
+          {activeCategories.length > 0 && (
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                Select Expense Category
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {activeCategories.map((cat) => {
+                  const isSelected = category === cat.id;
+                  const stat = categoryStats[cat.id] || { remaining: 0 };
 
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setCategory(cat.id)}
-                    className={`p-2.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
-                      isSelected
-                        ? 'border-emerald-600 bg-emerald-50/80 shadow-md ring-2 ring-emerald-500/20'
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className={`p-1.5 rounded-xl ${isSelected ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
-                        <IconComponent className="w-4 h-4" />
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setCategory(cat.id)}
+                      className={`p-2.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                        isSelected
+                          ? 'border-emerald-600 bg-emerald-50/80 shadow-md ring-2 ring-emerald-500/20'
+                          : 'border-slate-200 hover:border-slate-300 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className={`p-1.5 rounded-xl ${isSelected ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                          <Tag className="w-4 h-4" />
+                        </div>
+                        {isSelected && <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />}
                       </div>
-                      {isSelected && <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />}
-                    </div>
-                    <div>
-                      <span className="font-bold text-xs text-slate-900 block leading-tight">{cat.name}</span>
-                      <span className="text-[10px] text-slate-700 font-medium">₹{stat.remaining.toLocaleString('en-IN')} left</span>
-                    </div>
-                  </button>
-                );
-              })}
+                      <div>
+                        <span className="font-bold text-xs text-slate-900 block leading-tight truncate">{cat.name}</span>
+                        <span className="text-[10px] text-slate-700 font-medium">₹{stat.remaining.toLocaleString('en-IN')} left</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Real-Time Balance Impact Callout */}
-          {amount > 0 && (
+          {amount > 0 && categoryDefinitions[category] && (
             <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1">
               <div className="flex justify-between text-slate-600">
-                <span>Current {CATEGORY_DEFINITIONS[category]?.name} Remaining:</span>
+                <span>Current {categoryDefinitions[category]?.name} Remaining:</span>
                 <span className="font-bold">₹{currentCatStat.remaining.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-slate-600">
@@ -211,7 +203,7 @@ export default function AddExpenseModal() {
                 <span className="font-bold text-rose-600">-₹{Number(amount).toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between pt-1 border-t border-slate-200 font-black">
-                <span className="text-slate-800">New Category Remaining Balance:</span>
+                <span className="text-slate-800">New Remaining Balance:</span>
                 <span className={previewRemaining < 0 ? 'text-rose-600' : 'text-emerald-700'}>
                   ₹{previewRemaining.toLocaleString('en-IN')}
                 </span>
@@ -222,15 +214,15 @@ export default function AddExpenseModal() {
           {/* Title / Description */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Expense Details / Title
+              Expense Details / Title *
             </label>
             <input
               type="text"
               required
-              placeholder="e.g. 3000 for Bike Petrol / Kerala Lunch / Shikara Boating"
+              placeholder="e.g. Fuel at Adimali / Kerala Lunch / Jeep Ride"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-emerald-500 font-medium"
             />
           </div>
 
@@ -243,7 +235,7 @@ export default function AddExpenseModal() {
               <select
                 value={paymentMode}
                 onChange={(e) => setPaymentMode(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium bg-white"
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-emerald-500 font-medium bg-white"
               >
                 <option value="UPI">📱 UPI / GPay / PhonePe</option>
                 <option value="Cash">💵 Cash</option>
@@ -260,7 +252,7 @@ export default function AddExpenseModal() {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium bg-white"
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-emerald-500 font-medium bg-white"
               />
             </div>
           </div>
@@ -268,30 +260,27 @@ export default function AddExpenseModal() {
           {/* Optional Note */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Extra Note (Optional)
+              Optional Notes / Bill Details
             </label>
-            <input
-              type="text"
-              placeholder="e.g. Paid at Munnar Town BPCL pump"
+            <textarea
+              rows="2"
+              placeholder="e.g. Paid for 4 people / Received GST bill"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
-            />
+              className="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-500 custom-scrollbar resize-none"
+            ></textarea>
           </div>
 
           {/* Submit Button */}
-          <div className="pt-2">
-            <button
-              type="submit"
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.99] text-white text-sm font-black shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all"
-            >
-              <Plus className="w-5 h-5 stroke-[2.5]" />
-              <span>Record & Deduct ₹{amount || '0'}</span>
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex items-center justify-center gap-2"
+          >
+            <Plus className="w-5 h-5 stroke-[3]" />
+            <span>Save & Deduct From Budget</span>
+          </button>
 
         </form>
-
       </div>
     </div>
   );

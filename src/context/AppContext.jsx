@@ -2,43 +2,10 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import confetti from 'canvas-confetti';
 import { saveUserTripToCloud, loadUserTripFromCloud } from '../services/firebase';
 
-export const CATEGORY_DEFINITIONS = {
-  bike: {
-    id: 'bike',
-    name: 'Bike',
-    fullName: 'Bike & Transport',
-    subtitle: 'Fuel, Rental, Tolls, Spares, Parking',
-    icon: 'Bike',
-    color: 'emerald',
-    badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    barColor: 'bg-emerald-500',
-    accentColor: '#10b981'
-  },
-  food: {
-    id: 'food',
-    name: 'Food',
-    fullName: 'Food & Meals',
-    subtitle: 'Breakfast, Lunch, Dinner, Kerala Meals',
-    icon: 'UtensilsCrossed',
-    color: 'amber',
-    badgeBg: 'bg-amber-50 text-amber-700 border-amber-200',
-    barColor: 'bg-amber-500',
-    accentColor: '#f59e0b'
-  },
-  snacks: {
-    id: 'snacks',
-    name: 'Snacks',
-    fullName: 'Snacks & Beverages',
-    subtitle: 'Munnar Tea, Coffee, Kerala Snacks, Fruits',
-    icon: 'Coffee',
-    color: 'orange',
-    badgeBg: 'bg-orange-50 text-orange-700 border-orange-200',
-    barColor: 'bg-orange-500',
-    accentColor: '#f97316'
-  },
+export const DEFAULT_CATEGORY_DEFINITIONS = {
   rooms: {
     id: 'rooms',
-    name: 'Rooms',
+    name: 'Rooms & Stays',
     fullName: 'Rooms & Stays',
     subtitle: 'Resorts, Homestays, Hotels, Tents',
     icon: 'BedDouble',
@@ -47,23 +14,45 @@ export const CATEGORY_DEFINITIONS = {
     barColor: 'bg-blue-500',
     accentColor: '#3b82f6'
   },
+  food: {
+    id: 'food',
+    name: 'Food & Dining',
+    fullName: 'Food & Meals',
+    subtitle: 'Breakfast, Lunch, Dinner, Kerala Meals',
+    icon: 'UtensilsCrossed',
+    color: 'amber',
+    badgeBg: 'bg-amber-50 text-amber-700 border-amber-200',
+    barColor: 'bg-amber-500',
+    accentColor: '#f59e0b'
+  },
+  bike: {
+    id: 'bike',
+    name: 'Travel & Fuel',
+    fullName: 'Travel, Fuel & Cabs',
+    subtitle: 'Fuel, Rental, Tolls, Parking, Cabs',
+    icon: 'Car',
+    color: 'emerald',
+    badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    barColor: 'bg-emerald-500',
+    accentColor: '#10b981'
+  },
   tickets: {
     id: 'tickets',
-    name: 'Entry Tickets',
-    fullName: 'Entry Tickets & Safari',
-    subtitle: 'National Parks, Boating, Jeep, Museum Passes',
+    name: 'Tickets & Safari',
+    fullName: 'Tickets & Passes',
+    subtitle: 'National Parks, Boating, Jeep Passes',
     icon: 'Ticket',
     color: 'purple',
     badgeBg: 'bg-purple-50 text-purple-700 border-purple-200',
     barColor: 'bg-purple-500',
     accentColor: '#a855f7'
   },
-  unexpected: {
-    id: 'unexpected',
-    name: 'Unexpected Expenses',
-    fullName: 'Unexpected & Extras',
-    subtitle: 'Emergency, Spices Shopping, Medicine, Extras',
-    icon: 'ShieldAlert',
+  shopping: {
+    id: 'shopping',
+    name: 'Spices & Shopping',
+    fullName: 'Spices & Tea Shopping',
+    subtitle: 'Cardamom, Tea powder, Chocolates, Gifts',
+    icon: 'ShoppingBag',
     color: 'rose',
     badgeBg: 'bg-rose-50 text-rose-700 border-rose-200',
     barColor: 'bg-rose-500',
@@ -71,40 +60,43 @@ export const CATEGORY_DEFINITIONS = {
   }
 };
 
-const BLANK_BUDGETS = {
-  bike: 0,
-  food: 0,
-  snacks: 0,
-  rooms: 0,
-  tickets: 0,
-  unexpected: 0
-};
-
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
   // Navigation
-  const [activeTab, setActiveTab] = useState('places'); // 'places', 'tracker', 'reports', 'tools', 'creator'
+  const [activeTab, setActiveTab] = useState('places');
 
-  // Fresh user state - starts unauthenticated on fresh devices
+  // User state
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('munnar_user');
     return saved ? JSON.parse(saved) : null;
   });
 
-  // Flag indicating if the user has already configured their custom budgets
+  // Flag indicating if user configured their budget via predictor or custom setup
   const [isBudgetConfigured, setIsBudgetConfigured] = useState(() => {
     const saved = localStorage.getItem('munnar_budget_configured');
     return saved ? JSON.parse(saved) : false;
   });
 
-  // Budgets State - starts customizable per user
-  const [budgets, setBudgets] = useState(() => {
-    const saved = localStorage.getItem('munnar_budgets');
-    return saved ? JSON.parse(saved) : BLANK_BUDGETS;
+  // Dynamic Categories Definitions
+  const [categoryDefinitions, setCategoryDefinitions] = useState(() => {
+    const saved = localStorage.getItem('munnar_custom_categories_v2');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && Object.keys(parsed).length > 0) return parsed;
+      } catch (e) {}
+    }
+    return isBudgetConfigured ? DEFAULT_CATEGORY_DEFINITIONS : {};
   });
 
-  // Expenses State - starts empty for fresh custom user tracking
+  // Budgets State
+  const [budgets, setBudgets] = useState(() => {
+    const saved = localStorage.getItem('munnar_budgets_v2');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  // Expenses State
   const [expenses, setExpenses] = useState(() => {
     const saved = localStorage.getItem('munnar_expenses');
     return saved ? JSON.parse(saved) : [];
@@ -123,19 +115,11 @@ export function AppProvider({ children }) {
   const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
   const [isSetBudgetModalOpen, setIsSetBudgetModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
-  const [prefilledCategory, setPrefilledCategory] = useState('bike');
+  const [prefilledCategory, setPrefilledCategory] = useState('');
 
-  // Debounced Cloud Sync Ref
   const syncTimeoutRef = useRef(null);
 
-  // Auto prompt login if not logged in on first visit to expense tracker
-  useEffect(() => {
-    if (!user || !user.isVerified) {
-      // Keep state clean for fresh visitors
-    }
-  }, []);
-
-  // Persist to localStorage & Trigger Free Cloud Sync across devices
+  // Sync to localStorage
   useEffect(() => {
     if (user) {
       localStorage.setItem('munnar_user', JSON.stringify(user));
@@ -145,12 +129,12 @@ export function AppProvider({ children }) {
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem('munnar_budgets', JSON.stringify(budgets));
+    localStorage.setItem('munnar_custom_categories_v2', JSON.stringify(categoryDefinitions));
+    localStorage.setItem('munnar_budgets_v2', JSON.stringify(budgets));
     localStorage.setItem('munnar_budget_configured', JSON.stringify(isBudgetConfigured));
     localStorage.setItem('munnar_expenses', JSON.stringify(expenses));
     localStorage.setItem('munnar_wishlist', JSON.stringify(wishlist));
 
-    // If user is verified and has phone or email, automatically sync to Cloud Firestore
     const userKey = user?.phone || user?.email;
     if (userKey) {
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
@@ -158,6 +142,7 @@ export function AppProvider({ children }) {
         setIsCloudSynced(false);
         await saveUserTripToCloud(userKey, {
           user,
+          categoryDefinitions,
           budgets,
           expenses,
           wishlist,
@@ -166,10 +151,12 @@ export function AppProvider({ children }) {
         setIsCloudSynced(true);
       }, 1000);
     }
-  }, [budgets, isBudgetConfigured, expenses, wishlist, user]);
+  }, [categoryDefinitions, budgets, isBudgetConfigured, expenses, wishlist, user]);
 
   // Dynamic Calculations per Category
-  const categoryStats = Object.keys(CATEGORY_DEFINITIONS).reduce((acc, catKey) => {
+  const activeCatKeys = Object.keys(categoryDefinitions);
+
+  const categoryStats = activeCatKeys.reduce((acc, catKey) => {
     const allocated = Number(budgets[catKey]) || 0;
     const spent = expenses
       .filter((exp) => exp.category === catKey)
@@ -199,11 +186,13 @@ export function AppProvider({ children }) {
 
   // Actions
   const addExpense = (expenseData) => {
+    const defaultCat = activeCatKeys[0] || 'other';
     const newExpense = {
       id: `exp-${Date.now()}`,
       date: expenseData.date || new Date().toISOString().split('T')[0],
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       paymentMode: expenseData.paymentMode || 'UPI',
+      category: expenseData.category || defaultCat,
       note: expenseData.note || '',
       ...expenseData,
       amount: Number(expenseData.amount)
@@ -211,13 +200,11 @@ export function AppProvider({ children }) {
 
     setExpenses((prev) => [newExpense, ...prev]);
 
-    // Micro-animation confetti celebration if user stays within budget
     if (totalBudget > 0 && totalSpent + newExpense.amount <= totalBudget) {
       confetti({
-        particleCount: 35,
+        particleCount: 30,
         spread: 60,
-        origin: { y: 0.85 },
-        colors: ['#10b981', '#3b82f6', '#f59e0b']
+        origin: { y: 0.85 }
       });
     }
   };
@@ -232,92 +219,35 @@ export function AppProvider({ children }) {
     );
   };
 
-  const updateBudgets = (newBudgets) => {
-    const formatted = {};
-    let hasAnyBudget = false;
-    Object.keys(newBudgets).forEach((k) => {
-      const val = Math.max(0, Number(newBudgets[k]) || 0);
-      formatted[k] = val;
-      if (val > 0) hasAnyBudget = true;
-    });
-    setBudgets(formatted);
-    setIsBudgetConfigured(hasAnyBudget);
+  // Pipeline from Predictor to Tracker
+  const saveTripCategories = (newCategoriesMap, newBudgetsMap) => {
+    setCategoryDefinitions(newCategoriesMap);
+    setBudgets(newBudgetsMap);
+    setIsBudgetConfigured(true);
 
-    if (hasAnyBudget) {
-      confetti({
-        particleCount: 45,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-    }
+    confetti({
+      particleCount: 60,
+      spread: 80,
+      origin: { y: 0.6 }
+    });
   };
 
-  // Preload realistic sample template for demonstration (e.g. ₹15,000 for Bike)
-  const loadExampleTemplate = () => {
-    const sampleBudgets = {
-      bike: 15000,
-      food: 6000,
-      snacks: 2000,
-      rooms: 12000,
-      tickets: 4000,
-      unexpected: 3000
-    };
-    const sampleExpenses = [
-      {
-        id: 'exp-1',
-        category: 'bike',
-        amount: 3000,
-        title: 'Fuel refuel at Adimali petrol station',
-        paymentMode: 'UPI',
-        date: new Date().toISOString().split('T')[0],
-        time: '08:30 AM',
-        note: 'Tank full for mountain climb'
-      },
-      {
-        id: 'exp-2',
-        category: 'bike',
-        amount: 2000,
-        title: 'Royal Enfield Rental Advance',
-        paymentMode: 'UPI',
-        date: new Date().toISOString().split('T')[0],
-        time: '09:15 AM',
-        note: 'Riding gear and helmet'
-      },
-      {
-        id: 'exp-3',
-        category: 'food',
-        amount: 850,
-        title: 'Authentic Kerala Meals & Fish Curry',
-        paymentMode: 'Cash',
-        date: new Date().toISOString().split('T')[0],
-        time: '01:30 PM',
-        note: 'Lunch near Blossom Park'
-      },
-      {
-        id: 'exp-4',
-        category: 'snacks',
-        amount: 240,
-        title: 'Hot Cardamom Tea & Banana Fritters',
-        paymentMode: 'UPI',
-        date: new Date().toISOString().split('T')[0],
-        time: '04:45 PM',
-        note: 'Pothamedu viewpoint tea stall'
-      },
-      {
-        id: 'exp-5',
-        category: 'tickets',
-        amount: 600,
-        title: 'Eravikulam National Park passes',
-        paymentMode: 'Card',
-        date: new Date().toISOString().split('T')[0],
-        time: '10:30 AM',
-        note: 'Eco bus ticket included'
-      }
-    ];
-
-    setBudgets(sampleBudgets);
-    setExpenses(sampleExpenses);
+  const updateBudgets = (newBudgets) => {
+    setBudgets(newBudgets);
     setIsBudgetConfigured(true);
+  };
+
+  const resetAllData = () => {
+    if (confirm('Are you sure you want to clear all trip expenses and reset your categories?')) {
+      setExpenses([]);
+      setBudgets({});
+      setCategoryDefinitions({});
+      setIsBudgetConfigured(false);
+      localStorage.removeItem('munnar_custom_categories_v2');
+      localStorage.removeItem('munnar_budgets_v2');
+      localStorage.removeItem('munnar_budget_configured');
+      localStorage.removeItem('munnar_expenses');
+    }
   };
 
   const toggleWishlist = (placeId) => {
@@ -326,62 +256,31 @@ export function AppProvider({ children }) {
     );
   };
 
-  // Cross-device login & Cloud restore
-  const loginUser = async (userData) => {
-    setUser({
-      ...userData,
-      isVerified: true
-    });
-    setIsAuthModalOpen(false);
-
-    // Check if cloud data exists for this mobile number / email from another device
-    const userKey = userData.phone || userData.email;
-    if (userKey) {
-      const cloudData = await loadUserTripFromCloud(userKey);
-      if (cloudData) {
-        if (cloudData.budgets) setBudgets(cloudData.budgets);
-        if (cloudData.expenses) setExpenses(cloudData.expenses);
-        if (cloudData.wishlist) setWishlist(cloudData.wishlist);
-        if (typeof cloudData.isBudgetConfigured === 'boolean') {
-          setIsBudgetConfigured(cloudData.isBudgetConfigured);
-        }
-      }
-    }
+  const openPlaceDetails = (place) => {
+    setSelectedPlace(place);
   };
 
-  const logoutUser = () => {
-    setUser(null);
-    setBudgets(BLANK_BUDGETS);
-    setExpenses([]);
-    setIsBudgetConfigured(false);
-    localStorage.removeItem('munnar_user');
-    localStorage.removeItem('munnar_budgets');
-    localStorage.removeItem('munnar_budget_configured');
-    localStorage.removeItem('munnar_expenses');
-  };
-
-  const resetAllData = () => {
-    setBudgets(BLANK_BUDGETS);
-    setExpenses([]);
-    setIsBudgetConfigured(false);
-    localStorage.removeItem('munnar_budgets');
-    localStorage.removeItem('munnar_budget_configured');
-    localStorage.removeItem('munnar_expenses');
-
-    const userKey = user?.phone || user?.email;
-    if (userKey) {
-      saveUserTripToCloud(userKey, {
-        budgets: BLANK_BUDGETS,
-        expenses: [],
-        wishlist: [],
-        isBudgetConfigured: false
-      });
-    }
+  const closePlaceDetails = () => {
+    setSelectedPlace(null);
   };
 
   const openAddExpenseForCategory = (catKey) => {
     setPrefilledCategory(catKey);
     setIsAddExpenseModalOpen(true);
+  };
+
+  const loginUser = (userData) => {
+    setUser({ ...userData, isVerified: true });
+    setIsAuthModalOpen(false);
+  };
+
+  const logoutUser = () => {
+    setUser(null);
+    setIsBudgetConfigured(false);
+    setCategoryDefinitions({});
+    setBudgets({});
+    setExpenses([]);
+    localStorage.clear();
   };
 
   return (
@@ -390,19 +289,20 @@ export function AppProvider({ children }) {
         activeTab,
         setActiveTab,
         user,
-        setUser,
         loginUser,
         logoutUser,
-        budgets,
-        updateBudgets,
         isBudgetConfigured,
         setIsBudgetConfigured,
-        loadExampleTemplate,
+        categoryDefinitions,
+        setCategoryDefinitions,
+        saveTripCategories,
+        budgets,
+        setBudgets,
+        updateBudgets,
         expenses,
         addExpense,
         deleteExpense,
         updateExpense,
-        resetAllData,
         categoryStats,
         totalBudget,
         totalSpent,
@@ -410,17 +310,19 @@ export function AppProvider({ children }) {
         totalPercentUsed,
         wishlist,
         toggleWishlist,
+        selectedPlace,
+        openPlaceDetails,
+        closePlaceDetails,
         isAuthModalOpen,
         setIsAuthModalOpen,
         isAddExpenseModalOpen,
         setIsAddExpenseModalOpen,
         isSetBudgetModalOpen,
         setIsSetBudgetModalOpen,
-        selectedPlace,
-        setSelectedPlace,
         prefilledCategory,
         openAddExpenseForCategory,
-        isCloudSynced
+        isCloudSynced,
+        resetAllData
       }}
     >
       {children}
