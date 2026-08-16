@@ -120,16 +120,11 @@ export default function AuthModal() {
       });
 
       setStep('success');
-      confetti({
-        particleCount: 50,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
 
       setTimeout(() => {
         setIsAuthModalOpen(false);
         setStep('details');
-      }, 1400);
+      }, 1000);
     } catch (err) {
       setError(err.message || 'Incorrect OTP code. Please check your email and try again.');
     } finally {

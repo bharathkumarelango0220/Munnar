@@ -200,12 +200,6 @@ export default function TripCostPredictor() {
     setNewCatRate('');
     setIsAddingCategory(false);
     syncToAppContext(updated, days, travelers);
-
-    confetti({
-      particleCount: 30,
-      spread: 50,
-      origin: { y: 0.7 }
-    });
   };
 
   // Delete category

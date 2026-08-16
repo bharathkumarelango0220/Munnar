@@ -234,14 +234,6 @@ export function AppProvider({ children }) {
     };
 
     setExpenses((prev) => [newExpense, ...prev]);
-
-    if (totalBudget > 0 && totalSpent + newExpense.amount <= totalBudget) {
-      confetti({
-        particleCount: 30,
-        spread: 60,
-        origin: { y: 0.85 }
-      });
-    }
   };
 
   const deleteExpense = (id) => {
@@ -259,12 +251,6 @@ export function AppProvider({ children }) {
     setCategoryDefinitions(newCategoriesMap);
     setBudgets(newBudgetsMap);
     setIsBudgetConfigured(true);
-
-    confetti({
-      particleCount: 50,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
   };
 
   const updateBudgets = (newBudgets) => {

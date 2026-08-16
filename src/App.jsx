@@ -40,15 +40,6 @@ export default function App() {
           email: res.email,
           tripName: 'Trip Expedition 2026'
         });
-        try {
-          if (typeof confetti === 'function') {
-            confetti({
-              particleCount: 60,
-              spread: 80,
-              origin: { y: 0.6 }
-            });
-          }
-        } catch (e) {}
       }
     });
   }, [loginUser]);
@@ -189,7 +180,7 @@ export default function App() {
           <div className="pt-6 border-t border-slate-800 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
             <p>© {new Date().getFullYear()} TripTools Companion & Expense Tracker. Free for all travelers.</p>
             <p className="text-emerald-400 font-medium">
-              Handcrafted with ❤️ by <button onClick={() => { setActiveTab('creator'); scrollToTop(); }} className="underline font-bold text-white hover:text-emerald-300">Bharathkumar E</button>
+              Handcrafted by <button onClick={() => { setActiveTab('creator'); scrollToTop(); }} className="underline font-bold text-white hover:text-emerald-300">Bharathkumar E</button>
             </p>
           </div>
         </div>

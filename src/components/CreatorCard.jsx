@@ -94,7 +94,7 @@ export default function CreatorCard() {
                   Web Developer, UI/UX Specialist & Software Creator
                 </p>
                 <p className="text-xs text-slate-300 flex items-center gap-1.5 mt-1.5 font-medium">
-                  <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Creator of TripTools Travel Suite & Expense Tracker</span>
                 </p>
               </div>

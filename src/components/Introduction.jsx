@@ -215,59 +215,59 @@ export default function Introduction() {
       </div>
 
       {/* HOW TRIPTOOLS WORKS: 4 STEP WORKFLOW */}
-      <div className="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 rounded-3xl p-6 sm:p-8 border border-emerald-200/80 space-y-6">
+      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-soft space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider block mb-0.5">
+            <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block mb-0.5">
               Frictionless Trip Workflow
             </span>
-            <h3 className="text-xl sm:text-2xl font-black text-slate-900">
+            <h3 className="text-xl sm:text-2xl font-black text-white">
               How TripTools Powers Your Journey 🗺️💡
             </h3>
           </div>
-          <span className="text-xs text-slate-500 font-medium">
+          <span className="text-xs text-slate-400 font-medium">
             4 simple steps from start to finish
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
-          <div className="p-4 rounded-2xl bg-white border border-emerald-100 shadow-xs space-y-2">
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 shadow-xs space-y-2">
             <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white font-black text-sm flex items-center justify-center">
               1
             </div>
-            <h4 className="font-bold text-sm text-slate-900">Predict Budget</h4>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h4 className="font-bold text-sm text-white">Predict Budget</h4>
+            <p className="text-xs text-slate-300 leading-relaxed">
               Open <strong>Cost Predictor</strong>, configure days & travelers, and customize expense categories.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-emerald-100 shadow-xs space-y-2">
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 shadow-xs space-y-2">
             <div className="w-8 h-8 rounded-xl bg-teal-600 text-white font-black text-sm flex items-center justify-center">
               2
             </div>
-            <h4 className="font-bold text-sm text-slate-900">Estimate Fuel</h4>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h4 className="font-bold text-sm text-white">Estimate Fuel</h4>
+            <p className="text-xs text-slate-300 leading-relaxed">
               Use <strong>Fuel Calculator</strong> to compute mountain petrol costs, bike rentals, and passenger splits.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-emerald-100 shadow-xs space-y-2">
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 shadow-xs space-y-2">
             <div className="w-8 h-8 rounded-xl bg-amber-500 text-white font-black text-sm flex items-center justify-center">
               3
             </div>
-            <h4 className="font-bold text-sm text-slate-900">Track Spending</h4>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h4 className="font-bold text-sm text-white">Track Spending</h4>
+            <p className="text-xs text-slate-300 leading-relaxed">
               Log daily receipts into <strong>Expense Tracker</strong> and monitor live remaining balances.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-emerald-100 shadow-xs space-y-2">
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 shadow-xs space-y-2">
             <div className="w-8 h-8 rounded-xl bg-purple-600 text-white font-black text-sm flex items-center justify-center">
               4
             </div>
-            <h4 className="font-bold text-sm text-slate-900">Export Reports</h4>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h4 className="font-bold text-sm text-white">Export Reports</h4>
+            <p className="text-xs text-slate-300 leading-relaxed">
               Download your verified trip audit in <strong>PDF & CSV spreadsheet</strong> format in 1 click!
             </p>
           </div>

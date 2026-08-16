@@ -184,12 +184,6 @@ export default function ReportGenerator() {
       }
 
       doc.save(`TripTools_Expense_Report_${travelerName.replace(/\s+/g, '_')}.pdf`);
-
-      confetti({
-        particleCount: 40,
-        spread: 60,
-        origin: { y: 0.7 }
-      });
     } catch (err) {
       console.error('PDF generation error:', err);
       alert('Could not generate PDF directly. Please try Print Document.');
