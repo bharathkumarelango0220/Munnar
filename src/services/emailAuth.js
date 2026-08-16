@@ -4,16 +4,9 @@ import emailjs from '@emailjs/browser';
 const activeOtpSessions = new Map();
 
 // Your EmailJS Configuration
-const EMAILJS_PUBLIC_KEY = '2xnO9HgXktDoEkhng';
+const EMAILJS_SERVICE_ID = 'bk264165@gmail.com';
 const EMAILJS_TEMPLATE_ID = 'template_a8m7w6t';
-// Candidate Service IDs (will try in order)
-const EMAILJS_SERVICE_IDS = [
-  'service_default',
-  'service_gmail',
-  'gmail',
-  'default_service',
-  'service_munnar'
-];
+const EMAILJS_PUBLIC_KEY = '2xnO9HgXktDoEkhng';
 
 /**
  * Dispatches real 6-digit email verification OTP directly via EmailJS to recipient's inbox
@@ -44,41 +37,29 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
     const templateParams = {
       to_email: cleanEmail,
       email: cleanEmail,
+      user_email: cleanEmail,
       recipient: cleanEmail,
       to_name: recipientName,
       name: recipientName,
       otp_code: otpCode,
       passcode: otpCode,
       otp: otpCode,
-      message: `Your 6-digit Munnar Explorer verification OTP code is: ${otpCode}. Valid for 15 minutes.`
+      code: otpCode,
+      message: `Hello ${recipientName}! Your 6-digit Munnar Explorer verification OTP code is: ${otpCode}. Valid for 15 minutes.`
     };
-
-    let sentSuccessfully = false;
-    let lastError = '';
 
     // Initialize EmailJS
     emailjs.init(EMAILJS_PUBLIC_KEY);
 
-    // Try sending through EmailJS
-    for (const serviceId of EMAILJS_SERVICE_IDS) {
-      try {
-        const response = await emailjs.send(
-          serviceId,
-          EMAILJS_TEMPLATE_ID,
-          templateParams,
-          EMAILJS_PUBLIC_KEY
-        );
+    // Send email directly through connected Gmail service
+    const response = await emailjs.send(
+      EMAILJS_SERVICE_ID,
+      EMAILJS_TEMPLATE_ID,
+      templateParams,
+      EMAILJS_PUBLIC_KEY
+    );
 
-        if (response.status === 200) {
-          sentSuccessfully = true;
-          console.log(`EmailJS delivered successfully via ${serviceId}`);
-          break;
-        }
-      } catch (err) {
-        lastError = err?.text || err?.message || 'EmailJS dispatch error';
-        console.warn(`EmailJS attempt via ${serviceId} notice:`, lastError);
-      }
-    }
+    console.log('EmailJS response:', response);
 
     return {
       success: true,
@@ -88,9 +69,10 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
     };
   } catch (error) {
     console.error('Email OTP send error:', error);
+    const msg = error?.text || error?.message || 'Failed to dispatch email OTP. Please check your internet connection.';
     return {
       success: false,
-      error: error.message || 'Failed to dispatch email OTP. Please check your internet connection.'
+      error: msg
     };
   }
 }
