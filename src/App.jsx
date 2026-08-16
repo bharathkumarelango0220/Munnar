@@ -139,6 +139,11 @@ export default function App() {
                     📄 Download PDF Trip Report
                   </button>
                 </li>
+                <li>
+                  <button onClick={() => { setActiveTab('creator'); scrollToTop(); }} className="hover:text-white text-emerald-400 font-bold transition-colors">
+                    👨‍💻 Creator Profile & Contact
+                  </button>
+                </li>
               </ul>
             </div>
 

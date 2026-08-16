@@ -29,27 +29,35 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           
           {/* Brand Logo & Creator Tag */}
-          <div 
-            onClick={() => setActiveTab('places')}
-            className="flex items-center gap-3 cursor-pointer group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform">
-              <Compass className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900">
-                  Munnar<span className="text-emerald-600">Go</span>
-                </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  Free
-                </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setActiveTab('places')}
+              className="flex items-center gap-2.5 group text-left"
+              title="Go to Places"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform">
+                <Compass className="w-5 h-5" />
               </div>
-              <p className="text-[11px] font-medium text-slate-700 flex items-center gap-1">
-                <span>By</span>
-                <span className="text-emerald-700 font-semibold underline decoration-emerald-300">Bharathkumar E</span>
-              </p>
-            </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900">
+                    Munnar<span className="text-emerald-600">Go</span>
+                  </span>
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    Free
+                  </span>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('creator')}
+              className="text-[11px] font-medium text-slate-700 hover:text-emerald-700 transition-colors flex items-center gap-1 pl-2 border-l border-slate-200"
+              title="View Developer Portfolio"
+            >
+              <span>By</span>
+              <span className="text-emerald-700 font-bold underline decoration-emerald-300">Bharathkumar E</span>
+            </button>
           </div>
 
           {/* Desktop Nav Links */}
@@ -150,6 +158,19 @@ export default function Navbar() {
                   {wishlist.length}
                 </span>
               )}
+            </button>
+
+            {/* Creator Page Quick Button */}
+            <button
+              onClick={() => setActiveTab('creator')}
+              className={`p-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+                activeTab === 'creator'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
+              }`}
+              title="Developer Profile & Contact"
+            >
+              <Code className="w-4 h-4" />
             </button>
 
             {/* User Profile / Auth Button */}
