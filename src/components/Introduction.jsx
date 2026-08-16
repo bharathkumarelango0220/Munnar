@@ -19,7 +19,6 @@ import {
   Smartphone, 
   Lock,
   Globe,
-  Sliders,
   Compass
 } from 'lucide-react';
 
@@ -47,16 +46,7 @@ export default function Introduction() {
       description: 'Estimate your complete tour budget across Rooms, Food, Travel, Tickets, and Spices. Add your own custom categories or delete unneeded ones with live sync across the site.',
       highlights: ['Custom category builder', 'Live 2-way deletion & addition sync', 'Fixed / Per-day / Per-person rates', 'Custom budget architect']
     },
-    {
-      id: 'simulator',
-      title: 'What-If Budget Simulator',
-      icon: Sliders,
-      tag: 'Scenario Modeler Studio',
-      color: 'from-teal-600 to-emerald-600',
-      badgeBg: 'bg-teal-50 text-teal-700 border-teal-200',
-      description: 'Model alternative trip scenarios in real-time. Toggle accommodation tiers, transport modes, and dining styles to see instant per-person cost differences and AI savings suggestions.',
-      highlights: ['Hostel / Homestay / Villa tiers', 'Live net savings diff meter', 'Per-person cost impact splits', '1-Click apply to active budget']
-    },
+
     {
       id: 'tracker',
       title: 'Live Expense Tracker',

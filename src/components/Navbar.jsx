@@ -12,7 +12,6 @@ import {
   Sun,
   Moon,
   CheckCircle2,
-  Sliders,
   Sparkles
 } from 'lucide-react';
 
@@ -31,7 +30,6 @@ export default function Navbar() {
     { id: 'intro', label: 'Overview', icon: Plane },
     { id: 'fuel', label: 'Fuel', icon: Fuel },
     { id: 'predictor', label: 'Predictor', icon: Calculator },
-    { id: 'simulator', label: 'Simulator', icon: Sliders },
     { id: 'tracker', label: 'Expenses', icon: Wallet },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'reports', label: 'Reports', icon: FileText },
