@@ -6,7 +6,7 @@ import {
   Sparkles, 
   CheckCircle2, 
   X, 
-  Volume2, 
+  Send, 
   AlertCircle, 
   Tag, 
   Calendar, 
@@ -14,6 +14,7 @@ import {
   CreditCard, 
   Zap, 
   ArrowRight,
+  Info,
   RotateCcw
 } from 'lucide-react';
 import { parseVoiceExpense, SAMPLE_VOICE_COMMANDS } from '../services/voiceAssistant';
@@ -29,54 +30,60 @@ export default function AIVoiceAssistantModal() {
 
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [inputText, setInputText] = useState('');
   const [parsedData, setParsedData] = useState(null);
-  const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
   const [speechSupported, setSpeechSupported] = useState(true);
 
   const recognitionRef = useRef(null);
   const activeCategories = Object.values(categoryDefinitions || {});
 
-  // Initialize Speech Recognition on Mount
+  // Initialize Speech Recognition on Mount with network error fallbacks
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.lang = 'en-IN';
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = navigator.language || 'en-US';
 
-      recognition.onstart = () => {
-        setIsListening(true);
-        setError('');
-      };
+        recognition.onstart = () => {
+          setIsListening(true);
+          setInfoMessage('');
+        };
 
-      recognition.onresult = (event) => {
-        let currentTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          currentTranscript += event.results[i][0].transcript;
-        }
-        setTranscript(currentTranscript);
+        recognition.onresult = (event) => {
+          let currentTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            currentTranscript += event.results[i][0].transcript;
+          }
+          setTranscript(currentTranscript);
+          setInputText(currentTranscript);
 
-        if (event.results[0].isFinal) {
-          handleProcessVoiceText(currentTranscript);
-        }
-      };
+          if (event.results[0].isFinal) {
+            handleProcessVoiceText(currentTranscript);
+          }
+        };
 
-      recognition.onerror = (event) => {
-        console.warn('Speech recognition error:', event.error);
-        if (event.error === 'not-allowed') {
-          setError('Microphone access was denied. Please allow microphone permissions or use 1-click test commands.');
-        } else if (event.error !== 'no-speech') {
-          setError(`Speech error: ${event.error}. You can also type or try sample phrases.`);
-        }
-        setIsListening(false);
-      };
+        recognition.onerror = (event) => {
+          console.warn('Speech recognition notice:', event.error);
+          if (event.error === 'not-allowed') {
+            setInfoMessage('Microphone permission was denied. You can type your voice phrase or tap any sample below!');
+          } else if (event.error === 'network') {
+            setInfoMessage('Browser speech service offline. You can type or tap any 1-click test phrase to parse instantly!');
+          }
+          setIsListening(false);
+        };
 
-      recognition.onend = () => {
-        setIsListening(false);
-      };
+        recognition.onend = () => {
+          setIsListening(false);
+        };
 
-      recognitionRef.current = recognition;
+        recognitionRef.current = recognition;
+      } catch (e) {
+        setSpeechSupported(false);
+      }
     } else {
       setSpeechSupported(false);
     }
@@ -86,7 +93,7 @@ export default function AIVoiceAssistantModal() {
 
   // Start Voice Listening
   const startListening = () => {
-    setError('');
+    setInfoMessage('');
     setTranscript('');
     setParsedData(null);
 
@@ -94,20 +101,24 @@ export default function AIVoiceAssistantModal() {
       try {
         recognitionRef.current.start();
       } catch (e) {
-        recognitionRef.current.stop();
-        setTimeout(() => {
-          try { recognitionRef.current.start(); } catch (err) {}
-        }, 200);
+        try {
+          recognitionRef.current.stop();
+          setTimeout(() => {
+            try { recognitionRef.current.start(); } catch (err) {}
+          }, 150);
+        } catch (err) {
+          setInfoMessage('Please type your expense phrase or select a demo sample below.');
+        }
       }
     } else {
-      setError('Speech recognition is not supported in this browser. Please use the sample commands or manual entry.');
+      setInfoMessage('Speech recognition not available in this browser. Please type or select a sample phrase below.');
     }
   };
 
   // Stop Voice Listening
   const stopListening = () => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      try { recognitionRef.current.stop(); } catch (e) {}
     }
     setIsListening(false);
   };
@@ -126,14 +137,23 @@ export default function AIVoiceAssistantModal() {
         time: result.time,
         note: result.notes
       });
-    } else {
-      setError(result?.error || 'Could not recognize the expense. Please try again.');
+      setInfoMessage('');
+    }
+  };
+
+  // Handle Manual Text Typing & Instant Parse
+  const handleTextSubmit = (e) => {
+    e.preventDefault();
+    if (inputText.trim().length > 0) {
+      setTranscript(inputText);
+      handleProcessVoiceText(inputText);
     }
   };
 
   // Handle Sample Voice Click
   const handleSampleClick = (sample) => {
     setTranscript(sample.phrase);
+    setInputText(sample.phrase);
     handleProcessVoiceText(sample.phrase);
   };
 
@@ -141,7 +161,7 @@ export default function AIVoiceAssistantModal() {
   const handleConfirmAndSave = (e) => {
     e.preventDefault();
     if (!parsedData || !parsedData.amount || Number(parsedData.amount) <= 0) {
-      setError('Please provide a valid expense amount.');
+      setInfoMessage('Please provide a valid expense amount.');
       return;
     }
 
@@ -161,17 +181,18 @@ export default function AIVoiceAssistantModal() {
 
   const handleClose = () => {
     if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
+      try { recognitionRef.current.stop(); } catch (e) {}
     }
     setIsVoiceAssistantOpen(false);
     setIsListening(false);
     setTranscript('');
+    setInputText('');
     setParsedData(null);
-    setError('');
+    setInfoMessage('');
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-fadeIn">
       <div 
         className="bg-white rounded-3xl max-w-lg w-full overflow-hidden border border-slate-200 shadow-2xl animate-scaleUp max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -204,15 +225,15 @@ export default function AIVoiceAssistantModal() {
         {/* Modal Body */}
         <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-5">
           
-          {error && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-start gap-2 animate-shake">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
-              <span>{error}</span>
+          {infoMessage && (
+            <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2 animate-fadeIn">
+              <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+              <span>{infoMessage}</span>
             </div>
           )}
 
           {/* SECTION 1: MICROPHONE BUTTON & WAVE ANIMATION */}
-          <div className="text-center py-4 space-y-4">
+          <div className="text-center py-2 space-y-3">
             
             <div className="relative inline-block">
               {/* Pulse rings when listening */}
@@ -226,23 +247,23 @@ export default function AIVoiceAssistantModal() {
               <button
                 type="button"
                 onClick={isListening ? stopListening : startListening}
-                className={`relative z-10 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center text-white transition-all shadow-xl active:scale-95 ${
+                className={`relative z-10 w-20 h-20 sm:w-22 sm:h-22 rounded-full flex items-center justify-center text-white transition-all shadow-xl active:scale-95 ${
                   isListening
                     ? 'bg-rose-600 shadow-rose-600/40 ring-4 ring-rose-300 animate-pulse'
                     : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30 hover:scale-105'
                 }`}
               >
                 {isListening ? (
-                  <MicOff className="w-8 h-8 sm:w-10 sm:h-10" />
+                  <MicOff className="w-8 h-8 sm:w-9 sm:h-9" />
                 ) : (
-                  <Mic className="w-8 h-8 sm:w-10 sm:h-10" />
+                  <Mic className="w-8 h-8 sm:w-9 sm:h-9" />
                 )}
               </button>
             </div>
 
             <div>
               <span className="font-extrabold text-sm sm:text-base text-slate-900 block">
-                {isListening ? '🎙️ Listening... Speak naturally now!' : 'Tap the Mic to Speak'}
+                {isListening ? '🎙️ Listening... Speak naturally!' : 'Tap the Mic to Speak'}
               </span>
               <p className="text-xs text-slate-500 mt-0.5">
                 e.g. <em>"Spent 450 rupees for lunch at Saravana Bhavan with GPay"</em>
@@ -251,19 +272,37 @@ export default function AIVoiceAssistantModal() {
 
           </div>
 
-          {/* SECTION 2: LIVE TRANSCRIPT DISPLAY */}
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-              Spoken Voice Transcript:
-            </span>
-            <p className="font-semibold text-slate-900 min-h-[22px] italic">
-              {transcript ? `"${transcript}"` : <span className="text-slate-400 not-italic">Speech will appear here as you talk...</span>}
-            </p>
-          </div>
+          {/* SECTION 2: LIVE SPEECH & SMART INPUT BAR */}
+          <form onSubmit={handleTextSubmit} className="space-y-1.5">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Spoken / Typed Expense Command:
+            </label>
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                value={inputText}
+                onChange={(e) => {
+                  setInputText(e.target.value);
+                  if (e.target.value.trim().length > 3) {
+                    handleProcessVoiceText(e.target.value);
+                  }
+                }}
+                placeholder="Type or speak: e.g. Petrol 800 cash..."
+                className="w-full pl-3.5 pr-10 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-500 bg-white shadow-xs"
+              />
+              <button
+                type="submit"
+                className="absolute right-1.5 p-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
+                title="Parse Expense"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </form>
 
           {/* SECTION 3: EXTRACTED STRUCTURED DATA */}
           {parsedData && (
-            <form onSubmit={handleConfirmAndSave} className="p-4 rounded-3xl bg-emerald-50/60 border border-emerald-200 space-y-4 animate-scaleUp">
+            <form onSubmit={handleConfirmAndSave} className="p-4 rounded-3xl bg-emerald-50/60 border border-emerald-200 space-y-3.5 animate-scaleUp">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
@@ -274,7 +313,7 @@ export default function AIVoiceAssistantModal() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 
                 {/* Amount */}
                 <div>
@@ -359,10 +398,10 @@ export default function AIVoiceAssistantModal() {
           <div className="space-y-2 pt-2 border-t border-slate-100">
             <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5 text-amber-500" />
-              <span>Or Try 1-Click Sample Phrases:</span>
+              <span>Or Try 1-Click Sample Commands:</span>
             </span>
 
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-1 gap-1.5">
               {SAMPLE_VOICE_COMMANDS.map((sample, idx) => (
                 <button
                   key={idx}
