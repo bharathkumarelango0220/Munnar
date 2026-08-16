@@ -349,7 +349,7 @@ export default function CreatorCard() {
               type="text"
               value={inquiryName}
               onChange={(e) => setInquiryName(e.target.value)}
-              placeholder="e.g. John Doe"
+              placeholder="Enter your name"
               className="w-full px-4 py-3 rounded-2xl bg-white/10 border border-white/15 text-white placeholder-slate-400 text-sm font-semibold focus:outline-none focus:border-emerald-500"
             />
           </div>
