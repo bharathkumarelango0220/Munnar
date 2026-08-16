@@ -38,6 +38,8 @@ export default function AIVoiceAssistantModal() {
   const timerIntervalRef = useRef(null);
 
   const activeCategories = Object.values(categoryDefinitions || {});
+  const categoriesRef = useRef(activeCategories);
+  categoriesRef.current = activeCategories;
 
   // Setup speech recognition instance
   useEffect(() => {
@@ -92,7 +94,7 @@ export default function AIVoiceAssistantModal() {
     return () => {
       stopListening();
     };
-  }, [categoryDefinitions]);
+  }, []);
 
   // Handle Listening Timer
   useEffect(() => {
@@ -179,7 +181,9 @@ export default function AIVoiceAssistantModal() {
     }
 
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      try {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      } catch (e) {}
       mediaStreamRef.current = null;
     }
 
@@ -190,11 +194,6 @@ export default function AIVoiceAssistantModal() {
 
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
-    }
-
-    // If there is text in input, auto process final result
-    if (inputText.trim()) {
-      handleProcessVoiceText(inputText);
     }
   };
 

@@ -17,6 +17,7 @@ import AddExpenseModal from './components/AddExpenseModal';
 import SetBudgetModal from './components/SetBudgetModal';
 import AIReceiptScannerModal from './components/AIReceiptScannerModal';
 import AIVoiceAssistantModal from './components/AIVoiceAssistantModal';
+import ErrorBoundary from './components/ErrorBoundary';
 import { 
   Heart, 
   ExternalLink, 
@@ -63,15 +64,17 @@ export default function App() {
         <HeroBanner />
 
         {/* Dynamic Tab Switcher Content */}
-        <div className="transition-all duration-300">
-          {activeTab === 'intro' && <Introduction />}
-          {activeTab === 'fuel' && <FuelCalculator />}
-          {activeTab === 'predictor' && <TripCostPredictor />}
-          {activeTab === 'tracker' && <ExpenseTracker />}
-          {activeTab === 'analytics' && <BudgetAnalytics />}
-          {activeTab === 'reports' && <ReportGenerator />}
-          {activeTab === 'creator' && <CreatorCard />}
-        </div>
+        <ErrorBoundary>
+          <div className="transition-all duration-300">
+            {activeTab === 'intro' && <Introduction />}
+            {activeTab === 'fuel' && <FuelCalculator />}
+            {activeTab === 'predictor' && <TripCostPredictor />}
+            {activeTab === 'tracker' && <ExpenseTracker />}
+            {activeTab === 'analytics' && <BudgetAnalytics />}
+            {activeTab === 'reports' && <ReportGenerator />}
+            {activeTab === 'creator' && <CreatorCard />}
+          </div>
+        </ErrorBoundary>
 
       </main>
 

@@ -4,22 +4,14 @@ import {
   Users, 
   Calendar, 
   Sparkles, 
-  Check, 
-  Hotel, 
-  UtensilsCrossed, 
-  Car, 
-  Ticket, 
-  ShoppingBag, 
   RotateCcw,
   Plus,
   Minus,
   Trash2,
-  Tag,
-  ArrowRight,
-  PlusCircle,
-  HelpCircle
+  Tag
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+
 export default function TripCostPredictor() {
   const { saveTripCategories, setActiveTab, isLoggedIn } = useApp();
 
@@ -29,7 +21,7 @@ export default function TripCostPredictor() {
   const [days, setDays] = useState(() => {
     try {
       const saved = getStorage().getItem('munnar_predictor_days_v3');
-      return saved !== null ? parseInt(saved) || 0 : 0;
+      return saved !== null ? parseInt(saved, 10) || 0 : 0;
     } catch (e) {
       return 0;
     }
@@ -38,7 +30,7 @@ export default function TripCostPredictor() {
   const [travelers, setTravelers] = useState(() => {
     try {
       const saved = getStorage().getItem('munnar_predictor_travelers_v3');
-      return saved !== null ? parseInt(saved) || 0 : 0;
+      return saved !== null ? parseInt(saved, 10) || 0 : 0;
     } catch (e) {
       return 0;
     }
@@ -68,33 +60,39 @@ export default function TripCostPredictor() {
   const [newCatRateType, setNewCatRateType] = useState('fixed');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
 
-  // Sync to AppContext
+  // Sync to AppContext safely
   const syncToAppContext = (cats, currentDays, currentTravelers) => {
     const categoriesMap = {};
     const budgetsMap = {};
 
-    const roomCount = Math.ceil(currentTravelers / 2) || 0;
-    const nights = Math.max(0, currentDays > 1 ? currentDays - 1 : currentDays);
+    const currentRoomCount = Math.ceil((currentTravelers || 0) / 2) || 0;
+    const currentNights = Math.max(0, (currentDays || 0) > 1 ? (currentDays || 0) - 1 : (currentDays || 0));
 
     cats.forEach((item) => {
-      let totalCost = item.rate || 0;
-      if (item.rateType === 'roomsNights') totalCost = (item.rate || 0) * (nights || 1) * (roomCount || 1);
-      if (item.rateType === 'perPersonPerDay') totalCost = (item.rate || 0) * (currentDays || 1) * (currentTravelers || 1);
-      if (item.rateType === 'perDay') totalCost = (item.rate || 0) * (currentDays || 1);
-      if (item.rateType === 'perPerson') totalCost = (item.rate || 0) * (currentTravelers || 1);
+      const r = Number(item.rate) || 0;
+      let totalCost = r;
+      if (item.rateType === 'roomsNights') {
+        totalCost = r * (currentNights > 0 ? currentNights : 1) * (currentRoomCount > 0 ? currentRoomCount : 1);
+      } else if (item.rateType === 'perPersonPerDay') {
+        totalCost = r * (currentDays > 0 ? currentDays : 1) * (currentTravelers > 0 ? currentTravelers : 1);
+      } else if (item.rateType === 'perDay') {
+        totalCost = r * (currentDays > 0 ? currentDays : 1);
+      } else if (item.rateType === 'perPerson') {
+        totalCost = r * (currentTravelers > 0 ? currentTravelers : 1);
+      }
 
       categoriesMap[item.id] = {
         id: item.id,
         name: item.name,
         fullName: item.name,
-        subtitle: `Configured in Trip Predictor`,
+        subtitle: 'Configured in Trip Predictor',
         icon: item.icon || 'Tag',
         color: item.color || 'emerald',
         badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
         barColor: 'bg-emerald-500',
         accentColor: '#10b981'
       };
-      budgetsMap[item.id] = Math.round(totalCost);
+      budgetsMap[item.id] = Math.round(totalCost || 0);
     });
 
     saveTripCategories(categoriesMap, budgetsMap);
@@ -102,10 +100,14 @@ export default function TripCostPredictor() {
 
   // Persist category list & stepper values
   useEffect(() => {
-    const storage = getStorage();
-    storage.setItem('munnar_predictor_active_cats_v3', JSON.stringify(categoriesList));
-    storage.setItem('munnar_predictor_days_v3', days.toString());
-    storage.setItem('munnar_predictor_travelers_v3', travelers.toString());
+    try {
+      const storage = getStorage();
+      storage.setItem('munnar_predictor_active_cats_v3', JSON.stringify(categoriesList));
+      storage.setItem('munnar_predictor_days_v3', (days || 0).toString());
+      storage.setItem('munnar_predictor_travelers_v3', (travelers || 0).toString());
+    } catch (e) {
+      console.warn('Could not persist predictor storage', e);
+    }
   }, [categoriesList, days, travelers, isLoggedIn]);
 
   // Reset all rates to 0
@@ -154,9 +156,11 @@ export default function TripCostPredictor() {
 
   // Update category rate value
   const handleUpdateCategoryRate = (id, newRate) => {
+    const parsed = newRate === '' ? 0 : parseFloat(newRate);
+    const validRate = isNaN(parsed) ? 0 : parsed;
     const updated = categoriesList.map((c) => {
       if (c.id === id) {
-        return { ...c, rate: parseFloat(newRate) || 0 };
+        return { ...c, rate: validRate };
       }
       return c;
     });
@@ -166,39 +170,47 @@ export default function TripCostPredictor() {
 
   // Stepper handlers
   const handleDaysChange = (newDays) => {
-    const val = Math.max(0, newDays);
+    const val = Math.max(0, parseInt(newDays, 10) || 0);
     setDays(val);
     syncToAppContext(categoriesList, val, travelers);
   };
 
   const handleTravelersChange = (newTravelers) => {
-    const val = Math.max(0, newTravelers);
+    const val = Math.max(0, parseInt(newTravelers, 10) || 0);
     setTravelers(val);
     syncToAppContext(categoriesList, days, val);
   };
 
   // Calculations
-  const roomCount = Math.ceil(travelers / 2) || 0;
-  const nights = Math.max(0, days > 1 ? days - 1 : days);
+  const roomCount = Math.ceil((travelers || 0) / 2) || 0;
+  const nights = Math.max(0, (days || 0) > 1 ? (days || 0) - 1 : (days || 0));
 
   const calculateCategoryTotal = (cat) => {
-    const r = cat.rate || 0;
+    const r = Number(cat.rate) || 0;
     if (r === 0) return 0;
-    if (cat.rateType === 'roomsNights') return r * (nights || 1) * (roomCount || 1);
-    if (cat.rateType === 'perPersonPerDay') return r * (days || 1) * (travelers || 1);
-    if (cat.rateType === 'perDay') return r * (days || 1);
-    if (cat.rateType === 'perPerson') return r * (travelers || 1);
+    if (cat.rateType === 'roomsNights') {
+      return r * (nights > 0 ? nights : 1) * (roomCount > 0 ? roomCount : 1);
+    }
+    if (cat.rateType === 'perPersonPerDay') {
+      return r * (days > 0 ? days : 1) * (travelers > 0 ? travelers : 1);
+    }
+    if (cat.rateType === 'perDay') {
+      return r * (days > 0 ? days : 1);
+    }
+    if (cat.rateType === 'perPerson') {
+      return r * (travelers > 0 ? travelers : 1);
+    }
     return r;
   };
 
   const calculatedItems = categoriesList.map((cat) => ({
     ...cat,
-    totalCost: calculateCategoryTotal(cat)
+    totalCost: calculateCategoryTotal(cat) || 0
   }));
 
-  const totalEstimatedCost = calculatedItems.reduce((sum, item) => sum + item.totalCost, 0);
-  const costPerPerson = travelers > 0 ? Math.round(totalEstimatedCost / travelers) : 0;
-  const costPerDay = days > 0 ? Math.round(totalEstimatedCost / days) : 0;
+  const totalEstimatedCost = calculatedItems.reduce((sum, item) => sum + (item.totalCost || 0), 0) || 0;
+  const costPerPerson = (travelers || 0) > 0 ? Math.round(totalEstimatedCost / travelers) : 0;
+  const costPerDay = (days || 0) > 0 ? Math.round(totalEstimatedCost / days) : 0;
 
   // Save to Expense Tracker & Redirect
   const handleSaveAndGoToTracker = () => {
@@ -220,7 +232,7 @@ export default function TripCostPredictor() {
             All-in-One Trip Cost Predictor 🧮💰
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Every value starts at 0. Enter your custom amounts manually, or pick a template to quick-fill!
+            Every value starts at 0. Enter your custom amounts manually, add categories, or delete what you don't need!
           </p>
         </div>
 
@@ -244,8 +256,6 @@ export default function TripCostPredictor() {
           </button>
         </div>
       </div>
-
-
 
       {/* STEP 1: Duration & Travelers Steppers */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -274,7 +284,7 @@ export default function TripCostPredictor() {
               type="number"
               value={days === 0 ? '' : days}
               placeholder="0"
-              onChange={(e) => handleDaysChange(parseInt(e.target.value) || 0)}
+              onChange={(e) => handleDaysChange(e.target.value)}
               min="0"
               className="w-14 h-10 px-1 rounded-xl border border-slate-300 text-center font-black text-sm text-slate-900 focus:outline-none focus:border-emerald-500 bg-white"
             />
@@ -297,7 +307,7 @@ export default function TripCostPredictor() {
             </div>
             <div>
               <h4 className="font-bold text-xs sm:text-sm text-slate-900">Number of Travelers</h4>
-              <p className="text-[11px] text-slate-500">{travelers} People ({roomCount} {roomCount === 1 ? 'Room' : 'Rooms'})</p>
+              <p className="text-[11px] text-slate-500">{travelers} People ({roomCount} Rooms)</p>
             </div>
           </div>
 
@@ -313,7 +323,7 @@ export default function TripCostPredictor() {
               type="number"
               value={travelers === 0 ? '' : travelers}
               placeholder="0"
-              onChange={(e) => handleTravelersChange(parseInt(e.target.value) || 0)}
+              onChange={(e) => handleTravelersChange(e.target.value)}
               min="0"
               className="w-14 h-10 px-1 rounded-xl border border-slate-300 text-center font-black text-sm text-slate-900 focus:outline-none focus:border-emerald-500 bg-white"
             />
@@ -363,7 +373,7 @@ export default function TripCostPredictor() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <input
                   type="text"
-                  placeholder="Category Name (e.g. Campfire, Zipline, Guide)"
+                  placeholder="Category Name (e.g. Campfire, Guide)"
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   required
@@ -376,7 +386,8 @@ export default function TripCostPredictor() {
                   value={newCatRate}
                   onChange={(e) => setNewCatRate(e.target.value)}
                   min="0"
-                  className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-black focus:outline-none focus:border-emerald-500 bg-white"
+                  required
+                  className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-emerald-500 bg-white"
                 />
 
                 <select
@@ -414,9 +425,9 @@ export default function TripCostPredictor() {
             {calculatedItems.map((cat) => {
               let subtitle = 'Fixed Flat Budget';
               if (cat.rateType === 'roomsNights') subtitle = `${roomCount || 0} rooms × ${nights || 0} nights`;
-              if (cat.rateType === 'perPersonPerDay') subtitle = `₹${cat.rate} × ${days || 0} days × ${travelers || 0} people`;
-              if (cat.rateType === 'perDay') subtitle = `₹${cat.rate} × ${days || 0} days`;
-              if (cat.rateType === 'perPerson') subtitle = `₹${cat.rate} × ${travelers || 0} people`;
+              if (cat.rateType === 'perPersonPerDay') subtitle = `₹${cat.rate || 0} × ${days || 0} days × ${travelers || 0} people`;
+              if (cat.rateType === 'perDay') subtitle = `₹${cat.rate || 0} × ${days || 0} days`;
+              if (cat.rateType === 'perPerson') subtitle = `₹${cat.rate || 0} × ${travelers || 0} people`;
 
               return (
                 <div key={cat.id} className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -445,6 +456,7 @@ export default function TripCostPredictor() {
                       <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">₹</span>
                       <input
                         type="number"
+                        min="0"
                         value={cat.rate === 0 ? '' : cat.rate}
                         placeholder="0"
                         onChange={(e) => handleUpdateCategoryRate(cat.id, e.target.value)}
@@ -453,7 +465,7 @@ export default function TripCostPredictor() {
                       />
                     </div>
                     <span className="text-sm font-black text-slate-900 w-24 text-right">
-                      ₹{cat.totalCost.toLocaleString('en-IN')}
+                      ₹{(cat.totalCost || 0).toLocaleString('en-IN')}
                     </span>
                   </div>
                 </div>
@@ -479,7 +491,7 @@ export default function TripCostPredictor() {
 
               <div>
                 <p className="text-4xl sm:text-5xl font-black tracking-tight text-white">
-                  ₹{totalEstimatedCost.toLocaleString('en-IN')}
+                  ₹{(totalEstimatedCost || 0).toLocaleString('en-IN')}
                 </p>
                 <p className="text-xs text-slate-300 mt-1 font-medium">
                   {totalEstimatedCost === 0 
@@ -493,13 +505,13 @@ export default function TripCostPredictor() {
                 <div className="flex justify-between text-slate-300">
                   <span>Per Person Cost:</span>
                   <strong className="text-emerald-300 text-base font-black">
-                    ₹{costPerPerson.toLocaleString('en-IN')} / person
+                    ₹{(costPerPerson || 0).toLocaleString('en-IN')} / person
                   </strong>
                 </div>
 
                 <div className="flex justify-between text-slate-300">
                   <span>Daily Burn Rate:</span>
-                  <strong className="text-white">₹{costPerDay.toLocaleString('en-IN')} / day</strong>
+                  <strong className="text-white">₹{(costPerDay || 0).toLocaleString('en-IN')} / day</strong>
                 </div>
               </div>
 
