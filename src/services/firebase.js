@@ -4,7 +4,10 @@ import {
   RecaptchaVerifier, 
   signInWithPhoneNumber,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink
 } from 'firebase/auth';
 import { 
   getFirestore, 
@@ -28,6 +31,72 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 const googleProvider = new GoogleAuthProvider();
+
+/**
+ * 100% Free Firebase Official Transactional Email Dispatch (Zero Spam, Google MX Servers)
+ */
+export async function sendFirebaseEmailAuth(email) {
+  if (!email || !email.includes('@')) {
+    return { success: false, error: 'Valid email required' };
+  }
+
+  const cleanEmail = email.toLowerCase().trim();
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://munnartools.vercel.app';
+  
+  const actionCodeSettings = {
+    url: `${currentOrigin}?email_auth=${encodeURIComponent(cleanEmail)}`,
+    handleCodeInApp: true
+  };
+
+  try {
+    await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
+    try {
+      localStorage.setItem('emailForSignIn', cleanEmail);
+    } catch (e) {}
+    console.log(`Firebase official email dispatched to ${cleanEmail}`);
+    return {
+      success: true,
+      message: 'Official Firebase verification email sent!'
+    };
+  } catch (error) {
+    console.warn('Firebase Email Link dispatch notice:', error?.message);
+    return {
+      success: false,
+      error: error?.message || 'Firebase email dispatch error'
+    };
+  }
+}
+
+/**
+ * Checks if user opened app via Firebase Email Link
+ */
+export async function checkFirebaseEmailSignIn() {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      let email = window.localStorage.getItem('emailForSignIn');
+      if (!email) {
+        const urlParams = new URLSearchParams(window.location.search);
+        email = urlParams.get('email_auth');
+      }
+
+      if (email) {
+        const result = await signInWithEmailLink(auth, email, window.location.href);
+        const u = result.user;
+        window.localStorage.removeItem('emailForSignIn');
+        return {
+          name: u.displayName || email.split('@')[0],
+          email: u.email || email,
+          isVerified: true
+        };
+      }
+    }
+  } catch (error) {
+    console.warn('Firebase email link sign in notice:', error?.message);
+  }
+  return null;
+}
 
 /**
  * 100% Free 1-Click Google Sign-In with Zero Spam & Instant Cloud Sync

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useApp } from './context/AppContext';
 import { checkEmailLinkSignIn } from './services/emailAuth';
+import { checkFirebaseEmailSignIn } from './services/firebase';
 import confetti from 'canvas-confetti';
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
@@ -34,14 +35,17 @@ export default function App() {
   const { activeTab, setActiveTab, loginUser } = useApp();
 
   useEffect(() => {
-    // Check if user arrived via official Google Email verification link
-    checkEmailLinkSignIn().then((res) => {
-      if (res && res.success && res.email) {
+    // Check if user arrived via official Google Firebase Email verification link
+    checkFirebaseEmailSignIn().then((res) => {
+      if (res && res.email) {
         loginUser({
-          name: res.email.split('@')[0],
+          name: res.name || res.email.split('@')[0],
           email: res.email,
           tripName: 'Trip Expedition 2026'
         });
+        try {
+          confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+        } catch (e) {}
       }
     });
   }, [loginUser]);

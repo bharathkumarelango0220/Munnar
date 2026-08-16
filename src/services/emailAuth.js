@@ -1,4 +1,5 @@
 import emailjs from '@emailjs/browser';
+import { sendFirebaseEmailAuth } from './firebase';
 
 // In-memory active OTP verification store with expiration timestamp
 const activeOtpSessions = new Map();
@@ -16,8 +17,7 @@ const EMAILJS_SERVICE_CANDIDATES = [
 ];
 
 /**
- * Dispatches 6-digit email verification OTP directly via Brevo Transactional API (Primary)
- * with automatic fallback to EmailJS.
+ * Dispatches verification email directly via Firebase Authentication (Google MX) & EmailJS
  */
 export async function sendEmailOtp(email, fullName = 'Traveler') {
   if (!email || !email.includes('@')) {
@@ -42,109 +42,60 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       attempts: 0
     });
 
-    let delivered = false;
-
-    // 1. PRIMARY: Dispatch via Brevo API (/api/send-otp Serverless endpoint)
+    // 1. PRIMARY: Dispatch official Firebase verification email (Direct from Google servers)
     try {
-      const vercelBrevoRes = await fetch('/api/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: cleanEmail,
-          name: recipientName,
-          otpCode: otpCode
-        })
-      });
-
-      if (vercelBrevoRes.ok) {
-        const brevoJson = await vercelBrevoRes.json();
-        if (brevoJson.success) {
-          delivered = true;
-          console.log('Delivered successfully via Brevo Transactional API!');
-        }
-      }
+      await sendFirebaseEmailAuth(cleanEmail);
     } catch (e) {
-      console.warn('Brevo serverless route check:', e?.message);
+      console.warn('Firebase Email dispatch notice:', e?.message);
     }
 
-    // 2. Direct Brevo API call if client environment variable exists
-    const clientBrevoKey = import.meta.env.VITE_BREVO_API_KEY || '';
-    if (!delivered && clientBrevoKey) {
+    // 2. DISPATCH EMAIL VIA EMAILJS
+    const emailSubject = `TripTools verification code: ${otpCode}`;
+    const plainMessage = `Hello ${recipientName},\n\nYour verification code is: ${otpCode}\n\nValid for 15 minutes.\n\nTripTools`;
+
+    const templateParams = {
+      to_email: cleanEmail,
+      email: cleanEmail,
+      user_email: cleanEmail,
+      reply_to: 'bharathkumarelango02@gmail.com',
+      to: cleanEmail,
+      dest_email: cleanEmail,
+      recipient: cleanEmail,
+      recipient_email: cleanEmail,
+      send_to: cleanEmail,
+      target_email: cleanEmail,
+      email_to: cleanEmail,
+      to_name: recipientName,
+      name: recipientName,
+      user_name: recipientName,
+      from_name: 'TripTools',
+      otp_code: otpCode,
+      otp: otpCode,
+      passcode: otpCode,
+      code: otpCode,
+      subject: emailSubject,
+      message: plainMessage,
+      body: plainMessage,
+      content: plainMessage
+    };
+
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+
+    for (const serviceId of EMAILJS_SERVICE_CANDIDATES) {
       try {
-        const directBrevo = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'api-key': clientBrevoKey
-          },
-          body: JSON.stringify({
-            sender: { name: 'TripTools', email: 'bharathkumarelango02@gmail.com' },
-            to: [{ email: cleanEmail, name: recipientName }],
-            subject: `TripTools verification code: ${otpCode}`,
-            textContent: `Hello ${recipientName},\n\nYour TripTools verification code is: ${otpCode}\n\nValid for 15 minutes.\n\nTripTools Team`
-          })
-        });
+        const response = await emailjs.send(
+          serviceId,
+          EMAILJS_TEMPLATE_ID,
+          templateParams,
+          EMAILJS_PUBLIC_KEY
+        );
 
-        if (directBrevo.ok) {
-          delivered = true;
-          console.log('Delivered directly via Brevo client API!');
+        if (response.status === 200 || response.text === 'OK') {
+          console.log(`Delivered via EmailJS ${serviceId}`);
+          break;
         }
-      } catch (e) {
-        console.warn('Direct Brevo client warning:', e?.message);
-      }
-    }
-
-    // 3. FALLBACK: EmailJS
-    if (!delivered) {
-      const emailSubject = `TripTools verification code: ${otpCode}`;
-      const plainMessage = `Hello ${recipientName},\n\nYour verification code is: ${otpCode}\n\nValid for 15 minutes.\n\nTripTools`;
-
-      const templateParams = {
-        to_email: cleanEmail,
-        email: cleanEmail,
-        user_email: cleanEmail,
-        reply_to: 'bharathkumarelango02@gmail.com',
-        to: cleanEmail,
-        dest_email: cleanEmail,
-        recipient: cleanEmail,
-        recipient_email: cleanEmail,
-        send_to: cleanEmail,
-        target_email: cleanEmail,
-        email_to: cleanEmail,
-        to_name: recipientName,
-        name: recipientName,
-        user_name: recipientName,
-        from_name: 'TripTools',
-        otp_code: otpCode,
-        otp: otpCode,
-        passcode: otpCode,
-        code: otpCode,
-        subject: emailSubject,
-        message: plainMessage,
-        body: plainMessage,
-        content: plainMessage
-      };
-
-      emailjs.init(EMAILJS_PUBLIC_KEY);
-
-      for (const serviceId of EMAILJS_SERVICE_CANDIDATES) {
-        try {
-          const response = await emailjs.send(
-            serviceId,
-            EMAILJS_TEMPLATE_ID,
-            templateParams,
-            EMAILJS_PUBLIC_KEY
-          );
-
-          if (response.status === 200 || response.text === 'OK') {
-            delivered = true;
-            console.log(`Delivered via EmailJS ${serviceId}`);
-            break;
-          }
-        } catch (err) {
-          console.warn(`EmailJS trial via ${serviceId}:`, err?.text || err?.message);
-        }
+      } catch (err) {
+        console.warn(`EmailJS trial via ${serviceId}:`, err?.text || err?.message);
       }
     }
 
@@ -155,7 +106,7 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
     };
   } catch (error) {
     console.error('Email OTP send error:', error);
-    const msg = error?.text || error?.message || 'Failed to dispatch email OTP.';
+    const msg = error?.text || error?.message || 'Failed to dispatch email.';
     return {
       success: false,
       error: msg
