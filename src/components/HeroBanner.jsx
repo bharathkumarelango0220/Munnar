@@ -31,6 +31,11 @@ export default function HeroBanner() {
     categoryDefinitions
   } = useApp();
 
+  // If on Creator tab, CreatorCard itself is the complete showcase
+  if (activeTab === 'creator') {
+    return null;
+  }
+
   const activeCategoryCount = Object.keys(categoryDefinitions || {}).length;
 
   // 1. PLACES TAB BANNER
@@ -330,28 +335,5 @@ export default function HeroBanner() {
     );
   }
 
-  // 7. CREATOR TAB BANNER
-  return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white shadow-xl border border-emerald-500/30 p-5 sm:p-7 md:p-8 animate-fadeIn">
-      <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div className="relative z-10 space-y-4">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-xs font-bold uppercase tracking-wider">
-            <Code className="w-3.5 h-3.5" />
-            Software Engineer Portfolio
-          </span>
-        </div>
-
-        <div className="max-w-2xl">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
-            Designed & Developed by Bharathkumar E 👨‍💻✨
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
-            Full-Stack Software Engineer & UI/UX Designer. Discover more production-grade web applications at <strong>ApexAssure</strong>.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  return null;
 }
