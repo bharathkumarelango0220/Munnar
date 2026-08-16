@@ -21,7 +21,7 @@ export default function AuthModal() {
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    tripName: user?.tripName || 'Munnar Expedition 2026'
+    tripName: user?.tripName || 'Trip Expedition 2026'
   });
   
   // 6-digit Real Email OTP
@@ -375,7 +375,7 @@ export default function AuthModal() {
                 <CheckCircle2 className="w-10 h-10" />
               </div>
               <h3 className="text-lg font-bold text-slate-900">Email Verified Successfully!</h3>
-              <p className="text-xs text-slate-500">Welcome to Munnar Travel Companion, {formData.name}!</p>
+              <p className="text-xs text-slate-500">Welcome to TripTools, {formData.name}!</p>
             </div>
           )}
         </div>

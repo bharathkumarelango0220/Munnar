@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { 
-  Compass, 
+  Plane, 
   Wallet, 
   Fuel, 
   Calculator, 
@@ -13,7 +13,7 @@ export default function BottomNav() {
   const { activeTab, setActiveTab } = useApp();
 
   const navItems = [
-    { id: 'places', label: 'Places', icon: Compass },
+    { id: 'intro', label: 'Overview', icon: Plane },
     { id: 'fuel', label: 'Fuel', icon: Fuel },
     { id: 'predictor', label: 'Predictor', icon: Calculator },
     { id: 'tracker', label: 'Expenses', icon: Wallet },

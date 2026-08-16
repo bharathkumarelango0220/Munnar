@@ -64,7 +64,7 @@ const AppContext = createContext();
 
 export function AppProvider({ children }) {
   // Navigation
-  const [activeTab, setActiveTab] = useState('places');
+  const [activeTab, setActiveTab] = useState('intro');
 
   // User state (only stored persistently if verified login)
   const [user, setUser] = useState(() => {

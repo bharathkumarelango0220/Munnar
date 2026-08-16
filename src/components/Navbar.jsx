@@ -9,14 +9,18 @@ import {
   MapPin, 
   Sparkles,
   ExternalLink,
-  Code
+  Code,
+  Plane,
+  Fuel,
+  Calculator,
+  Map,
+  FileSpreadsheet
 } from 'lucide-react';
 
 export default function Navbar() {
   const { 
     user, 
     setIsAuthModalOpen, 
-    wishlist, 
     totalRemaining, 
     totalBudget, 
     setActiveTab, 
@@ -31,27 +35,33 @@ export default function Navbar() {
           {/* Brand Logo & Creator Tag */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setActiveTab('places')}
+              onClick={() => {
+                setActiveTab('intro');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className="flex items-center gap-2.5 group text-left"
-              title="Go to Places"
+              title="TripTools Home"
             >
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform">
-                <Compass className="w-5 h-5" />
+                <Plane className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900">
-                    Munnar<span className="text-emerald-600">Go</span>
+                  <span className="font-black text-lg sm:text-xl tracking-tight text-slate-900">
+                    Trip<span className="text-emerald-600">Tools</span>
                   </span>
                   <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-                    Free
+                    Pro
                   </span>
                 </div>
               </div>
             </button>
 
             <button
-              onClick={() => setActiveTab('creator')}
+              onClick={() => {
+                setActiveTab('creator');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className="text-[11px] font-medium text-slate-700 hover:text-emerald-700 transition-colors flex items-center gap-1 pl-2 border-l border-slate-200"
               title="View Developer Portfolio"
             >
@@ -63,17 +73,23 @@ export default function Navbar() {
           {/* Desktop Nav Links */}
           <nav className="hidden lg:flex items-center gap-1 bg-slate-100/90 p-1 rounded-2xl border border-slate-200/80">
             <button
-              onClick={() => setActiveTab('places')}
+              onClick={() => {
+                setActiveTab('intro');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'places'
+                activeTab === 'intro'
                   ? 'bg-white text-emerald-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              📍 Places
+              🚀 Overview
             </button>
             <button
-              onClick={() => setActiveTab('fuel')}
+              onClick={() => {
+                setActiveTab('fuel');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'fuel'
                   ? 'bg-white text-emerald-700 shadow-xs'
@@ -83,7 +99,10 @@ export default function Navbar() {
               ⛽ Fuel Calculator
             </button>
             <button
-              onClick={() => setActiveTab('predictor')}
+              onClick={() => {
+                setActiveTab('predictor');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'predictor'
                   ? 'bg-white text-emerald-700 shadow-xs'
@@ -93,7 +112,10 @@ export default function Navbar() {
               🧮 Cost Predictor
             </button>
             <button
-              onClick={() => setActiveTab('tracker')}
+              onClick={() => {
+                setActiveTab('tracker');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'tracker'
                   ? 'bg-white text-emerald-700 shadow-xs'
@@ -103,7 +125,10 @@ export default function Navbar() {
               💰 Expenses
             </button>
             <button
-              onClick={() => setActiveTab('route')}
+              onClick={() => {
+                setActiveTab('route');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'route'
                   ? 'bg-white text-emerald-700 shadow-xs'
@@ -113,7 +138,10 @@ export default function Navbar() {
               🗺️ Route Optimizer
             </button>
             <button
-              onClick={() => setActiveTab('reports')}
+              onClick={() => {
+                setActiveTab('reports');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'reports'
                   ? 'bg-white text-emerald-700 shadow-xs'
@@ -123,7 +151,10 @@ export default function Navbar() {
               📄 PDF Report
             </button>
             <button
-              onClick={() => setActiveTab('creator')}
+              onClick={() => {
+                setActiveTab('creator');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'creator'
                   ? 'bg-emerald-600 text-white shadow-xs'
@@ -138,7 +169,10 @@ export default function Navbar() {
           <div className="flex items-center gap-2.5">
             {/* Quick Balance Pill */}
             <button
-              onClick={() => setActiveTab('tracker')}
+              onClick={() => {
+                setActiveTab('tracker');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold hover:bg-emerald-100 transition-colors"
               title="Remaining Trip Budget"
             >
@@ -146,23 +180,12 @@ export default function Navbar() {
               <span>₹{totalRemaining.toLocaleString('en-IN')} Left</span>
             </button>
 
-            {/* Saved Wishlist Count */}
-            <button
-              onClick={() => setActiveTab('places')}
-              className="relative p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
-              title="Saved Attractions"
-            >
-              <Heart className={`w-4 h-4 ${wishlist.length > 0 ? 'text-rose-500 fill-rose-500' : ''}`} />
-              {wishlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                  {wishlist.length}
-                </span>
-              )}
-            </button>
-
             {/* Creator Page Quick Button */}
             <button
-              onClick={() => setActiveTab('creator')}
+              onClick={() => {
+                setActiveTab('creator');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`p-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
                 activeTab === 'creator'
                   ? 'bg-emerald-600 text-white shadow-xs'

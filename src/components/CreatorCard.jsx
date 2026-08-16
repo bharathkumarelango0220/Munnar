@@ -55,7 +55,7 @@ export default function CreatorCard() {
 
   const handleWhatsAppSend = (e) => {
     e.preventDefault();
-    const text = `Hi Bharathkumar! I am ${inquiryName || 'a visitor'}. ${inquiryMsg || 'I saw your MunnarGo web application and would like to discuss building a website / web project!'}`;
+    const text = `Hi Bharathkumar! I am ${inquiryName || 'a visitor'}. ${inquiryMsg || 'I saw your TripTools web application and would like to discuss building a website / web project!'}`;
     const url = `https://api.whatsapp.com/send?phone=918220802736&text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
@@ -95,7 +95,7 @@ export default function CreatorCard() {
                 </p>
                 <p className="text-xs text-slate-300 flex items-center gap-1.5 mt-1.5 font-medium">
                   <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
-                  <span>Creator of MunnarGo Travel Companion & Expense Tracker</span>
+                  <span>Creator of TripTools Travel Suite & Expense Tracker</span>
                 </p>
               </div>
             </div>
@@ -103,7 +103,7 @@ export default function CreatorCard() {
             {/* Quick Action Badges */}
             <div className="flex flex-wrap md:flex-col items-start md:items-end gap-2">
               <a
-                href="https://api.whatsapp.com/send?phone=918220802736&text=Hi%20Bharathkumar,%20I%20saw%20your%20MunnarGo%20app%20and%20would%20like%20to%20connect!"
+                href="https://api.whatsapp.com/send?phone=918220802736&text=Hi%20Bharathkumar,%20I%20saw%20your%20TripTools%20app%20and%20would%20like%20to%20connect!"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/25 active:scale-95 transition-all"
@@ -377,7 +377,7 @@ export default function CreatorCard() {
             </button>
 
             <a
-              href="mailto:bharathkumarelango02@gmail.com?subject=Website%20Inquiry%20from%20MunnarGo"
+              href="mailto:bharathkumarelango02@gmail.com?subject=Website%20Inquiry%20from%20TripTools"
               className="px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center gap-2 transition-all border border-white/15"
             >
               <Mail className="w-4 h-4" />

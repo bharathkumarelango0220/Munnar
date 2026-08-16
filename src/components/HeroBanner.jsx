@@ -22,7 +22,6 @@ import {
 export default function HeroBanner() {
   const { 
     activeTab, 
-    setActiveTab, 
     setIsAddExpenseModalOpen, 
     totalBudget, 
     totalSpent, 
@@ -31,79 +30,14 @@ export default function HeroBanner() {
     categoryDefinitions
   } = useApp();
 
-  // If on Creator tab, CreatorCard itself is the complete showcase
-  if (activeTab === 'creator') {
+  // If on Overview Intro tab or Creator tab, the components have their own complete hero
+  if (activeTab === 'intro' || activeTab === 'creator') {
     return null;
   }
 
   const activeCategoryCount = Object.keys(categoryDefinitions || {}).length;
 
-  // 1. PLACES TAB BANNER
-  if (activeTab === 'places') {
-    return (
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 text-white shadow-xl border border-emerald-500/30 p-5 sm:p-7 md:p-8 animate-fadeIn">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="relative z-10 space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-xs font-bold uppercase tracking-wider">
-              <Compass className="w-3.5 h-3.5" />
-              16+ Iconic Munnar Attractions
-            </span>
-            <span className="text-xs text-slate-400 font-medium">
-              Verified Timings, Entry Fees & Google Maps GPS
-            </span>
-          </div>
-
-          <div className="max-w-2xl">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
-              Explore Munnar's Top Peaks, Waterfalls & Tea Estates 🌿🏔️
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
-              From the <strong>World's Highest Tea Estate at Kolukkumalai (7,900 ft)</strong> to the <strong>Nilgiri Tahr at Eravikulam</strong>, browse curated spots with 1-Tap driving navigation.
-            </p>
-          </div>
-
-          {/* Quick Highlight Pills */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs">
-            <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2">
-              <span className="text-base">🌄</span>
-              <div>
-                <strong className="block text-white font-bold">Kolukkumalai</strong>
-                <span className="text-[10px] text-slate-400">Cloud Sunrise</span>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2">
-              <span className="text-base">🐐</span>
-              <div>
-                <strong className="block text-white font-bold">Eravikulam</strong>
-                <span className="text-[10px] text-slate-400">Nilgiri Tahr</span>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2">
-              <span className="text-base">🌊</span>
-              <div>
-                <strong className="block text-white font-bold">Mattupetty</strong>
-                <span className="text-[10px] text-slate-400">Speed Boating</span>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2">
-              <span className="text-base">☕</span>
-              <div>
-                <strong className="block text-white font-bold">KDHP Museum</strong>
-                <span className="text-[10px] text-slate-400">Tea Processing</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 2. FUEL CALCULATOR TAB BANNER
+  // 1. FUEL CALCULATOR TAB BANNER
   if (activeTab === 'fuel') {
     return (
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white shadow-xl border border-emerald-500/30 p-5 sm:p-7 md:p-8 animate-fadeIn">
@@ -113,10 +47,10 @@ export default function HeroBanner() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-xs font-bold uppercase tracking-wider">
               <Fuel className="w-3.5 h-3.5" />
-              Ghat Road Fuel & Rental Engine
+              Mountain Fuel & Rental Calculator
             </span>
             <span className="text-xs text-slate-400 font-medium">
-              Hairpin Bends & Mountain Incline Physics
+              Hairpin Bends & Ghat Road Incline Physics
             </span>
           </div>
 
@@ -151,7 +85,7 @@ export default function HeroBanner() {
     );
   }
 
-  // 3. COST PREDICTOR TAB BANNER
+  // 2. COST PREDICTOR TAB BANNER
   if (activeTab === 'predictor') {
     return (
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 text-white shadow-xl border border-teal-500/30 p-5 sm:p-7 md:p-8 animate-fadeIn">
@@ -173,7 +107,7 @@ export default function HeroBanner() {
               All-in-One Total Trip Cost Predictor 🧮💰
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
-              Estimate your entire Munnar tour budget across <strong>Rooms, Food, Travel, Tickets, and Spices</strong>. Delete categories you don't need, or add your custom expenses.
+              Estimate your entire tour budget across <strong>Rooms, Food, Travel, Tickets, and Spices</strong>. Delete categories you don't need, or add your custom expenses.
             </p>
           </div>
 
@@ -188,7 +122,7 @@ export default function HeroBanner() {
             </div>
             <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
               <span className="text-purple-400 font-bold block">👑 Luxury VIP</span>
-              <span className="text-[11px] text-slate-300">5-Star hilltop tea villas</span>
+              <span className="text-[11px] text-slate-300">5-Star premium villas</span>
             </div>
           </div>
         </div>
@@ -196,7 +130,7 @@ export default function HeroBanner() {
     );
   }
 
-  // 4. EXPENSE TRACKER TAB BANNER
+  // 3. EXPENSE TRACKER TAB BANNER
   if (activeTab === 'tracker') {
     return (
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white shadow-xl border border-emerald-500/30 p-5 sm:p-7 md:p-8 animate-fadeIn">
@@ -260,7 +194,7 @@ export default function HeroBanner() {
     );
   }
 
-  // 5. ROUTE OPTIMIZER TAB BANNER
+  // 4. ROUTE OPTIMIZER TAB BANNER
   if (activeTab === 'route') {
     return (
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 text-white shadow-xl border border-teal-500/30 p-5 sm:p-7 md:p-8 animate-fadeIn">
@@ -282,7 +216,7 @@ export default function HeroBanner() {
               Shortest Mountain Route Sequence & GPS 🗺️⚡
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
-              Select the places you want to visit. Our algorithm sequences them into the <strong>shortest single-direction mountain driving loop</strong> so you never waste fuel on hairpin turns.
+              Select your destinations. Our algorithm sequences them into the <strong>shortest single-direction driving loop</strong> so you never waste fuel on hairpin turns.
             </p>
           </div>
 
@@ -297,7 +231,7 @@ export default function HeroBanner() {
             </div>
             <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
               <strong className="text-white block font-bold">Time Optimization</strong>
-              <span className="text-[11px] text-slate-400">Beat mountain fog & buses</span>
+              <span className="text-[11px] text-slate-400">Beat mountain fog & traffic</span>
             </div>
           </div>
         </div>
@@ -305,7 +239,7 @@ export default function HeroBanner() {
     );
   }
 
-  // 6. REPORTS TAB BANNER
+  // 5. REPORTS TAB BANNER
   if (activeTab === 'reports') {
     return (
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white shadow-xl border border-emerald-500/30 p-5 sm:p-7 md:p-8 animate-fadeIn">
@@ -324,7 +258,7 @@ export default function HeroBanner() {
 
           <div className="max-w-2xl">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
-              Download Your Munnar Trip Expense Statement 📄📑
+              Download Your Trip Expense Statement 📄📑
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
               Export your complete trip audit report with itemized transactions, category budget versus actual comparisons, and verified digital signatures.

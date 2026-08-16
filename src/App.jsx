@@ -5,7 +5,7 @@ import confetti from 'canvas-confetti';
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
 import HeroBanner from './components/HeroBanner';
-import TouristPlaces from './components/TouristPlaces';
+import Introduction from './components/Introduction';
 import ExpenseTracker from './components/ExpenseTracker';
 import ReportGenerator from './components/ReportGenerator';
 import TripCostPredictor from './components/TripCostPredictor';
@@ -15,14 +15,13 @@ import CreatorCard from './components/CreatorCard';
 import AuthModal from './components/AuthModal';
 import AddExpenseModal from './components/AddExpenseModal';
 import SetBudgetModal from './components/SetBudgetModal';
-import PlaceDetailModal from './components/PlaceDetailModal';
 import { 
   Heart, 
   ExternalLink, 
   Phone, 
   Mail, 
   Sparkles, 
-  Compass,
+  Plane,
   ArrowUp,
   Calculator,
   Fuel,
@@ -39,13 +38,17 @@ export default function App() {
         loginUser({
           name: res.email.split('@')[0],
           email: res.email,
-          tripName: 'Munnar Tour 2026'
+          tripName: 'Trip Expedition 2026'
         });
-        confetti({
-          particleCount: 60,
-          spread: 80,
-          origin: { y: 0.6 }
-        });
+        try {
+          if (typeof confetti === 'function') {
+            confetti({
+              particleCount: 60,
+              spread: 80,
+              origin: { y: 0.6 }
+            });
+          }
+        } catch (e) {}
       }
     });
   }, [loginUser]);
@@ -63,15 +66,15 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 sm:space-y-8">
         
-        {/* Entrance Hero Banner */}
+        {/* Contextual Hero Banner */}
         <HeroBanner />
 
         {/* Dynamic Tab Switcher Content */}
         <div className="transition-all duration-300">
-          {activeTab === 'places' && <TouristPlaces />}
-          {activeTab === 'tracker' && <ExpenseTracker />}
+          {activeTab === 'intro' && <Introduction />}
           {activeTab === 'fuel' && <FuelCalculator />}
           {activeTab === 'predictor' && <TripCostPredictor />}
+          {activeTab === 'tracker' && <ExpenseTracker />}
           {activeTab === 'route' && <RouteOptimizer />}
           {activeTab === 'reports' && <ReportGenerator />}
           {activeTab === 'creator' && <CreatorCard />}
@@ -97,12 +100,12 @@ export default function App() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-slate-950 font-bold">
-                  <Compass className="w-5 h-5" />
+                  <Plane className="w-5 h-5" />
                 </div>
-                <span className="font-black text-lg tracking-tight">MunnarGo</span>
+                <span className="font-black text-lg tracking-tight">TripTools</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Free mobile-first tourist companion, 6-category expense tracker, fuel calculator, total cost predictor & smart route sequencer for Munnar, Kerala.
+                All-in-one smart travel suite, dynamic expense tracker, mountain fuel & rental calculator, total cost predictor & route sequencer. Free for all travelers.
               </p>
             </div>
 
@@ -111,13 +114,13 @@ export default function App() {
               <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Explore Features</h4>
               <ul className="space-y-1.5 text-xs text-slate-300">
                 <li>
-                  <button onClick={() => { setActiveTab('places'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    📍 16+ Munnar Tourist Places
+                  <button onClick={() => { setActiveTab('intro'); scrollToTop(); }} className="hover:text-white transition-colors">
+                    🚀 Overview & Introduction
                   </button>
                 </li>
                 <li>
                   <button onClick={() => { setActiveTab('fuel'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    ⛽ Ghat Road Fuel & Mileage Calculator
+                    ⛽ Fuel & Rental Calculator
                   </button>
                 </li>
                 <li>
@@ -168,15 +171,15 @@ export default function App() {
             <div className="space-y-2">
               <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Hire For Web Building</h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Need a modern website or fullstack web app? Get in touch for custom development.
+                Need a modern website or fullstack web app? Get in touch with Bharathkumar for custom development.
               </p>
               <a
-                href="https://apexassure.vercel.app/"
+                href="https://api.whatsapp.com/send?phone=918220802736&text=Hi%20Bharathkumar,%20I%20want%20to%20discuss%20building%20a%20website!"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md transition-all"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-md transition-all"
               >
-                <span>Visit ApexAssure</span>
+                <span>Chat on WhatsApp</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -184,9 +187,9 @@ export default function App() {
           </div>
 
           <div className="pt-6 border-t border-slate-800 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p>© {new Date().getFullYear()} MunnarGo Companion & Expense Tracker. Free for all travelers.</p>
+            <p>© {new Date().getFullYear()} TripTools Companion & Expense Tracker. Free for all travelers.</p>
             <p className="text-emerald-400 font-medium">
-              Handcrafted with ❤️ by <a href="https://apexassure.vercel.app/" target="_blank" rel="noopener noreferrer" className="underline font-bold text-white hover:text-emerald-300">Bharathkumar E</a>
+              Handcrafted with ❤️ by <button onClick={() => { setActiveTab('creator'); scrollToTop(); }} className="underline font-bold text-white hover:text-emerald-300">Bharathkumar E</button>
             </p>
           </div>
         </div>
@@ -199,8 +202,6 @@ export default function App() {
       <AuthModal />
       <AddExpenseModal />
       <SetBudgetModal />
-      <PlaceDetailModal />
-
     </div>
   );
 }

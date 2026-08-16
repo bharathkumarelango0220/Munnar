@@ -42,7 +42,7 @@ export default function ReportGenerator() {
   const travelerName = user?.name || 'Guest Traveler';
   const travelerPhone = user?.phone ? `+91 ${user.phone}` : 'Not linked';
   const travelerEmail = user?.email || 'Not linked';
-  const tripTitle = user?.tripName || 'Munnar Travel Expedition 2026';
+  const tripTitle = user?.tripName || 'Trip Expedition 2026';
   const reportDate = new Date().toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
@@ -70,7 +70,7 @@ export default function ReportGenerator() {
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(18);
-      doc.text('MUNNAR TRIP EXPENSE REPORT', 14, 14);
+      doc.text('TRIPTOOLS EXPENSE STATEMENT & AUDIT', 14, 14);
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
@@ -176,14 +176,14 @@ export default function ReportGenerator() {
         doc.setFontSize(8);
         doc.setTextColor(148, 163, 184);
         doc.text(
-          `Munnar Explorer Document Report | Developed by Bharathkumar E (Ph: 8220802736, Mail: bharathkumarelango02@gmail.com, Web: apexassure.vercel.app)`,
+          `TripTools Document Report | Developed by Bharathkumar E (Ph: 8220802736, Mail: bharathkumarelango02@gmail.com, Web: apexassure.vercel.app)`,
           14,
           290
         );
         doc.text(`Page ${i} of ${pageCount}`, 190, 290);
       }
 
-      doc.save(`Munnar_Trip_Expense_Report_${travelerName.replace(/\s+/g, '_')}.pdf`);
+      doc.save(`TripTools_Expense_Report_${travelerName.replace(/\s+/g, '_')}.pdf`);
 
       confetti({
         particleCount: 40,
@@ -201,7 +201,7 @@ export default function ReportGenerator() {
     let csvContent = 'data:text/csv;charset=utf-8,';
     
     // Header
-    csvContent += `MUNNAR TRIP EXPENSE REPORT\r\n`;
+    csvContent += `TRIPTOOLS EXPENSE STATEMENT\r\n`;
     csvContent += `Traveler,${travelerName}\r\n`;
     csvContent += `Mobile,${travelerPhone}\r\n`;
     csvContent += `Email,${travelerEmail}\r\n`;
@@ -228,7 +228,7 @@ export default function ReportGenerator() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Munnar_Expense_Report_${travelerName.replace(/\s+/g, '_')}.csv`);
+    link.setAttribute('download', `TripTools_Expense_Report_${travelerName.replace(/\s+/g, '_')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -253,7 +253,7 @@ export default function ReportGenerator() {
             Official Travel Expense Report 📑
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Download your customized Munnar trip statement in PDF & CSV spreadsheet format.
+            Download your customized trip statement in PDF & CSV spreadsheet format.
           </p>
         </div>
 
@@ -514,7 +514,7 @@ export default function ReportGenerator() {
         <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Digital Certificate of Authenticity • MunnarGo System</span>
+            <span>Digital Certificate of Authenticity • TripTools System</span>
           </div>
           <a
             href="https://apexassure.vercel.app/"
