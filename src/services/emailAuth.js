@@ -33,62 +33,41 @@ export async function sendEmailOtp(email, fullName = 'Traveler') {
       attempts: 0
     });
 
-    let emailSent = false;
-    let errorMessage = '';
+    const actionCodeSettings = {
+      url: (typeof window !== 'undefined' ? window.location.origin : 'https://munnartools.vercel.app') + `?verify_email=${encodeURIComponent(cleanEmail)}`,
+      handleCodeInApp: true
+    };
 
-    // 1. Dispatch Google Firebase Official Email
-    try {
-      const actionCodeSettings = {
-        url: (typeof window !== 'undefined' ? window.location.origin : 'https://munnartools.vercel.app') + `?verify_email=${encodeURIComponent(cleanEmail)}`,
-        handleCodeInApp: true
-      };
-      await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
-      emailSent = true;
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('munnar_email_for_signin', cleanEmail);
-      }
-    } catch (fbErr) {
-      console.warn('Firebase Email dispatch notice:', fbErr);
-      if (fbErr.code === 'auth/operation-not-allowed') {
-        errorMessage = 'Firebase Email Link is pending. Please enable "Email link (passwordless sign-in)" in Firebase Console.';
-      } else if (fbErr.code === 'auth/unauthorized-domain') {
-        errorMessage = 'Domain not authorized in Firebase. Please add munnartools.vercel.app to Firebase authorized domains.';
-      }
-    }
+    // Dispatch official Google Firebase Email Link
+    await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
 
-    // 2. Dispatch via Email relay endpoint
-    try {
-      await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          service_id: 'default_service',
-          template_id: 'template_munnar',
-          user_id: 'public_user',
-          template_params: {
-            to_email: cleanEmail,
-            to_name: fullName,
-            otp_code: otpCode,
-            app_url: 'https://munnartools.vercel.app'
-          }
-        })
-      });
-    } catch (e) {
-      // non-blocking
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('munnar_email_for_signin', cleanEmail);
     }
 
     return {
       success: true,
       email: cleanEmail,
       otpCode,
-      note: errorMessage,
       expiresInMinutes: 15
     };
   } catch (error) {
-    console.error('Email dispatch error:', error);
+    console.error('Firebase Email Dispatch Error:', error);
+    let friendlyError = 'Failed to send verification email. Please try again.';
+
+    if (error.code === 'auth/operation-not-allowed') {
+      friendlyError = '⚠️ Firebase Email Auth is disabled. Go to Firebase Console > Authentication > Sign-in method > Enable "Email/Password" and "Email link".';
+    } else if (error.code === 'auth/unauthorized-domain') {
+      friendlyError = '⚠️ Domain unauthorized. Add "munnartools.vercel.app" to Firebase Authentication > Settings > Authorized domains.';
+    } else if (error.code === 'auth/invalid-email') {
+      friendlyError = 'Please enter a valid email address format.';
+    } else if (error.message) {
+      friendlyError = error.message;
+    }
+
     return {
       success: false,
-      error: 'Could not send verification email. Please check your email address.'
+      error: friendlyError
     };
   }
 }
