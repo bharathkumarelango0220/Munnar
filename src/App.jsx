@@ -149,7 +149,7 @@ export default function App() {
                 Need a modern website or fullstack web app? Get in touch for custom development.
               </p>
               <a
-                href="https://apexassurein.vercel.app/"
+                href="https://apexassure.vercel.app/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md transition-all"

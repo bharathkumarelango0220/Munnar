@@ -72,7 +72,7 @@ export default function ReportGenerator() {
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      doc.text('Crafted by Bharathkumar E  |  Web: apexassurein.vercel.app  |  Ph: +91 8220802736', 14, 22);
+      doc.text('Crafted by Bharathkumar E  |  Web: apexassure.vercel.app  |  Ph: +91 8220802736', 14, 22);
       doc.text(`Generated on: ${new Date().toLocaleString('en-IN')}`, 14, 27);
 
       // Traveler Info Box
@@ -174,7 +174,7 @@ export default function ReportGenerator() {
         doc.setFontSize(8);
         doc.setTextColor(148, 163, 184);
         doc.text(
-          `Munnar Explorer Document Report | Developed by Bharathkumar E (Ph: 8220802736, Mail: bharathkumarelango02@gmail.com, Web: apexassurein.vercel.app)`,
+          `Munnar Explorer Document Report | Developed by Bharathkumar E (Ph: 8220802736, Mail: bharathkumarelango02@gmail.com, Web: apexassure.vercel.app)`,
           14,
           290
         );
@@ -204,7 +204,7 @@ export default function ReportGenerator() {
     csvContent += `Mobile,${travelerPhone}\r\n`;
     csvContent += `Email,${travelerEmail}\r\n`;
     csvContent += `Generated Date,${reportDate}\r\n`;
-    csvContent += `Author & Developer,Bharathkumar E (https://apexassurein.vercel.app/)\r\n\r\n`;
+    csvContent += `Author & Developer,Bharathkumar E (https://apexassure.vercel.app/)\r\n\r\n`;
 
     // Category Summary
     csvContent += `CATEGORY SUMMARY\r\n`;
@@ -533,12 +533,12 @@ export default function ReportGenerator() {
             </a>
             <span>•</span>
             <a 
-              href="https://apexassurein.vercel.app/" 
+              href="https://apexassure.vercel.app/" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-emerald-700 font-bold hover:underline inline-flex items-center gap-1"
             >
-              🌐 apexassurein.vercel.app
+              🌐 apexassure.vercel.app
               <ExternalLink className="w-3 h-3" />
             </a>
           </div>

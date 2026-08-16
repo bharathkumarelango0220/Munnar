@@ -95,7 +95,7 @@ export default function CreatorCard() {
             {/* Main Website Promotion Link */}
             <div className="flex flex-col sm:items-end gap-2">
               <a
-                href="https://apexassurein.vercel.app/"
+                href="https://apexassure.vercel.app/"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={handleHireClick}
@@ -106,7 +106,7 @@ export default function CreatorCard() {
                 <ExternalLink className="w-3.5 h-3.5 opacity-80" />
               </a>
               <span className="text-[11px] text-emerald-300/80 font-medium">
-                👉 apexassurein.vercel.app
+                👉 apexassure.vercel.app
               </span>
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function CreatorCard() {
                   <span>Portfolio & Services</span>
                 </div>
                 <a
-                  href="https://apexassurein.vercel.app/"
+                  href="https://apexassure.vercel.app/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors"
@@ -184,12 +184,12 @@ export default function CreatorCard() {
               </div>
               <div>
                 <a
-                  href="https://apexassurein.vercel.app/"
+                  href="https://apexassure.vercel.app/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs sm:text-sm font-bold text-emerald-300 hover:underline block truncate"
                 >
-                  apexassurein.vercel.app
+                  apexassure.vercel.app
                 </a>
                 <span className="text-[10px] text-slate-400">High-converting web solutions</span>
               </div>

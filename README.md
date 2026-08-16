@@ -53,7 +53,7 @@
 - **Name**: Bharathkumar E
 - **Phone**: [+91 8220802736](tel:8220802736)
 - **Email**: [bharathkumarelango02@gmail.com](mailto:bharathkumarelango02@gmail.com)
-- **Website & Portfolio**: [https://apexassurein.vercel.app/](https://apexassurein.vercel.app/)
+- **Website & Portfolio**: [https://apexassure.vercel.app/](https://apexassure.vercel.app/)
 
 ---
 
