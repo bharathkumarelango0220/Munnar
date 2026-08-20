@@ -773,7 +773,7 @@ export default function FuelCalculator() {
               <button
                 type="button"
                 onClick={handleAddBike}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
+                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
                 <span>+ Add Another Bike</span>
@@ -905,6 +905,18 @@ export default function FuelCalculator() {
                 </div>
               ))}
             </div>
+
+            {/* ADD ANOTHER BIKE BUTTON (Placed directly after created bike modules on mobile & desktop) */}
+            <button
+              type="button"
+              onClick={handleAddBike}
+              className="w-full py-4 px-6 rounded-2xl border-2 border-dashed border-emerald-500/40 hover:border-emerald-500 bg-emerald-50/60 hover:bg-emerald-50 text-emerald-800 font-black text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xs hover:shadow-md transition-all active:scale-98 group"
+            >
+              <div className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
+                <Plus className="w-4 h-4 stroke-[3]" />
+              </div>
+              <span>+ Add Another Bike to Convoy</span>
+            </button>
           </div>
 
           {/* STEP 3: OVERALL GROUP FLEET TOTAL SUMMARY CARD (CALCULATED VALUES) */}
