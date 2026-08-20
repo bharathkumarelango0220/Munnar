@@ -28,7 +28,8 @@ import {
   ArrowUp,
   Calculator,
   Fuel,
-  MapPin
+  MapPin,
+  Globe
 } from 'lucide-react';
 
 export default function App() {
@@ -154,7 +155,16 @@ export default function App() {
             <div className="space-y-2">
               <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Developer Contact</h4>
               <p className="text-xs text-slate-300 font-bold">Bharathkumar E</p>
-              <div className="space-y-1 text-xs text-slate-400">
+              <div className="space-y-1.5 text-xs text-slate-400">
+                <a 
+                  href="https://apexassure.vercel.app/" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center gap-1.5 text-teal-300 hover:text-teal-200 transition-colors font-bold"
+                >
+                  <Globe className="w-3.5 h-3.5 text-teal-400" />
+                  <span>apexassure.vercel.app ↗</span>
+                </a>
                 <a href="tel:8220802736" className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors">
                   <Phone className="w-3.5 h-3.5 text-emerald-500" />
                   <span>+91 8220802736</span>

@@ -100,25 +100,76 @@ export default function CreatorCard() {
             </div>
 
             {/* Quick Action Badges */}
-            <div className="flex flex-wrap md:flex-col items-start md:items-end gap-2">
+            <div className="flex flex-wrap md:flex-col items-start md:items-end gap-2.5">
+              <a
+                href="https://apexassure.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-400 hover:from-teal-300 hover:to-emerald-300 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-teal-500/25 active:scale-95 transition-all"
+              >
+                <Globe className="w-4 h-4" />
+                <span>View Portfolio 🌐</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+
               <a
                 href="https://api.whatsapp.com/send?phone=918220802736&text=Hi%20Bharathkumar,%20I%20saw%20your%20TripTools%20app%20and%20would%20like%20to%20connect!"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/25 active:scale-95 transition-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm border border-white/20 active:scale-95 transition-all"
               >
-                <MessageSquare className="w-4 h-4" />
+                <MessageSquare className="w-4 h-4 text-emerald-400" />
                 <span>Chat on WhatsApp</span>
               </a>
-              <span className="text-xs text-emerald-300/80 font-medium">
+              <span className="text-[11px] text-emerald-300/80 font-medium">
                 ⚡ Available for freelance & full-time projects
               </span>
             </div>
           </div>
 
-          {/* Contact Direct Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Contact & Portfolio Direct Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             
+            {/* Portfolio Website Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-teal-500/10 to-emerald-500/5 border border-teal-500/30 flex flex-col justify-between space-y-3 hover:border-teal-400 transition-all group">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-teal-300 text-xs font-bold">
+                  <Globe className="w-4 h-4 text-teal-400" />
+                  <span>Portfolio Website</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleCopy('https://apexassure.vercel.app/', 'portfolio')}
+                    className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors"
+                    title="Copy Portfolio URL"
+                  >
+                    {copiedField === 'portfolio' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                  <a
+                    href="https://apexassure.vercel.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-400 hover:text-teal-300 p-1 rounded-lg transition-colors"
+                    title="Open Portfolio in New Tab"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+              <div>
+                <a
+                  href="https://apexassure.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-base sm:text-lg font-black text-white hover:text-teal-300 transition-colors block tracking-tight truncate group-hover:underline"
+                >
+                  apexassure.vercel.app ↗
+                </a>
+                <span className="text-[11px] text-teal-200/70 block mt-0.5">Live Projects, SaaS & Case Studies</span>
+              </div>
+            </div>
+
             {/* Phone / WhatsApp */}
             <div className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between space-y-3 hover:border-emerald-500/40 transition-colors">
               <div className="flex items-center justify-between">
@@ -138,11 +189,11 @@ export default function CreatorCard() {
               <div>
                 <a
                   href="tel:8220802736"
-                  className="text-lg font-black text-white hover:text-emerald-300 transition-colors block tracking-tight"
+                  className="text-base sm:text-lg font-black text-white hover:text-emerald-300 transition-colors block tracking-tight"
                 >
                   +91 8220802736
                 </a>
-                <span className="text-[11px] text-slate-400">Direct Call & Instant WhatsApp</span>
+                <span className="text-[11px] text-slate-400 block mt-0.5">Direct Call & Instant WhatsApp</span>
               </div>
             </div>
 
@@ -169,7 +220,7 @@ export default function CreatorCard() {
                 >
                   bharathkumarelango02@gmail.com
                 </a>
-                <span className="text-[11px] text-slate-400">Direct Developer Inquiries</span>
+                <span className="text-[11px] text-slate-400 block mt-0.5">Direct Developer Inquiries</span>
               </div>
             </div>
 
@@ -345,6 +396,17 @@ export default function CreatorCard() {
               <Send className="w-4 h-4" />
               <span>Send via WhatsApp</span>
             </button>
+
+            <a
+              href="https://apexassure.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-teal-500/25 active:scale-95 transition-all"
+            >
+              <Globe className="w-4 h-4" />
+              <span>Visit Portfolio 🌐</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
 
             <a
               href="mailto:bharathkumarelango02@gmail.com?subject=Website%20Inquiry%20from%20TripTools"
