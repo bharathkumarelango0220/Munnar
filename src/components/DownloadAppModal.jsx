@@ -8,7 +8,8 @@ import {
   CheckCircle2, 
   Sparkles,
   Download,
-  ShieldCheck
+  ExternalLink,
+  DownloadCloud
 } from 'lucide-react';
 
 export default function DownloadAppModal() {
@@ -37,11 +38,11 @@ export default function DownloadAppModal() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-black text-lg text-white tracking-tight">
-                  Install TripTools App 📱
+                  Get TripTools App 📱
                 </h3>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                100% Free • Offline Ready • Real-Time Sync
+                Android APK • 100% Offline • Auto Cloud Sync
               </p>
             </div>
           </div>
@@ -56,7 +57,7 @@ export default function DownloadAppModal() {
         </div>
 
         {/* Modal Body */}
-        <div className="relative z-10 p-6 space-y-5">
+        <div className="relative z-10 p-6 space-y-4">
           
           {/* Key Advantages */}
           <div className="grid grid-cols-2 gap-2 text-xs">
@@ -81,47 +82,46 @@ export default function DownloadAppModal() {
             </div>
           </div>
 
-          {/* Direct 1-Click Install Button */}
-          {deferredPrompt ? (
+          {/* Action 1: Download Compiled Android APK */}
+          <a
+            href="https://www.pwabuilder.com?url=https://munnartools.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/30 active:scale-98 transition-all"
+          >
+            <DownloadCloud className="w-5 h-5 stroke-[2.5]" />
+            <span>Download Signed Android APK (.apk)</span>
+            <ExternalLink className="w-3.5 h-3.5 ml-1 opacity-70" />
+          </a>
+
+          {/* Action 2: Direct Install to Home Screen */}
+          {deferredPrompt && (
             <button
               type="button"
               onClick={() => {
                 installPwaApp();
                 setIsDownloadAppModalOpen(false);
               }}
-              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-500/30 active:scale-98 transition-all"
+              className="w-full py-3 px-5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all border border-white/15 active:scale-98"
             >
-              <Download className="w-5 h-5 stroke-[2.5]" />
-              <span>Tap to Install App on Phone</span>
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>Or Tap for 1-Click Install to Phone</span>
             </button>
-          ) : (
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-3">
-              <div className="flex items-center gap-2 text-emerald-300 font-bold text-xs">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Install Directly to Your Home Screen:</span>
-              </div>
-              
-              <div className="space-y-2 text-xs text-slate-300">
-                <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                  <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0">1</span>
-                  <p className="text-[11px] leading-relaxed">
-                    Tap the <strong>3 vertical dots (⋮)</strong> at the top right of your browser.
-                  </p>
-                </div>
-
-                <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                  <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0">2</span>
-                  <p className="text-[11px] leading-relaxed">
-                    Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.
-                  </p>
-                </div>
-              </div>
-            </div>
           )}
 
-          <div className="text-center">
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              ✨ Once installed, it appears directly in your phone's <strong>App Drawer & Home Screen</strong>, runs completely <strong>offline</strong> in mountain areas, and <strong>updates automatically</strong> whenever you connect to internet!
+          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-1.5 text-xs">
+            <h4 className="font-bold text-white text-xs flex items-center gap-1.5 text-emerald-400">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>How it works:</span>
+            </h4>
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              1. Tap <strong>Download Signed Android APK</strong> above $\rightarrow$ tap <strong>Package for Android</strong>.
+            </p>
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              2. Download and install the <strong>.apk</strong> on your Android phone.
+            </p>
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              3. The app runs <strong>100% offline</strong> and <strong>auto-syncs all future updates from the cloud</strong>!
             </p>
           </div>
 
