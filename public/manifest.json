@@ -1,7 +1,7 @@
 {
-  "name": "TripTools - Smart Travel Calculator & Expense Companion",
+  "name": "TripTools - Smart Travel Companion",
   "short_name": "TripTools",
-  "description": "All-in-one offline travel calculator, fuel & bike rental estimator, tour budget predictor, live expense tracker, and PDF statement generator.",
+  "description": "Smart offline travel calculator, mountain fuel & rental estimator, budget predictor, live expense tracker, and PDF statement generator.",
   "start_url": "/",
   "id": "/",
   "display": "standalone",
@@ -11,15 +11,9 @@
   "categories": ["travel", "finance", "productivity", "utilities"],
   "icons": [
     {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
