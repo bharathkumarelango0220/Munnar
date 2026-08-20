@@ -28,9 +28,9 @@ const QUICK_CATEGORY_PRESETS = [
 ];
 
 export default function TripCostPredictor() {
-  const { saveTripCategories, setActiveTab, isLoggedIn } = useApp();
+  const { saveTripCategories, setActiveTab } = useApp();
 
-  const getStorage = () => (isLoggedIn ? localStorage : sessionStorage);
+  const getStorage = () => localStorage;
 
   // Days & Travelers (starts 0 by default)
   const [days, setDays] = useState(() => {
@@ -116,7 +116,7 @@ export default function TripCostPredictor() {
     } catch (e) {
       console.warn('Could not persist predictor storage', e);
     }
-  }, [categoriesList, days, travelers, isLoggedIn]);
+  }, [categoriesList, days, travelers]);
 
   // Reset all rates to 0
   const handleResetToZero = () => {

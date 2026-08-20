@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import confetti from 'canvas-confetti';
-import { saveUserTripToCloud, loadUserTripFromCloud } from '../services/firebase';
 
 export const DEFAULT_CATEGORY_DEFINITIONS = {};
 
@@ -36,23 +34,46 @@ export function AppProvider({ children }) {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // User state (only stored persistently if verified login)
-  const [user, setUser] = useState(() => {
+  // Traveler / User Name (Persistent in localStorage, reflects on report & UI)
+  const [travelerName, setTravelerNameState] = useState(() => {
     try {
-      const saved = localStorage.getItem('munnar_user');
-      return saved ? JSON.parse(saved) : null;
+      const saved = localStorage.getItem('munnar_traveler_name');
+      return saved || 'Guest Traveler';
     } catch (e) {
-      return null;
+      return 'Guest Traveler';
     }
   });
 
-  const isLoggedIn = !!(user && user.isVerified);
+  const setTravelerName = (name) => {
+    const clean = (name && name.trim()) || 'Guest Traveler';
+    setTravelerNameState(clean);
+    try {
+      localStorage.setItem('munnar_traveler_name', clean);
+    } catch (e) {}
+  };
+
+  // Trip Title
+  const [tripTitle, setTripTitleState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('munnar_trip_title');
+      return saved || 'Trip Expedition 2026';
+    } catch (e) {
+      return 'Trip Expedition 2026';
+    }
+  });
+
+  const setTripTitle = (title) => {
+    const clean = (title && title.trim()) || 'Trip Expedition 2026';
+    setTripTitleState(clean);
+    try {
+      localStorage.setItem('munnar_trip_title', clean);
+    } catch (e) {}
+  };
 
   // Storage helper
   const getInitial = (key, fallback) => {
     try {
-      const storage = isLoggedIn ? localStorage : sessionStorage;
-      const item = storage.getItem(key);
+      const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : fallback;
     } catch (e) {
       return fallback;
@@ -64,7 +85,7 @@ export function AppProvider({ children }) {
     return getInitial('munnar_budget_configured_v3', false);
   });
 
-  // Dynamic Categories Definitions (Starts empty/clean for guests)
+  // Dynamic Categories Definitions (Starts empty/clean)
   const [categoryDefinitions, setCategoryDefinitions] = useState(() => {
     return getInitial('munnar_custom_categories_v3', {});
   });
@@ -84,54 +105,26 @@ export function AppProvider({ children }) {
     return getInitial('munnar_wishlist_v3', ['kolukkumalai-tea-estate', 'eravikulam-national-park', 'mattupetty-dam']);
   });
 
-  const [isCloudSynced, setIsCloudSynced] = useState(true);
-
   // Modals
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
   const [isSetBudgetModalOpen, setIsSetBudgetModalOpen] = useState(false);
   const [isReceiptScannerOpen, setIsReceiptScannerOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [prefilledCategory, setPrefilledCategory] = useState('');
 
-  const syncTimeoutRef = useRef(null);
-
-  // Save to Appropriate Storage (sessionStorage for guests, localStorage + Cloud for logged-in users)
+  // Persist all data directly to localStorage
   useEffect(() => {
-    const targetStorage = isLoggedIn ? localStorage : sessionStorage;
-
-    targetStorage.setItem('munnar_custom_categories_v3', JSON.stringify(categoryDefinitions));
-    targetStorage.setItem('munnar_budgets_v3', JSON.stringify(budgets));
-    targetStorage.setItem('munnar_budget_configured_v3', JSON.stringify(isBudgetConfigured));
-    targetStorage.setItem('munnar_expenses_v3', JSON.stringify(expenses));
-    targetStorage.setItem('munnar_wishlist_v3', JSON.stringify(wishlist));
-
-    if (!isLoggedIn) {
-      // Clear persistent storage so closing tab resets everything to 0 for unlogged users
-      localStorage.removeItem('munnar_custom_categories_v3');
-      localStorage.removeItem('munnar_budgets_v3');
-      localStorage.removeItem('munnar_budget_configured_v3');
-      localStorage.removeItem('munnar_expenses_v3');
-    } else {
-      // Sync with Cloud Firestore for logged-in accounts
-      const userKey = user?.phone || user?.email;
-      if (userKey) {
-        if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-        syncTimeoutRef.current = setTimeout(async () => {
-          setIsCloudSynced(false);
-          await saveUserTripToCloud(userKey, {
-            user,
-            categoryDefinitions,
-            budgets,
-            expenses,
-            wishlist,
-            isBudgetConfigured
-          });
-          setIsCloudSynced(true);
-        }, 1000);
-      }
+    try {
+      localStorage.setItem('munnar_custom_categories_v3', JSON.stringify(categoryDefinitions));
+      localStorage.setItem('munnar_budgets_v3', JSON.stringify(budgets));
+      localStorage.setItem('munnar_budget_configured_v3', JSON.stringify(isBudgetConfigured));
+      localStorage.setItem('munnar_expenses_v3', JSON.stringify(expenses));
+      localStorage.setItem('munnar_wishlist_v3', JSON.stringify(wishlist));
+    } catch (e) {
+      console.warn('Could not save to localStorage:', e);
     }
-  }, [categoryDefinitions, budgets, isBudgetConfigured, expenses, wishlist, user, isLoggedIn]);
+  }, [categoryDefinitions, budgets, isBudgetConfigured, expenses, wishlist]);
 
   // Dynamic Calculations per Category
   const activeCatKeys = Object.keys(categoryDefinitions);
@@ -151,33 +144,24 @@ export function AppProvider({ children }) {
       remaining,
       percentUsed,
       expenseCount,
-      isConfigured: allocated > 0,
-      isExceeded: allocated > 0 && spent > allocated,
-      isClose: allocated > 0 && spent >= allocated * 0.85 && spent <= allocated
+      isOverBudget: remaining < 0
     };
     return acc;
   }, {});
 
-  // Overall Calculations
+  // Overall Aggregates
   const totalBudget = Object.values(budgets).reduce((sum, b) => sum + (Number(b) || 0), 0);
-  const totalSpent = expenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+  const totalSpent = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   const totalRemaining = totalBudget - totalSpent;
-  const totalPercentUsed = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
+  const totalPercentUsed = totalBudget > 0 ? Math.min(Math.round((totalSpent / totalBudget) * 100), 999) : 0;
 
-  // Actions
+  // Handlers
   const addExpense = (expenseData) => {
-    const defaultCat = activeCatKeys[0] || 'other';
     const newExpense = {
-      id: `exp-${Date.now()}`,
-      date: expenseData.date || new Date().toISOString().split('T')[0],
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      paymentMode: expenseData.paymentMode || 'UPI',
-      category: expenseData.category || defaultCat,
-      note: expenseData.note || '',
-      ...expenseData,
-      amount: Number(expenseData.amount)
+      id: `exp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      createdAt: new Date().toISOString(),
+      ...expenseData
     };
-
     setExpenses((prev) => [newExpense, ...prev]);
   };
 
@@ -187,11 +171,10 @@ export function AppProvider({ children }) {
 
   const updateExpense = (id, updatedData) => {
     setExpenses((prev) =>
-      prev.map((exp) => (exp.id === id ? { ...exp, ...updatedData, amount: Number(updatedData.amount) } : exp))
+      prev.map((exp) => (exp.id === id ? { ...exp, ...updatedData } : exp))
     );
   };
 
-  // Pipeline from Predictor to Tracker
   const saveTripCategories = (newCategoriesMap, newBudgetsMap) => {
     setCategoryDefinitions(newCategoriesMap);
     setBudgets(newBudgetsMap);
@@ -213,7 +196,6 @@ export function AppProvider({ children }) {
       localStorage.removeItem('munnar_budgets_v3');
       localStorage.removeItem('munnar_budget_configured_v3');
       localStorage.removeItem('munnar_expenses_v3');
-      sessionStorage.clear();
     }
   };
 
@@ -236,54 +218,17 @@ export function AppProvider({ children }) {
     setIsAddExpenseModalOpen(true);
   };
 
-  // Login: promotes all session data to permanent cloud-synced localStorage
-  const loginUser = (userData) => {
-    const verifiedUser = { ...userData, isVerified: true };
-    setUser(verifiedUser);
-    localStorage.setItem('munnar_user', JSON.stringify(verifiedUser));
-
-    // Save current session data to localStorage
-    localStorage.setItem('munnar_custom_categories_v3', JSON.stringify(categoryDefinitions));
-    localStorage.setItem('munnar_budgets_v3', JSON.stringify(budgets));
-    localStorage.setItem('munnar_budget_configured_v3', JSON.stringify(isBudgetConfigured));
-    localStorage.setItem('munnar_expenses_v3', JSON.stringify(expenses));
-    localStorage.setItem('munnar_wishlist_v3', JSON.stringify(wishlist));
-
-    setIsAuthModalOpen(false);
-
-    // Also attempt to load any previously saved cloud trip for this user
-    const userKey = verifiedUser.phone || verifiedUser.email;
-    if (userKey) {
-      loadUserTripFromCloud(userKey).then((cloudData) => {
-        if (cloudData) {
-          if (cloudData.categoryDefinitions) setCategoryDefinitions(cloudData.categoryDefinitions);
-          if (cloudData.budgets) setBudgets(cloudData.budgets);
-          if (cloudData.expenses) setExpenses(cloudData.expenses);
-          if (cloudData.isBudgetConfigured !== undefined) setIsBudgetConfigured(cloudData.isBudgetConfigured);
-        }
-      });
-    }
-  };
-
-  const logoutUser = () => {
-    setUser(null);
-    setIsBudgetConfigured(false);
-    setCategoryDefinitions({});
-    setBudgets({});
-    setExpenses([]);
-    localStorage.clear();
-    sessionStorage.clear();
-  };
-
   return (
     <AppContext.Provider
       value={{
         activeTab,
         setActiveTab,
-        user,
-        isLoggedIn,
-        loginUser,
-        logoutUser,
+        travelerName,
+        setTravelerName,
+        tripTitle,
+        setTripTitle,
+        isNameModalOpen,
+        setIsNameModalOpen,
         isBudgetConfigured,
         setIsBudgetConfigured,
         categoryDefinitions,
@@ -306,8 +251,6 @@ export function AppProvider({ children }) {
         selectedPlace,
         openPlaceDetails,
         closePlaceDetails,
-        isAuthModalOpen,
-        setIsAuthModalOpen,
         isAddExpenseModalOpen,
         setIsAddExpenseModalOpen,
         isSetBudgetModalOpen,
@@ -316,7 +259,6 @@ export function AppProvider({ children }) {
         setIsReceiptScannerOpen,
         prefilledCategory,
         openAddExpenseForCategory,
-        isCloudSynced,
         resetAllData,
         theme,
         toggleTheme

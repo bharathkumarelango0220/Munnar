@@ -26,8 +26,6 @@ import {
 
 export default function ExpenseTracker() {
   const { 
-    user,
-    setIsAuthModalOpen,
     budgets, 
     expenses, 
     categoryDefinitions,

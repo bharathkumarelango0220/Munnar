@@ -28,8 +28,7 @@ const SINGLE_VEHICLE_PRESETS = [
 ];
 
 export default function FuelCalculator() {
-  const { isLoggedIn } = useApp();
-  const getStorage = () => (isLoggedIn ? localStorage : sessionStorage);
+  const getStorage = () => localStorage;
 
   const [calcMode, setCalcMode] = useState('single'); // 'single' or 'multi'
 
@@ -92,8 +91,7 @@ export default function FuelCalculator() {
     storage.setItem('munnar_fuel_mileage_v3', customMileage);
     storage.setItem('munnar_fuel_price_v3', fuelPrice);
     storage.setItem('munnar_fuel_pass_v3', passengerCount.toString());
-    storage.setItem('munnar_fuel_multi_dist_v3', multiDistanceKm);
-  }, [distanceKm, customMileage, fuelPrice, passengerCount, multiDistanceKm, isLoggedIn]);
+  }, [distanceKm, customMileage, fuelPrice, passengerCount, multiDistanceKm]);
 
   // Single Vehicle Calculation
   const singleDist = parseFloat(distanceKm) || 0;

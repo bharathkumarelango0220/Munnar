@@ -6,25 +6,19 @@ import {
   FileSpreadsheet, 
   Download, 
   Printer, 
-  Share2, 
   User, 
-  Phone, 
-  Mail, 
   Calendar, 
-  ShieldCheck, 
-  Sparkles, 
-  TrendingDown, 
+  MapPin,
   CheckCircle2, 
-  AlertCircle,
   ExternalLink,
-  Code,
-  IndianRupee
+  Edit3
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
 
 export default function ReportGenerator() {
   const { 
-    user, 
+    travelerName,
+    tripTitle,
+    setIsNameModalOpen,
     budgets, 
     expenses, 
     categoryDefinitions,
@@ -32,17 +26,12 @@ export default function ReportGenerator() {
     totalBudget, 
     totalSpent, 
     totalRemaining, 
-    totalPercentUsed,
-    setIsAuthModalOpen 
+    totalPercentUsed
   } = useApp();
 
   const printRef = useRef();
   const activeCategories = Object.values(categoryDefinitions || {});
 
-  const travelerName = user?.name || 'Guest Traveler';
-  const travelerPhone = user?.phone ? `+91 ${user.phone}` : 'Not linked';
-  const travelerEmail = user?.email || 'Not linked';
-  const tripTitle = user?.tripName || 'Trip Expedition 2026';
   const reportDate = new Date().toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
@@ -79,26 +68,26 @@ export default function ReportGenerator() {
 
       // Traveler Info Box
       doc.setFillColor(248, 250, 252);
-      doc.roundedRect(14, 38, 182, 24, 3, 3, 'F');
+      doc.roundedRect(14, 38, 182, 22, 3, 3, 'F');
       doc.setDrawColor(226, 232, 240);
-      doc.roundedRect(14, 38, 182, 24, 3, 3, 'S');
+      doc.roundedRect(14, 38, 182, 22, 3, 3, 'S');
 
       doc.setTextColor(15, 23, 42);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
-      doc.text(`Traveler: ${travelerName}`, 20, 46);
-      doc.text(`Trip: ${tripTitle}`, 110, 46);
+      doc.text(`Report Prepared For: ${travelerName}`, 20, 47);
+      doc.text(`Trip Title: ${tripTitle}`, 110, 47);
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      doc.text(`Mobile: ${travelerPhone}`, 20, 54);
-      doc.text(`Email: ${travelerEmail}`, 110, 54);
+      doc.text(`Statement Date: ${reportDate}`, 20, 54);
+      doc.text(`Status: Verified Active Expense Record`, 110, 54);
 
       // Table 1: Category Budget vs Actual Summary
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
       doc.setTextColor(21, 128, 61);
-      doc.text('1. Category Budget vs. Actual Spend Summary', 14, 70);
+      doc.text('1. Category Budget vs. Actual Spend Summary', 14, 68);
 
       const categoryRows = activeCategories.map((cat) => {
         const stat = categoryStats[cat.id] || { allocated: 0, spent: 0, remaining: 0, percentUsed: 0 };
@@ -119,33 +108,26 @@ export default function ReportGenerator() {
         `Rs. ${totalSpent.toLocaleString('en-IN')}`,
         `Rs. ${totalRemaining.toLocaleString('en-IN')}`,
         `${totalPercentUsed}%`,
-        totalRemaining < 0 ? 'OVER BUDGET' : 'ON TRACK'
+        totalRemaining < 0 ? 'OVER BUDGET' : 'UNDER BUDGET'
       ]);
 
       autoTable(doc, {
-        startY: 74,
-        head: [['Category', 'Allocated Budget', 'Total Spent', 'Remaining Balance', '% Used', 'Status']],
+        startY: 72,
+        head: [['Expense Category', 'Allocated Budget', 'Total Spent', 'Remaining Balance', '% Used', 'Status']],
         body: categoryRows,
         theme: 'striped',
         headStyles: { fillColor: [21, 128, 61], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
         bodyStyles: { fontSize: 8.5, textColor: [30, 41, 59] },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        footStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-        didParseCell: (data) => {
-          if (data.row.index === categoryRows.length - 1) {
-            data.cell.styles.fontStyle = 'bold';
-            data.cell.styles.fillColor = [220, 252, 231];
-            data.cell.styles.textColor = [20, 83, 45];
-          }
-        }
+        footStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' }
       });
 
-      // Table 2: Chronological Itemized Transactions
-      const finalY = doc.lastAutoTable.finalY + 12;
+      // Table 2: Itemized Transactions Ledger
+      const finalY = doc.lastAutoTable.finalY || 130;
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
       doc.setTextColor(21, 128, 61);
-      doc.text('2. Itemized Chronological Expense Ledger', 14, finalY);
+      doc.text('2. Itemized Transactions Audit Ledger', 14, finalY + 12);
 
       const expenseRows = expenses.map((exp, idx) => {
         const catName = categoryDefinitions[exp.category]?.name || exp.category;
@@ -160,7 +142,7 @@ export default function ReportGenerator() {
       });
 
       autoTable(doc, {
-        startY: finalY + 4,
+        startY: finalY + 16,
         head: [['#', 'Date & Time', 'Category', 'Expense Description & Notes', 'Mode', 'Amount']],
         body: expenseRows.length > 0 ? expenseRows : [['-', '-', '-', 'No expenses recorded yet', '-', '-']],
         theme: 'grid',
@@ -169,7 +151,7 @@ export default function ReportGenerator() {
         alternateRowStyles: { fillColor: [250, 250, 250] },
       });
 
-      // Footer Promotion
+      // Footer
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
@@ -183,7 +165,7 @@ export default function ReportGenerator() {
         doc.text(`Page ${i} of ${pageCount}`, 190, 290);
       }
 
-      doc.save(`TripTools_Expense_Report_${travelerName.replace(/\s+/g, '_')}.pdf`);
+      doc.save(`TripTools_Report_${travelerName.replace(/\s+/g, '_')}.pdf`);
     } catch (err) {
       console.error('PDF generation error:', err);
       alert('Could not generate PDF directly. Please try Print Document.');
@@ -196,9 +178,8 @@ export default function ReportGenerator() {
     
     // Header
     csvContent += `TRIPTOOLS EXPENSE STATEMENT\r\n`;
-    csvContent += `Traveler,${travelerName}\r\n`;
-    csvContent += `Mobile,${travelerPhone}\r\n`;
-    csvContent += `Email,${travelerEmail}\r\n`;
+    csvContent += `Report Prepared For,${travelerName}\r\n`;
+    csvContent += `Trip Title,${tripTitle}\r\n`;
     csvContent += `Generated Date,${reportDate}\r\n`;
     csvContent += `Author & Developer,Bharathkumar E (https://apexassure.vercel.app/)\r\n\r\n`;
 
@@ -222,7 +203,7 @@ export default function ReportGenerator() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `TripTools_Expense_Report_${travelerName.replace(/\s+/g, '_')}.csv`);
+    link.setAttribute('download', `TripTools_Report_${travelerName.replace(/\s+/g, '_')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -247,7 +228,7 @@ export default function ReportGenerator() {
             Official Travel Expense Report 📑
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Download your customized trip statement in PDF & CSV spreadsheet format.
+            Personalized with your traveler name. Download in PDF & CSV spreadsheet format.
           </p>
         </div>
 
@@ -316,38 +297,50 @@ export default function ReportGenerator() {
           </div>
         </div>
 
-        {/* Traveler Information Card */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black">
-              <User className="w-5 h-5" />
+        {/* Traveler Information Card with Quick Edit */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black">
+                <User className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-emerald-800 uppercase block">Report Prepared For</span>
+                <strong className="text-sm sm:text-base text-slate-900 font-black">{travelerName}</strong>
+              </div>
             </div>
-            <div>
-              <span className="text-[10px] font-bold text-slate-700 uppercase block">Traveler Name</span>
-              <strong className="text-xs sm:text-sm text-slate-900">{travelerName}</strong>
-            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsNameModalOpen(true)}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all shadow-xs"
+              title="Edit Traveler Name"
+            >
+              <Edit3 className="w-3 h-3" />
+              <span>Change Name</span>
+            </button>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black">
-              <Phone className="w-5 h-5" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-teal-800 uppercase block">Trip Title</span>
+                <strong className="text-sm sm:text-base text-slate-900 font-black">{tripTitle}</strong>
+              </div>
             </div>
-            <div>
-              <span className="text-[10px] font-bold text-slate-700 uppercase block">Mobile Phone</span>
-              <strong className="text-xs sm:text-sm text-slate-900">{travelerPhone}</strong>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black">
-              <Mail className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[10px] font-bold text-slate-700 uppercase block">Email Address</span>
-              <strong className="text-xs sm:text-sm text-slate-900 truncate block max-w-[180px]">
-                {travelerEmail}
-              </strong>
-            </div>
+            <button
+              type="button"
+              onClick={() => setIsNameModalOpen(true)}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white hover:bg-teal-100 text-teal-800 border border-teal-300 text-xs font-bold transition-all shadow-xs"
+              title="Edit Trip Title"
+            >
+              <Edit3 className="w-3 h-3" />
+              <span>Edit Trip</span>
+            </button>
           </div>
         </div>
 
@@ -379,62 +372,41 @@ export default function ReportGenerator() {
                   
                   return (
                     <tr key={cat.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 px-3 sm:px-4 font-bold text-slate-900">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                          <span>{cat.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-3 sm:px-4 text-right font-semibold">
-                        ₹{stat.allocated.toLocaleString('en-IN')}
-                      </td>
-                      <td className="py-3 px-3 sm:px-4 text-right font-semibold text-amber-600">
-                        ₹{stat.spent.toLocaleString('en-IN')}
-                      </td>
+                      <td className="py-3 px-3 sm:px-4 font-bold text-slate-900">{cat.name}</td>
+                      <td className="py-3 px-3 sm:px-4 text-right">₹{stat.allocated.toLocaleString('en-IN')}</td>
+                      <td className="py-3 px-3 sm:px-4 text-right text-rose-600 font-bold">₹{stat.spent.toLocaleString('en-IN')}</td>
                       <td className="py-3 px-3 sm:px-4 text-right font-black">
-                        <span className={stat.remaining < 0 ? 'text-rose-600' : 'text-emerald-600'}>
+                        <span className={stat.remaining < 0 ? 'text-rose-600' : 'text-emerald-700'}>
                           ₹{stat.remaining.toLocaleString('en-IN')}
                         </span>
                       </td>
-                      <td className="py-3 px-3 sm:px-4 text-center font-bold text-xs">
-                        {stat.percentUsed}%
+                      <td className="py-3 px-3 sm:px-4 text-center">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold ${
+                          stat.percentUsed > 100 ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
+                        }`}>
+                          {stat.percentUsed}%
+                        </span>
                       </td>
                       <td className="py-3 px-3 sm:px-4 text-center">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                          stat.remaining < 0
-                            ? 'bg-rose-100 text-rose-700'
-                            : stat.percentUsed >= 85
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-emerald-100 text-emerald-800'
+                        <span className={`text-[11px] font-bold ${
+                          stat.remaining < 0 ? 'text-rose-600' : 'text-emerald-600'
                         }`}>
-                          {stat.remaining < 0 ? 'Exceeded' : stat.percentUsed >= 85 ? 'Near Limit' : 'Within Budget'}
+                          {stat.remaining < 0 ? 'Exceeded' : 'Within Budget'}
                         </span>
                       </td>
                     </tr>
                   );
                 })}
 
-                {/* Grand Totals Summary Row */}
-                <tr className="bg-emerald-50/80 font-black text-slate-950 border-t-2 border-emerald-200">
-                  <td className="py-3.5 px-3 sm:px-4 uppercase text-xs tracking-wider font-extrabold">
-                    Grand Total
-                  </td>
-                  <td className="py-3.5 px-3 sm:px-4 text-right font-black text-slate-900">
-                    ₹{totalBudget.toLocaleString('en-IN')}
-                  </td>
-                  <td className="py-3.5 px-3 sm:px-4 text-right font-black text-amber-700">
-                    ₹{totalSpent.toLocaleString('en-IN')}
-                  </td>
-                  <td className="py-3.5 px-3 sm:px-4 text-right font-black text-emerald-800 text-base">
-                    ₹{totalRemaining.toLocaleString('en-IN')}
-                  </td>
-                  <td className="py-3.5 px-3 sm:px-4 text-center font-extrabold text-xs">
-                    {totalPercentUsed}%
-                  </td>
-                  <td className="py-3.5 px-3 sm:px-4 text-center">
-                    <span className="inline-block px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-600 text-white">
-                      {totalRemaining < 0 ? 'Over' : 'Balanced'}
-                    </span>
+                {/* Grand Total Row */}
+                <tr className="bg-slate-900 text-white font-black text-xs sm:text-sm">
+                  <td className="py-3.5 px-3 sm:px-4 uppercase tracking-wider">Grand Total</td>
+                  <td className="py-3.5 px-3 sm:px-4 text-right">₹{totalBudget.toLocaleString('en-IN')}</td>
+                  <td className="py-3.5 px-3 sm:px-4 text-right text-rose-400">₹{totalSpent.toLocaleString('en-IN')}</td>
+                  <td className="py-3.5 px-3 sm:px-4 text-right text-emerald-400">₹{totalRemaining.toLocaleString('en-IN')}</td>
+                  <td className="py-3.5 px-3 sm:px-4 text-center">{totalPercentUsed}%</td>
+                  <td className="py-3.5 px-3 sm:px-4 text-center text-xs">
+                    {totalRemaining < 0 ? '⚠️ Over Budget' : '✅ Balanced'}
                   </td>
                 </tr>
               </tbody>
@@ -442,59 +414,53 @@ export default function ReportGenerator() {
           </div>
         </div>
 
-        {/* Section 2: Detailed Chronological Expenses List */}
+        {/* Section 2: Itemized Transactions Table */}
         <div className="space-y-3 pt-4 border-t border-slate-100">
           <div className="flex items-center justify-between">
             <h3 className="font-extrabold text-sm sm:text-base text-slate-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">2</span>
-              <span>Chronological Expense Ledger</span>
+              <span className="w-6 h-6 rounded-lg bg-slate-900 text-white text-xs flex items-center justify-center font-bold">2</span>
+              <span>Itemized Transactions Log ({expenses.length})</span>
             </h3>
-            <span className="text-xs font-semibold text-slate-500">{expenses.length} Records</span>
+            <span className="text-xs font-semibold text-slate-500">Live Item Ledger</span>
           </div>
 
           <div className="overflow-x-auto rounded-2xl border border-slate-200">
-            <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-slate-100/90 text-slate-700 font-bold uppercase text-[11px] border-b border-slate-200">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] border-b border-slate-200">
                 <tr>
-                  <th className="py-3 px-3 sm:px-4">#</th>
-                  <th className="py-3 px-3 sm:px-4">Date & Time</th>
-                  <th className="py-3 px-3 sm:px-4">Category</th>
-                  <th className="py-3 px-3 sm:px-4">Description / Notes</th>
-                  <th className="py-3 px-3 sm:px-4 text-center">Mode</th>
-                  <th className="py-3 px-3 sm:px-4 text-right">Amount</th>
+                  <th className="py-2.5 px-3">#</th>
+                  <th className="py-2.5 px-3">Date & Time</th>
+                  <th className="py-2.5 px-3">Category</th>
+                  <th className="py-2.5 px-3">Description</th>
+                  <th className="py-2.5 px-3">Payment Mode</th>
+                  <th className="py-2.5 px-3 text-right">Amount</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+              <tbody className="divide-y divide-slate-100 text-slate-700">
                 {expenses.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="py-8 text-center text-slate-400 text-xs">
-                      No expenses logged yet.
+                    <td colSpan="6" className="py-8 text-center text-slate-400 font-medium">
+                      No expense transactions logged yet. Add expenses in the Tracker to view them here.
                     </td>
                   </tr>
                 ) : (
                   expenses.map((exp, idx) => {
-                    const cat = categoryDefinitions[exp.category] || { name: exp.category };
+                    const catName = categoryDefinitions[exp.category]?.name || exp.category;
                     return (
-                      <tr key={exp.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-3 px-3 sm:px-4 text-slate-400 font-mono text-xs">{idx + 1}</td>
-                        <td className="py-3 px-3 sm:px-4 whitespace-nowrap text-xs text-slate-500">
-                          {exp.date} {exp.time ? `(${exp.time})` : ''}
-                        </td>
-                        <td className="py-3 px-3 sm:px-4 font-bold text-slate-900">
-                          {cat.name}
-                        </td>
-                        <td className="py-3 px-3 sm:px-4">
-                          <p className="font-semibold text-slate-900">{exp.title}</p>
-                          {exp.note && <p className="text-[11px] text-slate-500 italic mt-0.5">"{exp.note}"</p>}
-                        </td>
-                        <td className="py-3 px-3 sm:px-4 text-center">
-                          <span className="inline-block px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">
-                            {exp.paymentMode || 'UPI'}
+                      <tr key={exp.id} className="hover:bg-slate-50/80">
+                        <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap text-slate-500">{exp.date} {exp.time}</td>
+                        <td className="py-2.5 px-3">
+                          <span className="font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-800">
+                            {catName}
                           </span>
                         </td>
-                        <td className="py-3 px-3 sm:px-4 text-right font-black text-slate-900">
-                          ₹{Number(exp.amount).toLocaleString('en-IN')}
+                        <td className="py-2.5 px-3 font-medium text-slate-900">
+                          {exp.title}
+                          {exp.note && <span className="text-slate-400 block text-[11px]">{exp.note}</span>}
                         </td>
+                        <td className="py-2.5 px-3 text-slate-500">{exp.paymentMode || 'UPI'}</td>
+                        <td className="py-2.5 px-3 text-right font-black text-slate-900">₹{Number(exp.amount).toLocaleString('en-IN')}</td>
                       </tr>
                     );
                   })
@@ -504,20 +470,16 @@ export default function ReportGenerator() {
           </div>
         </div>
 
-        {/* Report Sign-off & Developer Badge */}
-        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Digital Certificate of Authenticity • TripTools System</span>
-          </div>
-          <a
+        {/* Footer Credit */}
+        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
+          <span>Official Statement generated by TripTools Suite</span>
+          <a 
             href="https://apexassure.vercel.app/"
-            target="_blank"
+            target="_blank" 
             rel="noopener noreferrer"
-            className="text-emerald-700 font-bold hover:underline flex items-center gap-1"
+            className="text-emerald-700 font-bold hover:underline"
           >
-            <span>Developed by Bharathkumar E</span>
-            <ExternalLink className="w-3 h-3" />
+            Engineered by Bharathkumar E (apexassure.vercel.app)
           </a>
         </div>
 

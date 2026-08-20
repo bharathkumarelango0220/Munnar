@@ -1,8 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useApp } from './context/AppContext';
-import { checkEmailLinkSignIn } from './services/emailAuth';
-import { checkFirebaseEmailSignIn } from './services/firebase';
-import confetti from 'canvas-confetti';
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
 import HeroBanner from './components/HeroBanner';
@@ -13,7 +10,7 @@ import TripCostPredictor from './components/TripCostPredictor';
 import BudgetAnalytics from './components/BudgetAnalytics';
 import FuelCalculator from './components/FuelCalculator';
 import CreatorCard from './components/CreatorCard';
-import AuthModal from './components/AuthModal';
+import TravelerNameModal from './components/TravelerNameModal';
 import AddExpenseModal from './components/AddExpenseModal';
 import SetBudgetModal from './components/SetBudgetModal';
 import AIReceiptScannerModal from './components/AIReceiptScannerModal';
@@ -33,23 +30,7 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  const { activeTab, setActiveTab, loginUser } = useApp();
-
-  useEffect(() => {
-    // Check if user arrived via official Google Firebase Email verification link
-    checkFirebaseEmailSignIn().then((res) => {
-      if (res && res.email) {
-        loginUser({
-          name: res.name || res.email.split('@')[0],
-          email: res.email,
-          tripName: 'Trip Expedition 2026'
-        });
-        try {
-          confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-        } catch (e) {}
-      }
-    });
-  }, [loginUser]);
+  const { activeTab, setActiveTab } = useApp();
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -64,12 +45,12 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 sm:space-y-8">
         
-        {/* Contextual Hero Banner */}
+        {/* Dynamic Hero Banner */}
         <HeroBanner />
 
-        {/* Dynamic Tab Switcher Content */}
+        {/* Tab Router with Error Boundary */}
         <ErrorBoundary>
-          <div className="transition-all duration-300">
+          <div>
             {activeTab === 'intro' && <Introduction />}
             {activeTab === 'fuel' && <FuelCalculator />}
             {activeTab === 'predictor' && <TripCostPredictor />}
@@ -82,60 +63,44 @@ export default function App() {
 
       </main>
 
-      {/* Floating Scroll to Top button */}
-      <button
-        onClick={scrollToTop}
-        className="fixed bottom-20 md:bottom-8 right-4 z-30 p-2.5 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white shadow-lg backdrop-blur-sm transition-all"
-        title="Scroll to Top"
-      >
-        <ArrowUp className="w-4 h-4" />
-      </button>
-
-      {/* Universal Footer */}
-      <footer className="bg-slate-900 text-white mt-12 border-t border-slate-800 pb-20 md:pb-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+      {/* Modern High-Conversion Footer */}
+      <footer className="mt-auto bg-slate-900 text-slate-300 border-t border-slate-800 py-10 px-4 sm:px-6 pb-24 md:pb-10">
+        <div className="max-w-6xl mx-auto space-y-8">
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             
-            {/* Col 1: About */}
-            <div className="space-y-2">
+            {/* Col 1: Brand & Bio */}
+            <div className="space-y-3 md:col-span-1">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-slate-950 font-bold">
-                  <Plane className="w-5 h-5" />
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-sm">
+                  <Plane className="w-4 h-4" />
                 </div>
-                <span className="font-black text-lg tracking-tight">TripTools</span>
+                <span className="font-black text-lg text-white tracking-tight">
+                  Trip<span className="text-emerald-500">Tools</span> PRO
+                </span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                All-in-one smart travel suite, dynamic expense tracker, mountain fuel & rental calculator, total cost predictor & route sequencer. Free for all travelers.
+                Smart travel budgeting, fuel prediction & expense statement auditing tailored for explorers.
               </p>
             </div>
 
-            {/* Col 2: Navigation Links */}
+            {/* Col 2: Quick Features */}
             <div className="space-y-2">
-              <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Explore Features</h4>
-              <ul className="space-y-1.5 text-xs text-slate-300">
-                <li>
-                  <button onClick={() => { setActiveTab('intro'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    🚀 Overview & Introduction
-                  </button>
-                </li>
+              <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Features</h4>
+              <ul className="space-y-1.5 text-xs text-slate-400">
                 <li>
                   <button onClick={() => { setActiveTab('fuel'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    ⛽ Fuel & Rental Calculator
+                    ⛽ Ghat Fuel & Bike Rental Calculator
                   </button>
                 </li>
                 <li>
                   <button onClick={() => { setActiveTab('predictor'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    🧮 All-in-One Total Cost Predictor
+                    🧮 Dynamic Trip Cost Predictor
                   </button>
                 </li>
                 <li>
                   <button onClick={() => { setActiveTab('tracker'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    💰 Trip Budget & Expense Tracker
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => { setActiveTab('analytics'); scrollToTop(); }} className="hover:text-white transition-colors">
-                    📊 Budget Analytics & Radar
+                    💰 Budget vs. Actual Expense Tracker
                   </button>
                 </li>
                 <li>
@@ -208,7 +173,7 @@ export default function App() {
       <BottomNav />
 
       {/* Global Modals */}
-      <AuthModal />
+      <TravelerNameModal />
       <AddExpenseModal />
       <SetBudgetModal />
       <AIReceiptScannerModal />

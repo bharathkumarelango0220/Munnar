@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 export default function Introduction() {
-  const { setActiveTab, setIsAuthModalOpen, user } = useApp();
+  const { setActiveTab, setIsNameModalOpen, travelerName } = useApp();
 
   const toolFeatures = [
     {
@@ -284,22 +284,20 @@ export default function Introduction() {
           </div>
           <div className="space-y-1">
             <h3 className="font-black text-base sm:text-lg text-slate-900">
-              Zero Default Values & Ephemeral Privacy
+              Personalized Trip Statement & Instant Privacy
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-              All numbers default to <strong>0</strong> so you can enter your exact values manually. Unauthenticated guests store data only in temporary session storage (wiping clean when the browser closes). Log in with your email to persist your trip data across all your devices via Cloud Firestore!
+              All your trip calculations, custom categories, and expenses are automatically saved on your device. Set your <strong>Traveler Name ({travelerName})</strong> to generate official personalized PDF and spreadsheet reports!
             </p>
           </div>
         </div>
 
-        {!user?.isVerified && (
-          <button
-            onClick={() => setIsAuthModalOpen(true)}
-            className="px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shrink-0 shadow-md transition-all self-start md:self-auto"
-          >
-            🔒 Sign In to Sync Cloud Data
-          </button>
-        )}
+        <button
+          onClick={() => setIsNameModalOpen(true)}
+          className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shrink-0 shadow-md shadow-emerald-600/25 transition-all self-start md:self-auto flex items-center gap-2"
+        >
+          <span>👤 Set Traveler Name</span>
+        </button>
       </div>
 
     </div>
