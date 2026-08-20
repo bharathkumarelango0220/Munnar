@@ -37,7 +37,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#080c14] text-slate-900 dark:text-slate-100 font-sans selection:bg-emerald-500 selection:text-white transition-colors">
       
       {/* Sticky Top Header */}
       <Navbar />

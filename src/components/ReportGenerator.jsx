@@ -215,47 +215,47 @@ export default function ReportGenerator() {
   };
 
   return (
-    <section className="space-y-6 animate-fadeIn">
+    <section className="space-y-6 animate-fadeIn pb-12">
       
       {/* Top Header & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1">
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Trip Document & Reports</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             Official Travel Expense Report 📑
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Personalized with your traveler name. Download in PDF & CSV spreadsheet format.
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        {/* Action Buttons - Mobile friendly full width grid / row */}
+        <div className="grid grid-cols-3 sm:flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-xs"
+            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all shadow-xs active:scale-95"
           >
-            <Download className="w-4 h-4 text-emerald-600" />
-            <span>Export CSV</span>
+            <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span className="truncate">CSV</span>
           </button>
 
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-xs"
+            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all shadow-xs active:scale-95"
           >
-            <Printer className="w-4 h-4 text-slate-600" />
+            <Printer className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
             <span>Print</span>
           </button>
 
           <button
             onClick={handleDownloadPDF}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all active:scale-95"
+            className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-md shadow-emerald-600/30 transition-all active:scale-95 whitespace-nowrap"
           >
             <Download className="w-4 h-4" />
-            <span>Download PDF</span>
+            <span>PDF</span>
           </button>
         </div>
       </div>
@@ -263,33 +263,33 @@ export default function ReportGenerator() {
       {/* Printable Report Document Card */}
       <div 
         ref={printRef}
-        className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl space-y-6 print:shadow-none print:border-none print:p-0"
+        className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 print:shadow-none print:border-none print:p-0 transition-colors"
       >
         
         {/* Document Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 uppercase tracking-widest">
+              <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 uppercase tracking-widest border border-emerald-200 dark:border-emerald-800/60">
                 Official Trip Audit
               </span>
             </div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-2">
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-2">
               Expense Summary & Itemized Audit
             </h1>
-            <p className="text-xs text-slate-500 mt-1">
-              Application & System Designed by <strong className="text-emerald-700">Bharathkumar E</strong>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Application & System Designed by <strong className="text-emerald-700 dark:text-emerald-400">Bharathkumar E</strong>
             </p>
           </div>
 
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-xs text-slate-600 space-y-1.5 sm:text-right min-w-[220px]">
+          <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 space-y-1.5 sm:text-right w-full sm:w-auto min-w-[220px]">
             <div className="flex sm:justify-end gap-2">
-              <span className="text-slate-700">Report Date:</span>
-              <strong className="text-slate-900">{reportDate}</strong>
+              <span className="text-slate-500 dark:text-slate-400">Report Date:</span>
+              <strong className="text-slate-900 dark:text-white">{reportDate}</strong>
             </div>
             <div className="flex sm:justify-end gap-2">
-              <span className="text-slate-700">Status:</span>
-              <span className="font-bold text-emerald-600 flex items-center gap-1">
+              <span className="text-slate-500 dark:text-slate-400">Status:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Verified Active
               </span>
@@ -297,49 +297,57 @@ export default function ReportGenerator() {
           </div>
         </div>
 
-        {/* Traveler Information Card with Quick Edit */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black">
+        {/* Traveler Information Card with High-Contrast Dark Theme */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black shrink-0">
                 <User className="w-5 h-5" />
               </div>
-              <div>
-                <span className="text-[10px] font-bold text-emerald-800 uppercase block">Report Prepared For</span>
-                <strong className="text-sm sm:text-base text-slate-900 font-black">{travelerName}</strong>
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-emerald-400 uppercase tracking-wider block">
+                  Report Prepared For
+                </span>
+                <strong className="text-sm sm:text-base text-slate-900 dark:text-white font-black truncate block">
+                  {travelerName}
+                </strong>
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => setIsNameModalOpen(true)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all shadow-xs"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-emerald-300 border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all shadow-xs shrink-0"
               title="Edit Traveler Name"
             >
               <Edit3 className="w-3 h-3" />
-              <span>Change Name</span>
+              <span>Change</span>
             </button>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black shrink-0">
                 <MapPin className="w-5 h-5" />
               </div>
-              <div>
-                <span className="text-[10px] font-bold text-teal-800 uppercase block">Trip Title</span>
-                <strong className="text-sm sm:text-base text-slate-900 font-black">{tripTitle}</strong>
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-teal-400 uppercase tracking-wider block">
+                  Trip Title
+                </span>
+                <strong className="text-sm sm:text-base text-slate-900 dark:text-white font-black truncate block">
+                  {tripTitle}
+                </strong>
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => setIsNameModalOpen(true)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white hover:bg-teal-100 text-teal-800 border border-teal-300 text-xs font-bold transition-all shadow-xs"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-teal-300 border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all shadow-xs shrink-0"
               title="Edit Trip Title"
             >
               <Edit3 className="w-3 h-3" />
-              <span>Edit Trip</span>
+              <span>Edit</span>
             </button>
           </div>
         </div>
@@ -347,16 +355,16 @@ export default function ReportGenerator() {
         {/* Section 1: Categories Comparison Table */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-sm sm:text-base text-slate-900 flex items-center gap-2">
+            <h3 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
               <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">1</span>
               <span>Category Budget vs. Spend Comparison</span>
             </h3>
-            <span className="text-xs font-semibold text-slate-500">{activeCategories.length} Categories</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{activeCategories.length} Categories</span>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-slate-100/90 text-slate-700 font-bold uppercase text-[11px] border-b border-slate-200">
+              <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[11px] border-b border-slate-200 dark:border-slate-700">
                 <tr>
                   <th className="py-3 px-3 sm:px-4">Category</th>
                   <th className="py-3 px-3 sm:px-4 text-right">Allocated Budget</th>
@@ -366,30 +374,32 @@ export default function ReportGenerator() {
                   <th className="py-3 px-3 sm:px-4 text-center">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-800 dark:text-slate-200">
                 {activeCategories.map((cat) => {
                   const stat = categoryStats[cat.id] || { allocated: 0, spent: 0, remaining: 0, percentUsed: 0 };
                   
                   return (
-                    <tr key={cat.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 px-3 sm:px-4 font-bold text-slate-900">{cat.name}</td>
+                    <tr key={cat.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-3 px-3 sm:px-4 font-bold text-slate-900 dark:text-white">{cat.name}</td>
                       <td className="py-3 px-3 sm:px-4 text-right">₹{stat.allocated.toLocaleString('en-IN')}</td>
-                      <td className="py-3 px-3 sm:px-4 text-right text-rose-600 font-bold">₹{stat.spent.toLocaleString('en-IN')}</td>
+                      <td className="py-3 px-3 sm:px-4 text-right text-rose-600 dark:text-rose-400 font-bold">₹{stat.spent.toLocaleString('en-IN')}</td>
                       <td className="py-3 px-3 sm:px-4 text-right font-black">
-                        <span className={stat.remaining < 0 ? 'text-rose-600' : 'text-emerald-700'}>
+                        <span className={stat.remaining < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400'}>
                           ₹{stat.remaining.toLocaleString('en-IN')}
                         </span>
                       </td>
                       <td className="py-3 px-3 sm:px-4 text-center">
                         <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold ${
-                          stat.percentUsed > 100 ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
+                          stat.percentUsed > 100 
+                            ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300' 
+                            : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
                         }`}>
                           {stat.percentUsed}%
                         </span>
                       </td>
                       <td className="py-3 px-3 sm:px-4 text-center">
                         <span className={`text-[11px] font-bold ${
-                          stat.remaining < 0 ? 'text-rose-600' : 'text-emerald-600'
+                          stat.remaining < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
                         }`}>
                           {stat.remaining < 0 ? 'Exceeded' : 'Within Budget'}
                         </span>
@@ -399,7 +409,7 @@ export default function ReportGenerator() {
                 })}
 
                 {/* Grand Total Row */}
-                <tr className="bg-slate-900 text-white font-black text-xs sm:text-sm">
+                <tr className="bg-slate-900 dark:bg-slate-950 text-white font-black text-xs sm:text-sm border-t-2 border-slate-700">
                   <td className="py-3.5 px-3 sm:px-4 uppercase tracking-wider">Grand Total</td>
                   <td className="py-3.5 px-3 sm:px-4 text-right">₹{totalBudget.toLocaleString('en-IN')}</td>
                   <td className="py-3.5 px-3 sm:px-4 text-right text-rose-400">₹{totalSpent.toLocaleString('en-IN')}</td>
@@ -415,18 +425,18 @@ export default function ReportGenerator() {
         </div>
 
         {/* Section 2: Itemized Transactions Table */}
-        <div className="space-y-3 pt-4 border-t border-slate-100">
+        <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-sm sm:text-base text-slate-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-lg bg-slate-900 text-white text-xs flex items-center justify-center font-bold">2</span>
+            <h3 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="w-6 h-6 rounded-lg bg-slate-900 dark:bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">2</span>
               <span>Itemized Transactions Log ({expenses.length})</span>
             </h3>
-            <span className="text-xs font-semibold text-slate-500">Live Item Ledger</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Live Item Ledger</span>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] border-b border-slate-200">
+              <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-700">
                 <tr>
                   <th className="py-2.5 px-3">#</th>
                   <th className="py-2.5 px-3">Date & Time</th>
@@ -436,10 +446,10 @@ export default function ReportGenerator() {
                   <th className="py-2.5 px-3 text-right">Amount</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                 {expenses.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="py-8 text-center text-slate-400 font-medium">
+                    <td colSpan="6" className="py-8 text-center text-slate-400 dark:text-slate-500 font-medium">
                       No expense transactions logged yet. Add expenses in the Tracker to view them here.
                     </td>
                   </tr>
@@ -447,20 +457,20 @@ export default function ReportGenerator() {
                   expenses.map((exp, idx) => {
                     const catName = categoryDefinitions[exp.category]?.name || exp.category;
                     return (
-                      <tr key={exp.id} className="hover:bg-slate-50/80">
-                        <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
-                        <td className="py-2.5 px-3 whitespace-nowrap text-slate-500">{exp.date} {exp.time}</td>
+                      <tr key={exp.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="py-2.5 px-3 font-bold text-slate-400 dark:text-slate-500">{idx + 1}</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap text-slate-500 dark:text-slate-400">{exp.date} {exp.time}</td>
                         <td className="py-2.5 px-3">
-                          <span className="font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-800">
+                          <span className="font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                             {catName}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 font-medium text-slate-900">
+                        <td className="py-2.5 px-3 font-medium text-slate-900 dark:text-white">
                           {exp.title}
-                          {exp.note && <span className="text-slate-400 block text-[11px]">{exp.note}</span>}
+                          {exp.note && <span className="text-slate-400 dark:text-slate-500 block text-[11px]">{exp.note}</span>}
                         </td>
-                        <td className="py-2.5 px-3 text-slate-500">{exp.paymentMode || 'UPI'}</td>
-                        <td className="py-2.5 px-3 text-right font-black text-slate-900">₹{Number(exp.amount).toLocaleString('en-IN')}</td>
+                        <td className="py-2.5 px-3 text-slate-500 dark:text-slate-400">{exp.paymentMode || 'UPI'}</td>
+                        <td className="py-2.5 px-3 text-right font-black text-slate-900 dark:text-white">₹{Number(exp.amount).toLocaleString('en-IN')}</td>
                       </tr>
                     );
                   })
@@ -471,13 +481,13 @@ export default function ReportGenerator() {
         </div>
 
         {/* Footer Credit */}
-        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
+        <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 dark:text-slate-500 gap-2">
           <span>Official Statement generated by TripTools Suite</span>
           <a 
             href="https://apexassure.vercel.app/"
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-emerald-700 font-bold hover:underline"
+            className="text-emerald-700 dark:text-emerald-400 font-bold hover:underline"
           >
             Engineered by Bharathkumar E (apexassure.vercel.app)
           </a>
