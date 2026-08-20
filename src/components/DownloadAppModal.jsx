@@ -1,19 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   X, 
-  Download, 
   Smartphone, 
   ShieldCheck, 
-  Zap, 
   WifiOff, 
   RefreshCw, 
   CheckCircle2, 
   HardDrive,
-  FileCheck,
   Sparkles,
-  ArrowDownToLine,
-  ExternalLink
+  ExternalLink,
+  HelpCircle,
+  DownloadCloud,
+  ChevronRight,
+  Menu
 } from 'lucide-react';
 
 export default function DownloadAppModal() {
@@ -24,10 +24,12 @@ export default function DownloadAppModal() {
     installPwaApp 
   } = useApp();
 
+  const [activeTab, setActiveTab] = useState('instant'); // 'instant' | 'apk'
+
   if (!isDownloadAppModalOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
       <div className="relative w-full max-w-lg rounded-3xl bg-slate-900 text-white border border-emerald-500/30 shadow-2xl overflow-hidden animate-scaleUp">
         
         {/* Glowing Background Accent */}
@@ -42,14 +44,14 @@ export default function DownloadAppModal() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-black text-lg sm:text-xl text-white tracking-tight">
-                  Download TripTools Mobile App 📱
+                  Get TripTools App 📱
                 </h3>
                 <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                  APK v2.4
+                  Offline Ready
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Official Android Package • 100% Free & Offline Ready
+                Install on Android • 100% Free • Auto Cloud Sync
               </p>
             </div>
           </div>
@@ -63,105 +65,147 @@ export default function DownloadAppModal() {
           </button>
         </div>
 
+        {/* Tab Switcher */}
+        <div className="px-6 pt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('instant')}
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === 'instant'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'bg-white/5 text-slate-400 hover:text-white'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>1-Tap Install (Recommended)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('apk')}
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === 'apk'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'bg-white/5 text-slate-400 hover:text-white'
+            }`}
+          >
+            <DownloadCloud className="w-3.5 h-3.5" />
+            <span>Generate APK File</span>
+          </button>
+        </div>
+
         {/* Modal Body */}
-        <div className="relative z-10 p-6 sm:p-7 space-y-6 max-h-[78vh] overflow-y-auto custom-scrollbar">
+        <div className="relative z-10 p-6 space-y-5 max-h-[70vh] overflow-y-auto custom-scrollbar">
           
           {/* Key Capabilities Badges */}
-          <div className="grid grid-cols-2 gap-2.5 text-xs">
-            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400">
-                <WifiOff className="w-4 h-4" />
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+                <WifiOff className="w-3.5 h-3.5" />
               </div>
               <div>
                 <strong className="block text-white font-bold text-[11px]">100% Offline</strong>
-                <span className="text-[10px] text-slate-400">Zero internet required</span>
+                <span className="text-[10px] text-slate-400">No internet needed</span>
               </div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-teal-500/20 text-teal-400">
-                <RefreshCw className="w-4 h-4" />
+            <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-teal-500/20 text-teal-400">
+                <RefreshCw className="w-3.5 h-3.5" />
               </div>
               <div>
                 <strong className="block text-white font-bold text-[11px]">Auto Feature Sync</strong>
-                <span className="text-[10px] text-slate-400">Updates live when online</span>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
-                <HardDrive className="w-4 h-4" />
-              </div>
-              <div>
-                <strong className="block text-white font-bold text-[11px]">Permanent Storage</strong>
-                <span className="text-[10px] text-slate-400">Never loses trip numbers</span>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div>
-                <strong className="block text-white font-bold text-[11px]">No Login Needed</strong>
-                <span className="text-[10px] text-slate-400">Instant privacy & safety</span>
+                <span className="text-[10px] text-slate-400">Live background updates</span>
               </div>
             </div>
           </div>
 
-          {/* Primary Action Buttons */}
-          <div className="space-y-3">
-            
-            {/* Direct APK Download Button */}
-            <a
-              href="/TripTools.apk"
-              download="TripTools.apk"
-              onClick={() => {
-                setTimeout(() => setIsDownloadAppModalOpen(false), 2000);
-              }}
-              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-500/25 active:scale-98 transition-all group"
-            >
-              <ArrowDownToLine className="w-5 h-5 stroke-[2.5] group-hover:translate-y-0.5 transition-transform" />
-              <span>Download Android APK Directly (5.2 MB)</span>
-            </a>
+          {/* TAB 1: INSTANT 1-TAP INSTALL (PWA - 0 Parse Error) */}
+          {activeTab === 'instant' && (
+            <div className="space-y-4 animate-fadeIn">
+              
+              {/* If browser supports direct prompt */}
+              {deferredPrompt ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    installPwaApp();
+                    setIsDownloadAppModalOpen(false);
+                  }}
+                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-500/25 active:scale-98 transition-all"
+                >
+                  <Sparkles className="w-5 h-5 stroke-[2.5]" />
+                  <span>Install TripTools Directly to Phone</span>
+                </button>
+              ) : (
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-3">
+                  <div className="flex items-center gap-2 text-emerald-300 font-bold text-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <span>Instant Install in 2 Taps (Zero Error):</span>
+                  </div>
+                  
+                  <div className="space-y-2 text-xs text-slate-300">
+                    <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
+                      <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0">1</span>
+                      <p className="text-[11px] leading-relaxed">
+                        Tap the <strong>3 vertical dots (⋮)</strong> at the top-right corner of Chrome / your mobile browser.
+                      </p>
+                    </div>
 
-            {/* Instant PWA Install (if available) */}
-            {deferredPrompt && (
-              <button
-                type="button"
-                onClick={() => {
-                  installPwaApp();
-                  setIsDownloadAppModalOpen(false);
-                }}
-                className="w-full py-3 px-5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all border border-white/15 active:scale-98"
-              >
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>Add to Home Screen (Instant Install)</span>
-              </button>
-            )}
+                    <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
+                      <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0">2</span>
+                      <p className="text-[11px] leading-relaxed">
+                        Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.
+                      </p>
+                    </div>
+                  </div>
 
-          </div>
+                  <p className="text-[10px] text-emerald-400 font-medium pt-1">
+                    ✨ That's it! It installs as a real standalone app with app icon, runs 100% offline, and auto-updates with new features!
+                  </p>
+                </div>
+              )}
 
-          {/* Easy 4-Step Installation Instructions */}
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2.5 text-xs">
-            <h4 className="font-extrabold text-white text-xs flex items-center gap-1.5 text-emerald-400">
-              <FileCheck className="w-4 h-4" />
-              <span>How to Install on Android:</span>
-            </h4>
-            <ol className="space-y-1.5 text-[11px] text-slate-300 pl-4 list-decimal leading-relaxed">
-              <li>Tap the <strong>Download Android APK</strong> button above.</li>
-              <li>When download finishes, tap <strong>Open</strong> in notification bar.</li>
-              <li>If prompted by Android, tap <strong>Settings</strong> & enable <em>"Allow from this source"</em>.</li>
-              <li>Tap <strong>Install</strong> and launch TripTools on your phone! 🚀</li>
-            </ol>
-          </div>
+            </div>
+          )}
+
+          {/* TAB 2: COMPILED BINARY APK BUILDER */}
+          {activeTab === 'apk' && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3 text-xs">
+                <div className="flex items-center gap-2 text-white font-bold">
+                  <DownloadCloud className="w-4 h-4 text-teal-400" />
+                  <span>Build Signed APK Package:</span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  To get a compiled, signed binary <strong>`.apk`</strong> file that installs cleanly without Android parsing errors, you can generate it in 1 minute using <strong>PWABuilder</strong>:
+                </p>
+
+                <a
+                  href="https://www.pwabuilder.com?url=https://munnartools.vercel.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3.5 px-5 rounded-2xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg transition-all active:scale-98"
+                >
+                  <span>Open PWABuilder & Download APK</span>
+                  <ExternalLink className="w-3.5 h-3.5 stroke-[2.5]" />
+                </a>
+
+                <div className="text-[10px] text-slate-400 space-y-1 pt-1">
+                  <p>1. Open PWABuilder link above</p>
+                  <p>2. Click <strong>Package for Android</strong></p>
+                  <p>3. Download the signed <strong>`.apk`</strong> file directly!</p>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
 
         {/* Modal Footer */}
         <div className="relative z-10 p-4 bg-slate-950/60 border-t border-slate-800 text-center">
           <p className="text-[11px] text-slate-400">
-            Engineered by <strong>Bharathkumar E</strong> (ApexAssure) • Munnar & Mountain Travel Certified
+            Crafted by <strong>Bharathkumar E</strong> (ApexAssure) • Munnar Tour Companion
           </p>
         </div>
 
