@@ -762,66 +762,7 @@ export default function FuelCalculator() {
 
           </div>
 
-          {/* OVERALL GROUP FLEET TOTAL SUMMARY CARD */}
-          <div className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-emerald-500/20 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-0.5">
-                  Overall Group Total ({bikes.length} Bikes Combined)
-                </span>
-                <h3 className="text-xl sm:text-2xl font-black text-white">
-                  Total Cost for Entire Group Ride 🏍️💨
-                </h3>
-              </div>
-              <span className="text-xs px-3 py-1 rounded-xl bg-white/10 text-emerald-300 font-bold border border-white/10 self-start sm:self-auto">
-                {multiDist > 0 ? `${multiDist} KM Trip` : 'Enter Distance Above'}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              
-              {/* Grand Total Cost (Fuel + Rental) */}
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-xs text-slate-300 font-medium">Total Group Cost</span>
-                <p className="text-2xl sm:text-3xl font-black text-emerald-300 mt-1">
-                  ₹{totalFleetGrandCost.toLocaleString('en-IN')}
-                </p>
-                <span className="text-[11px] text-slate-400 mt-0.5 block">
-                  Fuel: ₹{totalFleetFuelCost.toLocaleString('en-IN')} {totalFleetRentalCost > 0 ? `+ Rental: ₹${totalFleetRentalCost.toLocaleString('en-IN')}` : ''}
-                </span>
-              </div>
-
-              {/* Total Litres */}
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-xs text-slate-300 font-medium">Total Petrol Required</span>
-                <p className="text-2xl sm:text-3xl font-black text-white mt-1">
-                  {totalFleetLitres.toFixed(1)} <span className="text-base font-bold text-slate-300">Litres</span>
-                </p>
-                <span className="text-[11px] text-slate-400 mt-0.5 block">Combined consumption</span>
-              </div>
-
-              {/* Per-Person Split */}
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-xs text-slate-300 font-medium">Per-Person Split ({multiPassengerCount > 0 ? multiPassengerCount : 1} People)</span>
-                <p className="text-2xl sm:text-3xl font-black text-emerald-400 mt-1">
-                  ₹{multiPerPersonCost.toLocaleString('en-IN')}
-                </p>
-                <span className="text-[11px] text-slate-400 mt-0.5 block">Fair share per person</span>
-              </div>
-
-              {/* Avg Per Bike */}
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-xs text-slate-300 font-medium">Average Cost per Bike</span>
-                <p className="text-2xl sm:text-3xl font-black text-teal-300 mt-1">
-                  ₹{avgCostPerBike.toLocaleString('en-IN')}
-                </p>
-                <span className="text-[11px] text-slate-400 mt-0.5 block">Per bike average</span>
-              </div>
-
-            </div>
-          </div>
-
-          {/* INDIVIDUAL BIKES LIST WITH RENTAL TOGGLE FOR EACH BIKE */}
+          {/* STEP 2: INDIVIDUAL BIKES LIST WITH RENTAL TOGGLE FOR EACH BIKE */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
@@ -963,6 +904,65 @@ export default function FuelCalculator() {
 
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* STEP 3: OVERALL GROUP FLEET TOTAL SUMMARY CARD (CALCULATED VALUES) */}
+          <div className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-emerald-500/20 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-0.5">
+                  Overall Group Total ({bikes.length} Bikes Combined)
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black text-white">
+                  Total Cost for Entire Group Ride 🏍️💨
+                </h3>
+              </div>
+              <span className="text-xs px-3 py-1 rounded-xl bg-white/10 text-emerald-300 font-bold border border-white/10 self-start sm:self-auto">
+                {multiDist > 0 ? `${multiDist} KM Trip` : 'Enter Distance Above'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              
+              {/* Grand Total Cost (Fuel + Rental) */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-xs text-slate-300 font-medium">Total Group Cost</span>
+                <p className="text-2xl sm:text-3xl font-black text-emerald-300 mt-1">
+                  ₹{totalFleetGrandCost.toLocaleString('en-IN')}
+                </p>
+                <span className="text-[11px] text-slate-400 mt-0.5 block">
+                  Fuel: ₹{totalFleetFuelCost.toLocaleString('en-IN')} {totalFleetRentalCost > 0 ? `+ Rental: ₹${totalFleetRentalCost.toLocaleString('en-IN')}` : ''}
+                </span>
+              </div>
+
+              {/* Total Litres */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-xs text-slate-300 font-medium">Total Petrol Required</span>
+                <p className="text-2xl sm:text-3xl font-black text-white mt-1">
+                  {totalFleetLitres.toFixed(1)} <span className="text-base font-bold text-slate-300">Litres</span>
+                </p>
+                <span className="text-[11px] text-slate-400 mt-0.5 block">Combined consumption</span>
+              </div>
+
+              {/* Per-Person Split */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-xs text-slate-300 font-medium">Per-Person Split ({multiPassengerCount > 0 ? multiPassengerCount : 1} People)</span>
+                <p className="text-2xl sm:text-3xl font-black text-emerald-400 mt-1">
+                  ₹{multiPerPersonCost.toLocaleString('en-IN')}
+                </p>
+                <span className="text-[11px] text-slate-400 mt-0.5 block">Fair share per person</span>
+              </div>
+
+              {/* Avg Per Bike */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-xs text-slate-300 font-medium">Average Cost per Bike</span>
+                <p className="text-2xl sm:text-3xl font-black text-teal-300 mt-1">
+                  ₹{avgCostPerBike.toLocaleString('en-IN')}
+                </p>
+                <span className="text-[11px] text-slate-400 mt-0.5 block">Per bike average</span>
+              </div>
+
             </div>
           </div>
 
