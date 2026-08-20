@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export const DEFAULT_CATEGORY_DEFINITIONS = {};
 
@@ -38,14 +38,14 @@ export function AppProvider({ children }) {
   const [travelerName, setTravelerNameState] = useState(() => {
     try {
       const saved = localStorage.getItem('munnar_traveler_name');
-      return saved || 'Guest Traveler';
+      return saved || 'Traveler';
     } catch (e) {
-      return 'Guest Traveler';
+      return 'Traveler';
     }
   });
 
   const setTravelerName = (name) => {
-    const clean = (name && name.trim()) || 'Guest Traveler';
+    const clean = (name && name.trim()) || 'Traveler';
     setTravelerNameState(clean);
     try {
       localStorage.setItem('munnar_traveler_name', clean);
@@ -56,14 +56,14 @@ export function AppProvider({ children }) {
   const [tripTitle, setTripTitleState] = useState(() => {
     try {
       const saved = localStorage.getItem('munnar_trip_title');
-      return saved || 'Trip Expedition 2026';
+      return saved || 'My Trip';
     } catch (e) {
-      return 'Trip Expedition 2026';
+      return 'My Trip';
     }
   });
 
   const setTripTitle = (title) => {
-    const clean = (title && title.trim()) || 'Trip Expedition 2026';
+    const clean = (title && title.trim()) || 'My Trip';
     setTripTitleState(clean);
     try {
       localStorage.setItem('munnar_trip_title', clean);
@@ -85,12 +85,12 @@ export function AppProvider({ children }) {
     return getInitial('munnar_budget_configured_v3', false);
   });
 
-  // Dynamic Categories Definitions (Starts empty/clean)
+  // Dynamic Categories Definitions (Starts empty/clean with 0 values)
   const [categoryDefinitions, setCategoryDefinitions] = useState(() => {
     return getInitial('munnar_custom_categories_v3', {});
   });
 
-  // Budgets State (Starts 0 for all)
+  // Budgets State (Starts empty/0 for all)
   const [budgets, setBudgets] = useState(() => {
     return getInitial('munnar_budgets_v3', {});
   });
@@ -100,9 +100,9 @@ export function AppProvider({ children }) {
     return getInitial('munnar_expenses_v3', []);
   });
 
-  // Wishlist
+  // Wishlist (Starts empty)
   const [wishlist, setWishlist] = useState(() => {
-    return getInitial('munnar_wishlist_v3', ['kolukkumalai-tea-estate', 'eravikulam-national-park', 'mattupetty-dam']);
+    return getInitial('munnar_wishlist_v3', []);
   });
 
   // Modals
@@ -186,17 +186,52 @@ export function AppProvider({ children }) {
     setIsBudgetConfigured(true);
   };
 
-  const resetAllData = () => {
-    if (confirm('Are you sure you want to clear all trip expenses and reset all categories to 0?')) {
+  // One-click Complete Reset of All Website Values to 0
+  const resetAllDataToZero = () => {
+    if (window.confirm('Are you sure you want to reset all trip values back to 0? This will clear all entered expenses, fuel numbers, customized categories, and budgets across this website on this device.')) {
+      try {
+        const keysToRemove = [
+          'munnar_custom_categories_v3',
+          'munnar_budgets_v3',
+          'munnar_budget_configured_v3',
+          'munnar_expenses_v3',
+          'munnar_wishlist_v3',
+          'munnar_traveler_name',
+          'munnar_trip_title',
+          'munnar_predictor_days_v3',
+          'munnar_predictor_travelers_v3',
+          'munnar_predictor_active_cats_v3',
+          'munnar_fuel_dist_v3',
+          'munnar_fuel_mileage_v3',
+          'munnar_fuel_price_v3',
+          'munnar_fuel_pass_v3',
+          'munnar_fuel_multi_dist_v3',
+          'munnar_fuel_multi_price_v3',
+          'munnar_fuel_multi_pass_v3',
+          'munnar_fuel_fleet_v3',
+          'munnar_fuel_single_rental_v3',
+          'munnar_fuel_single_fee_v3',
+          'munnar_fuel_mode_v3',
+          'munnar_fuel_selected_veh_v3'
+        ];
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
+      } catch (e) {
+        console.warn('Storage reset error', e);
+      }
+
       setExpenses([]);
       setBudgets({});
       setCategoryDefinitions({});
       setIsBudgetConfigured(false);
-      localStorage.removeItem('munnar_custom_categories_v3');
-      localStorage.removeItem('munnar_budgets_v3');
-      localStorage.removeItem('munnar_budget_configured_v3');
-      localStorage.removeItem('munnar_expenses_v3');
+      setWishlist([]);
+      setTravelerNameState('Traveler');
+      setTripTitleState('My Trip');
+
+      // Dispatch event to notify all components to reset their local states to 0
+      window.dispatchEvent(new CustomEvent('triptools_reset_all'));
+      return true;
     }
+    return false;
   };
 
   const toggleWishlist = (placeId) => {
@@ -259,7 +294,7 @@ export function AppProvider({ children }) {
         setIsReceiptScannerOpen,
         prefilledCategory,
         openAddExpenseForCategory,
-        resetAllData,
+        resetAllDataToZero,
         theme,
         toggleTheme
       }}

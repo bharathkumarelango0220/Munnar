@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   Fuel, 
   Calculator, 
   Wallet, 
-  Map, 
   FileSpreadsheet, 
   Code, 
   BarChart3, 
@@ -12,18 +11,22 @@ import {
   ArrowRight, 
   CheckCircle2, 
   ShieldCheck, 
-  Zap, 
-  Layers, 
-  Users, 
-  TrendingUp, 
-  Smartphone, 
-  Lock,
-  Globe,
-  Compass
+  RotateCcw,
+  User,
+  HardDrive
 } from 'lucide-react';
 
 export default function Introduction() {
-  const { setActiveTab, setIsNameModalOpen, travelerName } = useApp();
+  const { setActiveTab, setIsNameModalOpen, travelerName, resetAllDataToZero } = useApp();
+  const [resetFeedback, setResetFeedback] = useState(false);
+
+  const handleResetClick = () => {
+    const didReset = resetAllDataToZero();
+    if (didReset) {
+      setResetFeedback(true);
+      setTimeout(() => setResetFeedback(false), 3500);
+    }
+  };
 
   const toolFeatures = [
     {
@@ -46,7 +49,6 @@ export default function Introduction() {
       description: 'Estimate your complete tour budget across Rooms, Food, Travel, Tickets, and Spices. Add your own custom categories or delete unneeded ones with live sync across the site.',
       highlights: ['Custom category builder', 'Live 2-way deletion & addition sync', 'Fixed / Per-day / Per-person rates', 'Custom budget architect']
     },
-
     {
       id: 'tracker',
       title: 'Live Expense Tracker',
@@ -117,7 +119,7 @@ export default function Introduction() {
             </p>
           </div>
 
-          {/* Quick Launch Buttons */}
+          {/* Quick Launch & Reset Buttons */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               onClick={() => {
@@ -141,22 +143,37 @@ export default function Introduction() {
               <Calculator className="w-4 h-4" />
               <span>Open Cost Predictor</span>
             </button>
+
+            <button
+              onClick={handleResetClick}
+              className="px-4 py-3 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-rose-200 border border-rose-500/40 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95"
+              title="Reset all values to 0"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Reset Values to 0</span>
+            </button>
           </div>
+
+          {resetFeedback && (
+            <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-fadeIn">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>All trip values, categories, fuel rates, and expenses have been reset to 0!</span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* CORE FEATURES GRID */}
       <div className="space-y-4">
         <div>
-          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">
-            <Layers className="w-4 h-4 text-emerald-600" />
-            <span>Power Features</span>
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            Explore All 6 Powerful Tools Inside TripTools 🛠️⚡
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+            Engineered Travel Solutions
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
+            Choose a Tool to Get Started 🛠️
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Click on any tool card to launch and start using it instantly.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Every module starts at <strong>0</strong> by default. Enter your own values manually and they will stay saved on this device forever.
           </p>
         </div>
 
@@ -171,43 +188,42 @@ export default function Introduction() {
                   setActiveTab(tool.id);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="group bg-white rounded-3xl p-6 border border-slate-200 shadow-soft hover:border-emerald-400 hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between space-y-4"
+                className="group relative bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-soft hover:shadow-xl hover:border-emerald-500/40 transition-all duration-300 flex flex-col justify-between cursor-pointer space-y-4"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className={`p-3 rounded-2xl bg-gradient-to-tr ${tool.color} text-white shadow-md group-hover:scale-105 transition-transform`}>
-                      <Icon className="w-5 h-5" />
+                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${tool.color} text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
+                      <Icon className="w-6 h-6" />
                     </div>
-                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${tool.badgeBg}`}>
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${tool.badgeBg}`}>
                       {tool.tag}
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="font-extrabold text-base sm:text-lg text-slate-900 group-hover:text-emerald-700 transition-colors">
+                    <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
                       {tool.title}
                     </h3>
-                    <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                       {tool.description}
                     </p>
                   </div>
+                </div>
 
-                  {/* Highlights List */}
-                  <ul className="space-y-1.5 pt-2 border-t border-slate-100">
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                  <ul className="space-y-1">
                     {tool.highlights.map((h, i) => (
-                      <li key={i} className="flex items-center gap-2 text-[11px] font-medium text-slate-600">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <li key={i} className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300 font-medium">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         <span>{h}</span>
                       </li>
                     ))}
                   </ul>
-                </div>
 
-                <div className="pt-2">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-700 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all">
-                    <span>Open {tool.title}</span>
-                    <ArrowRight className="w-3.5 h-3.5 stroke-[3]" />
-                  </span>
+                  <div className="pt-2 flex items-center text-xs font-bold text-emerald-700 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">
+                    <span>Open Module</span>
+                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </div>
                 </div>
               </div>
             );
@@ -215,31 +231,28 @@ export default function Introduction() {
         </div>
       </div>
 
-      {/* HOW TRIPTOOLS WORKS: 4 STEP WORKFLOW */}
-      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-soft space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block mb-0.5">
-              Frictionless Trip Workflow
-            </span>
-            <h3 className="text-xl sm:text-2xl font-black text-white">
-              How TripTools Powers Your Journey 🗺️💡
-            </h3>
-          </div>
-          <span className="text-xs text-slate-400 font-medium">
-            4 simple steps from start to finish
+      {/* HOW IT WORKS 4-STEP WORKFLOW */}
+      <div className="rounded-3xl bg-slate-900 text-white p-6 sm:p-8 md:p-10 border border-slate-800 shadow-xl space-y-6">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+            Recommended Workflow
           </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">
+            How to Master Your Trip Budget 🧭
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-300 mt-1">
+            Follow this 4-step sequence to plan, budget, calculate, and audit your complete expedition.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 rounded-2xl bg-white/5 border border-white/10 shadow-xs space-y-2">
             <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white font-black text-sm flex items-center justify-center">
               1
             </div>
-            <h4 className="font-bold text-sm text-white">Predict Budget</h4>
+            <h4 className="font-bold text-sm text-white">Plan Categories</h4>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Open <strong>Cost Predictor</strong>, configure days & travelers, and customize expense categories.
+              Open <strong>Trip Cost Predictor</strong>, set your days & travelers, and add your custom expense categories with rates.
             </p>
           </div>
 
@@ -272,32 +285,46 @@ export default function Introduction() {
               Download your verified trip audit in <strong>PDF & CSV spreadsheet</strong> format in 1 click!
             </p>
           </div>
-
         </div>
       </div>
 
-      {/* STORAGE & PRIVACY ARCHITECTURE CARD */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-6">
+      {/* STORAGE & RESET MANAGEMENT CARD */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-6 transition-colors">
         <div className="flex items-start gap-4">
-          <div className="p-3 rounded-2xl bg-teal-50 text-teal-700 border border-teal-200 shrink-0">
-            <ShieldCheck className="w-6 h-6" />
+          <div className="p-3 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800/60 shrink-0">
+            <HardDrive className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <h3 className="font-black text-base sm:text-lg text-slate-900">
-              Personalized Trip Statement & Instant Privacy
+            <h3 className="font-black text-base sm:text-lg text-slate-900 dark:text-white">
+              Permanent Device Storage & One-Click Reset
             </h3>
-            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-              All your trip calculations, custom categories, and expenses are automatically saved on your device. Set your <strong>Traveler Name ({travelerName})</strong> to generate official personalized PDF and spreadsheet reports!
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              Every value you enter is <strong>automatically and permanently saved on this device</strong>. Even if you close, refresh, or reopen the browser, your last updated values will always be restored. Click <strong>Reset All Values to 0</strong> anytime to start a brand new tour from scratch!
+            </p>
+            <p className="text-xs text-emerald-700 dark:text-emerald-400 font-bold pt-0.5">
+              Current Traveler Profile: <span>{travelerName}</span>
             </p>
           </div>
         </div>
 
-        <button
-          onClick={() => setIsNameModalOpen(true)}
-          className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shrink-0 shadow-md shadow-emerald-600/25 transition-all self-start md:self-auto flex items-center gap-2"
-        >
-          <span>👤 Set Traveler Name</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start md:self-auto">
+          <button
+            onClick={() => setIsNameModalOpen(true)}
+            className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/25 transition-all flex items-center gap-1.5 active:scale-95"
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Set Traveler Name</span>
+          </button>
+
+          <button
+            onClick={handleResetClick}
+            className="px-4 py-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
+            title="Reset all numbers and categories on this device to 0"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset All Values to 0</span>
+          </button>
+        </div>
       </div>
 
     </div>

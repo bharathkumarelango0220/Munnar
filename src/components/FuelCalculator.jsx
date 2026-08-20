@@ -30,10 +30,23 @@ const SINGLE_VEHICLE_PRESETS = [
 export default function FuelCalculator() {
   const getStorage = () => localStorage;
 
-  const [calcMode, setCalcMode] = useState('single'); // 'single' or 'multi'
+  const [calcMode, setCalcMode] = useState(() => {
+    try {
+      return getStorage().getItem('munnar_fuel_mode_v3') || 'single';
+    } catch (e) {
+      return 'single';
+    }
+  });
 
-  // Single Vehicle State
-  const [selectedVehicle, setSelectedVehicle] = useState('bike');
+  // Single Vehicle State (Starts empty/0 on fresh device)
+  const [selectedVehicle, setSelectedVehicle] = useState(() => {
+    try {
+      return getStorage().getItem('munnar_fuel_selected_veh_v3') || 'bike';
+    } catch (e) {
+      return 'bike';
+    }
+  });
+
   const [distanceKm, setDistanceKm] = useState(() => {
     try {
       return getStorage().getItem('munnar_fuel_dist_v3') || '';
@@ -41,35 +54,51 @@ export default function FuelCalculator() {
       return '';
     }
   });
+
   const [customMileage, setCustomMileage] = useState(() => {
     try {
-      return getStorage().getItem('munnar_fuel_mileage_v3') || '32';
+      return getStorage().getItem('munnar_fuel_mileage_v3') || '';
     } catch (e) {
-      return '32';
+      return '';
     }
   });
+
   const [fuelPrice, setFuelPrice] = useState(() => {
     try {
-      return getStorage().getItem('munnar_fuel_price_v3') || '105';
+      return getStorage().getItem('munnar_fuel_price_v3') || '';
     } catch (e) {
-      return '105';
+      return '';
     }
   });
+
   const [isGhatRoadMode, setIsGhatRoadMode] = useState(true); // 18% mountain incline adjustment
   const [passengerCount, setPassengerCount] = useState(() => {
     try {
       const saved = getStorage().getItem('munnar_fuel_pass_v3');
-      return saved !== null ? parseInt(saved) || 0 : 0;
+      return saved !== null ? parseInt(saved, 10) || 0 : 0;
     } catch (e) {
       return 0;
     }
   });
 
   // Single Vehicle Rental Option
-  const [isSingleRental, setIsSingleRental] = useState(false);
-  const [singleRentalFee, setSingleRentalFee] = useState('');
+  const [isSingleRental, setIsSingleRental] = useState(() => {
+    try {
+      return getStorage().getItem('munnar_fuel_single_rental_v3') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
 
-  // Multi-Bike Fleet State
+  const [singleRentalFee, setSingleRentalFee] = useState(() => {
+    try {
+      return getStorage().getItem('munnar_fuel_single_fee_v3') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+
+  // Multi-Bike Fleet State (Starts empty/0 on fresh device)
   const [multiDistanceKm, setMultiDistanceKm] = useState(() => {
     try {
       return getStorage().getItem('munnar_fuel_multi_dist_v3') || '';
@@ -77,21 +106,84 @@ export default function FuelCalculator() {
       return '';
     }
   });
-  const [multiFuelPrice, setMultiFuelPrice] = useState('105');
-  const [multiPassengerCount, setMultiPassengerCount] = useState(0);
-  const [bikes, setBikes] = useState([
-    { id: 'b1', name: 'Bike 1', model: 'Royal Enfield Classic 350', mileage: '30', isRental: false, rentalFee: '' },
-    { id: 'b2', name: 'Bike 2', model: 'KTM Duke 390', mileage: '25', isRental: false, rentalFee: '' }
-  ]);
 
-  // Persist single fuel inputs
+  const [multiFuelPrice, setMultiFuelPrice] = useState(() => {
+    try {
+      return getStorage().getItem('munnar_fuel_multi_price_v3') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+
+  const [multiPassengerCount, setMultiPassengerCount] = useState(() => {
+    try {
+      const saved = getStorage().getItem('munnar_fuel_multi_pass_v3');
+      return saved !== null ? parseInt(saved, 10) || 0 : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
+
+  const [bikes, setBikes] = useState(() => {
+    try {
+      const saved = getStorage().getItem('munnar_fuel_fleet_v3');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
+
+  // Listen to Global Reset Event
   useEffect(() => {
-    const storage = getStorage();
-    storage.setItem('munnar_fuel_dist_v3', distanceKm);
-    storage.setItem('munnar_fuel_mileage_v3', customMileage);
-    storage.setItem('munnar_fuel_price_v3', fuelPrice);
-    storage.setItem('munnar_fuel_pass_v3', passengerCount.toString());
-  }, [distanceKm, customMileage, fuelPrice, passengerCount, multiDistanceKm]);
+    const handleResetAll = () => {
+      setDistanceKm('');
+      setCustomMileage('');
+      setFuelPrice('');
+      setPassengerCount(0);
+      setIsSingleRental(false);
+      setSingleRentalFee('');
+      setMultiDistanceKm('');
+      setMultiFuelPrice('');
+      setMultiPassengerCount(0);
+      setBikes([]);
+    };
+    window.addEventListener('triptools_reset_all', handleResetAll);
+    return () => window.removeEventListener('triptools_reset_all', handleResetAll);
+  }, []);
+
+  // Persist all fuel inputs
+  useEffect(() => {
+    try {
+      const storage = getStorage();
+      storage.setItem('munnar_fuel_dist_v3', distanceKm);
+      storage.setItem('munnar_fuel_mileage_v3', customMileage);
+      storage.setItem('munnar_fuel_price_v3', fuelPrice);
+      storage.setItem('munnar_fuel_pass_v3', passengerCount.toString());
+      storage.setItem('munnar_fuel_single_rental_v3', isSingleRental ? 'true' : 'false');
+      storage.setItem('munnar_fuel_single_fee_v3', singleRentalFee);
+      storage.setItem('munnar_fuel_multi_dist_v3', multiDistanceKm);
+      storage.setItem('munnar_fuel_multi_price_v3', multiFuelPrice);
+      storage.setItem('munnar_fuel_multi_pass_v3', multiPassengerCount.toString());
+      storage.setItem('munnar_fuel_fleet_v3', JSON.stringify(bikes));
+      storage.setItem('munnar_fuel_mode_v3', calcMode);
+      storage.setItem('munnar_fuel_selected_veh_v3', selectedVehicle);
+    } catch (e) {}
+  }, [
+    distanceKm, 
+    customMileage, 
+    fuelPrice, 
+    passengerCount, 
+    isSingleRental, 
+    singleRentalFee, 
+    multiDistanceKm, 
+    multiFuelPrice, 
+    multiPassengerCount, 
+    bikes, 
+    calcMode, 
+    selectedVehicle
+  ]);
 
   // Single Vehicle Calculation
   const singleDist = parseFloat(distanceKm) || 0;

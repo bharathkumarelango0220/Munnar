@@ -106,6 +106,17 @@ export default function TripCostPredictor() {
     saveTripCategories(categoriesMap, budgetsMap);
   };
 
+  // Listen to Global Reset Event
+  useEffect(() => {
+    const handleResetAll = () => {
+      setDays(0);
+      setTravelers(0);
+      setCategoriesList([]);
+    };
+    window.addEventListener('triptools_reset_all', handleResetAll);
+    return () => window.removeEventListener('triptools_reset_all', handleResetAll);
+  }, []);
+
   // Persist category list & stepper values
   useEffect(() => {
     try {

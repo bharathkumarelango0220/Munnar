@@ -35,7 +35,7 @@ export default function ExpenseTracker() {
     totalRemaining, 
     totalPercentUsed,
     isBudgetConfigured,
-    resetAllData,
+    resetAllDataToZero,
     setIsAddExpenseModalOpen, 
     setIsReceiptScannerOpen,
     openAddExpenseForCategory,
@@ -368,11 +368,11 @@ export default function ExpenseTracker() {
             {/* Reset Trip Button */}
             <div className="pt-4 border-t border-slate-100 flex justify-end">
               <button
-                onClick={resetAllData}
+                onClick={resetAllDataToZero}
                 className="text-xs font-bold text-slate-400 hover:text-rose-600 transition-colors flex items-center gap-1"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset All Categories & Expenses</span>
+                <span>Reset All Categories & Expenses to 0</span>
               </button>
             </div>
 
