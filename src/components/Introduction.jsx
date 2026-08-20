@@ -13,11 +13,21 @@ import {
   ShieldCheck, 
   RotateCcw,
   User,
-  HardDrive
+  HardDrive,
+  Smartphone,
+  WifiOff,
+  RefreshCw
 } from 'lucide-react';
 
 export default function Introduction() {
-  const { setActiveTab, setIsNameModalOpen, travelerName, resetAllDataToZero } = useApp();
+  const { 
+    setActiveTab, 
+    setIsNameModalOpen, 
+    travelerName, 
+    resetAllDataToZero,
+    setIsDownloadAppModalOpen 
+  } = useApp();
+  
   const [resetFeedback, setResetFeedback] = useState(false);
 
   const handleResetClick = () => {
@@ -119,7 +129,7 @@ export default function Introduction() {
             </p>
           </div>
 
-          {/* Quick Launch & Reset Buttons */}
+          {/* Quick Launch, App Download & Reset Buttons */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               onClick={() => {
@@ -142,6 +152,16 @@ export default function Introduction() {
             >
               <Calculator className="w-4 h-4" />
               <span>Open Cost Predictor</span>
+            </button>
+
+            {/* DOWNLOAD ANDROID APP BUTTON */}
+            <button
+              onClick={() => setIsDownloadAppModalOpen(true)}
+              className="px-4 py-3 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-teal-500/20 active:scale-95 transition-all"
+              title="Download Android App APK file for offline use"
+            >
+              <Smartphone className="w-4 h-4 stroke-[2.5]" />
+              <span>Download App (APK)</span>
             </button>
 
             <button
@@ -309,11 +329,19 @@ export default function Introduction() {
 
         <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start md:self-auto">
           <button
+            onClick={() => setIsDownloadAppModalOpen(true)}
+            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-md transition-all flex items-center gap-1.5 active:scale-95"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span>Download APK</span>
+          </button>
+
+          <button
             onClick={() => setIsNameModalOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/25 transition-all flex items-center gap-1.5 active:scale-95"
+            className="px-4 py-2.5 rounded-2xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
           >
             <User className="w-3.5 h-3.5" />
-            <span>Set Traveler Name</span>
+            <span>Set Name</span>
           </button>
 
           <button
@@ -322,7 +350,7 @@ export default function Introduction() {
             title="Reset all numbers and categories on this device to 0"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset All Values to 0</span>
+            <span>Reset to 0</span>
           </button>
         </div>
       </div>

@@ -11,7 +11,8 @@ import {
   Sun, 
   Moon,
   Sparkles,
-  Edit3
+  Edit3,
+  Smartphone
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -22,7 +23,8 @@ export default function Navbar() {
     setActiveTab, 
     activeTab,
     theme,
-    toggleTheme
+    toggleTheme,
+    setIsDownloadAppModalOpen
   } = useApp();
 
   const navLinks = [
@@ -106,11 +108,21 @@ export default function Navbar() {
                 setActiveTab('tracker');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold transition-all shadow-xs"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold transition-all shadow-xs"
               title="Remaining Balance"
             >
               <Wallet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>₹{totalRemaining.toLocaleString('en-IN')} Left</span>
+            </button>
+
+            {/* Download App Button */}
+            <button
+              onClick={() => setIsDownloadAppModalOpen(true)}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60 text-xs font-bold transition-all shadow-xs active:scale-95"
+              title="Download Android App APK"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+              <span>App APK</span>
             </button>
 
             {/* DARK / LIGHT MODE SWITCH BUTTON */}

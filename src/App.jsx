@@ -14,6 +14,7 @@ import TravelerNameModal from './components/TravelerNameModal';
 import AddExpenseModal from './components/AddExpenseModal';
 import SetBudgetModal from './components/SetBudgetModal';
 import AIReceiptScannerModal from './components/AIReceiptScannerModal';
+import DownloadAppModal from './components/DownloadAppModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import { 
   Heart, 
@@ -177,6 +178,7 @@ export default function App() {
       <AddExpenseModal />
       <SetBudgetModal />
       <AIReceiptScannerModal />
+      <DownloadAppModal />
     </div>
   );
 }
