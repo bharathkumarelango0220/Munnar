@@ -38,7 +38,7 @@ export default function Navbar() {
   const firstLetter = (travelerName && travelerName.trim().charAt(0).toUpperCase()) || 'T';
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 transition-all shadow-xs">
+    <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-850 transition-all shadow-xs">
       <div className="max-w-6xl mx-auto px-3 sm:px-6">
         <div className="flex items-center justify-between h-16 gap-2">
           
@@ -57,14 +57,14 @@ export default function Navbar() {
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5 leading-none">
-                  <span className="font-black text-base sm:text-lg tracking-tight text-slate-900">
-                    Trip<span className="text-emerald-600">Tools</span>
+                  <span className="font-black text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
+                    Trip<span className="text-emerald-600 dark:text-emerald-400">Tools</span>
                   </span>
-                  <span className="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <span className="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                     PRO
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-600 font-semibold tracking-tight mt-0.5">
+                <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold tracking-tight mt-0.5">
                   by Bharathkumar E
                 </span>
               </div>
@@ -72,7 +72,7 @@ export default function Navbar() {
           </div>
 
           {/* DESKTOP NAVIGATION CAPSULE */}
-          <nav className="hidden md:flex items-center p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 shadow-inner">
+          <nav className="hidden md:flex items-center p-1 bg-slate-100/90 dark:bg-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-inner">
             {navLinks.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -86,11 +86,11 @@ export default function Navbar() {
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                     isActive
-                      ? 'bg-white text-emerald-700 shadow-xs ring-1 ring-slate-900/5'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                      ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-xs ring-1 ring-slate-900/5 dark:ring-emerald-500/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-800/80'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-600 stroke-[2.5]' : 'text-slate-500'}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-600 dark:text-emerald-400 stroke-[2.5]' : 'text-slate-500 dark:text-slate-400'}`} />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -106,17 +106,17 @@ export default function Navbar() {
                 setActiveTab('tracker');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-all"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold transition-all shadow-xs"
               title="Remaining Balance"
             >
-              <Wallet className="w-3.5 h-3.5 text-emerald-600" />
+              <Wallet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>₹{totalRemaining.toLocaleString('en-IN')} Left</span>
             </button>
 
             {/* DARK / LIGHT MODE SWITCH BUTTON */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-100 hover:bg-slate-200/80 text-slate-700 transition-all flex items-center justify-center active:scale-95 shadow-xs"
+              className="p-2 rounded-xl border border-slate-200 dark:border-slate-750 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-850 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-all flex items-center justify-center active:scale-95 shadow-xs"
               title={theme === 'dark' ? '☀️ Switch to Light Mode' : '🌙 Switch to Dark Mode'}
               aria-label="Toggle Theme"
             >
@@ -130,7 +130,7 @@ export default function Navbar() {
             {/* Traveler Profile Name Pill */}
             <button
               onClick={() => setIsNameModalOpen(true)}
-              className="flex items-center gap-1.5 pl-2 pr-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs active:scale-95 group"
+              className="flex items-center gap-1.5 pl-2 pr-3 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 group border border-slate-800 dark:border-slate-700"
               title="Click to change Traveler Name for Reports"
             >
               <div className="w-5 h-5 rounded-lg bg-emerald-500 text-slate-950 font-black text-[10px] flex items-center justify-center">
