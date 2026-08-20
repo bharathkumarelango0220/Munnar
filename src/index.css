@@ -5,16 +5,24 @@
 @layer base {
   * {
     -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
   }
   
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-slate-50 dark:bg-[#080c14] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 /* =========================================================
-   ULTRA-PREMIUM OBSIDIAN DARK MODE ARCHITECTURE
+   ULTRA-PERFORMANCE OBSIDIAN DARK MODE ARCHITECTURE
 ========================================================= */
 
 /* 1. Core Canvas & Backgrounds */
@@ -25,7 +33,7 @@ html.dark body {
 
 html.dark header,
 html.dark .glass-nav {
-  background-color: rgba(8, 12, 20, 0.94) !important;
+  background-color: #0c121e !important;
   border-color: #1e293b !important;
 }
 
@@ -56,30 +64,34 @@ html.dark .bg-slate-200 {
   background-color: #131d30 !important;
 }
 
-/* 2. Text Colors & Hierarchy */
+/* 2. Text Colors & High Contrast Hierarchy (Crystal Clear in Dark Mode) */
 html.dark .text-slate-950,
 html.dark .text-slate-900 {
-  color: #f8fafc !important;
+  color: #ffffff !important;
 }
 
 html.dark .text-slate-800 {
-  color: #f1f5f9 !important;
+  color: #f8fafc !important;
 }
 
 html.dark .text-slate-700 {
-  color: #cbd5e1 !important;
+  color: #f1f5f9 !important;
 }
 
 html.dark .text-slate-600 {
-  color: #94a3b8 !important;
+  color: #e2e8f0 !important;
 }
 
 html.dark .text-slate-500 {
-  color: #64748b !important;
+  color: #cbd5e1 !important;
 }
 
 html.dark .text-slate-400 {
   color: #94a3b8 !important;
+}
+
+html.dark .text-slate-300 {
+  color: #e2e8f0 !important;
 }
 
 /* 3. Borders & Dividers */
@@ -116,7 +128,7 @@ html.dark textarea {
 
 html.dark input::placeholder,
 html.dark textarea::placeholder {
-  color: #64748b !important;
+  color: #94a3b8 !important;
 }
 
 html.dark input:focus,
@@ -126,106 +138,130 @@ html.dark textarea:focus {
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
 }
 
-/* 5. Tinted Accent Cards & Status Badges (Handles any opacity variants) */
+/* 5. Tinted Accent Cards & Status Badges (High Contrast in Dark Mode) */
 html.dark [class*="bg-emerald-50"] {
-  background-color: rgba(6, 78, 59, 0.45) !important;
-  border-color: rgba(16, 185, 129, 0.45) !important;
+  background-color: rgba(6, 78, 59, 0.5) !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
 }
 
 html.dark [class*="bg-emerald-100"] {
-  background-color: rgba(16, 185, 129, 0.22) !important;
+  background-color: rgba(16, 185, 129, 0.25) !important;
 }
 
 html.dark .text-emerald-800,
-html.dark .text-emerald-900 {
-  color: #a7f3d0 !important;
+html.dark .text-emerald-900,
+html.dark .text-emerald-950 {
+  color: #6ee7b7 !important;
 }
 
-html.dark .text-emerald-700 {
+html.dark .text-emerald-700,
+html.dark .text-emerald-600 {
   color: #34d399 !important;
 }
 
 html.dark [class*="bg-teal-50"] {
-  background-color: rgba(19, 78, 74, 0.45) !important;
-  border-color: rgba(20, 184, 166, 0.45) !important;
+  background-color: rgba(19, 78, 74, 0.5) !important;
+  border-color: rgba(20, 184, 166, 0.5) !important;
 }
 
 html.dark [class*="bg-teal-100"] {
-  background-color: rgba(20, 184, 166, 0.22) !important;
+  background-color: rgba(20, 184, 166, 0.25) !important;
 }
 
 html.dark .text-teal-800,
-html.dark .text-teal-900 {
-  color: #99f6e4 !important;
+html.dark .text-teal-900,
+html.dark .text-teal-950 {
+  color: #5eead4 !important;
 }
 
-html.dark .text-teal-700 {
+html.dark .text-teal-700,
+html.dark .text-teal-600 {
   color: #2dd4bf !important;
 }
 
 html.dark [class*="bg-purple-50"] {
-  background-color: rgba(88, 28, 135, 0.45) !important;
-  border-color: rgba(168, 85, 247, 0.45) !important;
+  background-color: rgba(88, 28, 135, 0.5) !important;
+  border-color: rgba(168, 85, 247, 0.5) !important;
 }
 
 html.dark [class*="bg-purple-100"] {
-  background-color: rgba(168, 85, 247, 0.22) !important;
+  background-color: rgba(168, 85, 247, 0.25) !important;
 }
 
+html.dark .text-purple-800,
 html.dark .text-purple-900,
 html.dark .text-purple-950 {
-  color: #f3e8ff !important;
+  color: #e9d5ff !important;
 }
 
-html.dark .text-purple-700 {
+html.dark .text-purple-700,
+html.dark .text-purple-600 {
   color: #c084fc !important;
 }
 
 html.dark [class*="bg-amber-50"] {
-  background-color: rgba(120, 53, 15, 0.45) !important;
-  border-color: rgba(245, 158, 11, 0.45) !important;
+  background-color: rgba(120, 53, 15, 0.5) !important;
+  border-color: rgba(245, 158, 11, 0.5) !important;
 }
 
 html.dark [class*="bg-amber-100"] {
-  background-color: rgba(245, 158, 11, 0.22) !important;
+  background-color: rgba(245, 158, 11, 0.25) !important;
 }
 
 html.dark .text-amber-800,
-html.dark .text-amber-900 {
-  color: #fef08a !important;
+html.dark .text-amber-900,
+html.dark .text-amber-950 {
+  color: #fde047 !important;
+}
+
+html.dark .text-amber-700,
+html.dark .text-amber-600 {
+  color: #fbbf24 !important;
 }
 
 html.dark [class*="bg-rose-50"] {
-  background-color: rgba(136, 19, 55, 0.45) !important;
-  border-color: rgba(244, 63, 94, 0.45) !important;
+  background-color: rgba(136, 19, 55, 0.5) !important;
+  border-color: rgba(244, 63, 94, 0.5) !important;
 }
 
 html.dark [class*="bg-rose-100"] {
-  background-color: rgba(244, 63, 94, 0.22) !important;
+  background-color: rgba(244, 63, 94, 0.25) !important;
 }
 
 html.dark .text-rose-800,
-html.dark .text-rose-900 {
-  color: #fecdd3 !important;
+html.dark .text-rose-900,
+html.dark .text-rose-950 {
+  color: #fda4af !important;
+}
+
+html.dark .text-rose-700,
+html.dark .text-rose-600 {
+  color: #fb7185 !important;
 }
 
 html.dark [class*="bg-blue-50"] {
-  background-color: rgba(30, 58, 138, 0.45) !important;
-  border-color: rgba(59, 130, 246, 0.45) !important;
+  background-color: rgba(30, 58, 138, 0.5) !important;
+  border-color: rgba(59, 130, 246, 0.5) !important;
 }
 
 html.dark [class*="bg-blue-100"] {
-  background-color: rgba(59, 130, 246, 0.22) !important;
+  background-color: rgba(59, 130, 246, 0.25) !important;
+}
+
+html.dark .text-blue-800,
+html.dark .text-blue-900,
+html.dark .text-blue-950 {
+  color: #bfdbfe !important;
 }
 
 /* 6. Tables in Dark Mode */
 html.dark thead {
   background-color: #111a2e !important;
-  color: #cbd5e1 !important;
+  color: #e2e8f0 !important;
 }
 
 html.dark thead th {
-  color: #cbd5e1 !important;
+  color: #f8fafc !important;
 }
 
 html.dark table tbody tr:hover,
@@ -278,10 +314,20 @@ html.dark .shadow-xl {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45) !important;
 }
 
-/* 9. Mobile Bottom Navigation in Dark Mode */
-html.dark .safe-bottom {
-  background-color: rgba(8, 12, 20, 0.96) !important;
-  border-color: #1e293b !important;
+/* 9. Mobile Performance & Smooth 60FPS Scrolling */
+@media (max-width: 768px) {
+  /* Eliminate heavy GPU blur filters on mobile to prevent scroll lagging */
+  .blur-3xl,
+  .blur-2xl {
+    display: none !important;
+  }
+  
+  .backdrop-blur-md,
+  .backdrop-blur-sm,
+  .backdrop-blur-lg {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 }
 
 /* Custom Scrollbar */

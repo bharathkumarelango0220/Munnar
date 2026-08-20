@@ -105,35 +105,13 @@ export function AppProvider({ children }) {
     return getInitial('munnar_wishlist_v3', []);
   });
 
-  // Modals & PWA Prompts
+  // Modals
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
   const [isSetBudgetModalOpen, setIsSetBudgetModalOpen] = useState(false);
   const [isReceiptScannerOpen, setIsReceiptScannerOpen] = useState(false);
-  const [isDownloadAppModalOpen, setIsDownloadAppModalOpen] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [prefilledCategory, setPrefilledCategory] = useState('');
-
-  // Capture PWA Install Prompt
-  useEffect(() => {
-    const handleBeforeInstall = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-  }, []);
-
-  const installPwaApp = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
-      }
-    }
-  };
 
   // Persist all data directly to localStorage
   useEffect(() => {
@@ -314,10 +292,6 @@ export function AppProvider({ children }) {
         setIsSetBudgetModalOpen,
         isReceiptScannerOpen,
         setIsReceiptScannerOpen,
-        isDownloadAppModalOpen,
-        setIsDownloadAppModalOpen,
-        deferredPrompt,
-        installPwaApp,
         prefilledCategory,
         openAddExpenseForCategory,
         resetAllDataToZero,

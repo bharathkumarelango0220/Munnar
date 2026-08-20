@@ -33,8 +33,8 @@ export default function HeroBanner() {
     categoryDefinitions
   } = useApp();
 
-  // If on Overview Intro tab or Creator tab, the components have their own complete hero
-  if (activeTab === 'intro' || activeTab === 'creator') {
+  // If on Overview Intro tab, Creator tab, or Expense Tracker tab, the components have their own complete hero
+  if (activeTab === 'intro' || activeTab === 'creator' || activeTab === 'tracker') {
     return null;
   }
 
