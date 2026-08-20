@@ -330,6 +330,44 @@ html.dark .shadow-xl {
   }
 }
 
+/* 10. Dedicated Mobile View Typography & Perfect Text Wrap Optimization (< 640px) */
+@media (max-width: 640px) {
+  /* Balance headings and eliminate single orphan words */
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto;
+  }
+
+  p, span, label, li {
+    overflow-wrap: break-word !important;
+  }
+
+  /* Prevent text clipping inside small badges and pills */
+  [class*="rounded-full"],
+  [class*="rounded-xl"],
+  [class*="rounded-2xl"] {
+    max-width: 100%;
+  }
+
+  /* Ensure input text fields are comfortable without iOS auto-zoom */
+  input[type="number"],
+  input[type="text"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Compact padding for cards on smaller screens to maximize usable text space */
+  .p-5 {
+    padding: 1rem !important;
+  }
+  
+  .p-6 {
+    padding: 1.15rem !important;
+  }
+}
+
 /* Custom Scrollbar */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

@@ -14,18 +14,18 @@ export default function BottomNav() {
   const { activeTab, setActiveTab } = useApp();
 
   const navItems = [
-    { id: 'intro', label: 'Overview', icon: Plane },
+    { id: 'intro', label: 'Home', icon: Plane },
     { id: 'fuel', label: 'Fuel', icon: Fuel },
-    { id: 'predictor', label: 'Predictor', icon: Calculator },
-    { id: 'tracker', label: 'Expenses', icon: Wallet },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'reports', label: 'Reports', icon: FileText },
-    { id: 'creator', label: 'Creator', icon: Code },
+    { id: 'predictor', label: 'Budget', icon: Calculator },
+    { id: 'tracker', label: 'Ledger', icon: Wallet },
+    { id: 'analytics', label: 'Stats', icon: BarChart3 },
+    { id: 'reports', label: 'Report', icon: FileText },
+    { id: 'creator', label: 'About', icon: Code },
   ];
 
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200/90 dark:border-slate-800/90 shadow-2xl safe-bottom transition-colors">
-      <div className="grid grid-cols-7 h-16 max-w-lg mx-auto items-center px-0.5">
+      <div className="grid grid-cols-7 h-16 max-w-lg mx-auto items-center px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -39,14 +39,14 @@ export default function BottomNav() {
               }}
               className={`flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition-all relative ${
                 isActive 
-                  ? 'text-emerald-700 dark:text-emerald-400 font-bold' 
+                  ? 'text-emerald-700 dark:text-emerald-400 font-black' 
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <div className={`p-1 rounded-lg transition-transform ${isActive ? 'scale-110 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 shadow-xs' : ''}`}>
+              <div className={`p-1 rounded-lg transition-transform ${isActive ? 'scale-105 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 shadow-xs' : ''}`}>
                 <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.5] text-emerald-600 dark:text-emerald-400' : 'stroke-[1.75]'}`} />
               </div>
-              <span className="text-[8.5px] sm:text-[9px] tracking-tighter leading-tight mt-0.5 truncate w-full text-center">
+              <span className="text-[9.5px] font-bold tracking-tight leading-none mt-1 truncate w-full text-center">
                 {item.label}
               </span>
               {isActive && (

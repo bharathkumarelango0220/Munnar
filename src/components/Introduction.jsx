@@ -117,26 +117,26 @@ export default function Introduction() {
           </div>
 
           <div>
-            <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-snug sm:leading-tight">
               The All-in-One Smart Travel Calculator & Expense Companion ✈️🎒
             </h1>
-            <p className="text-sm sm:text-base text-slate-300 mt-3 leading-relaxed font-normal">
+            <p className="text-xs sm:text-base text-slate-300 mt-2.5 sm:mt-3 leading-relaxed font-normal">
               <strong>TripTools</strong> is engineered to eliminate the friction of trip planning. Predict total tour budgets, calculate mountain fuel and rental charges, optimize driving routes, track live group spending, and export official PDF statements.
             </p>
           </div>
 
           {/* Quick Launch & Reset Buttons */}
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 pt-2">
             <button
               onClick={() => {
                 setActiveTab('fuel');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-2 shadow-xl shadow-emerald-500/30 active:scale-95 transition-all"
+              className="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/30 active:scale-95 transition-all"
             >
-              <Fuel className="w-4 h-4" />
+              <Fuel className="w-4 h-4 shrink-0" />
               <span>Launch Fuel Calculator</span>
-              <ArrowRight className="w-4 h-4 stroke-[3]" />
+              <ArrowRight className="w-4 h-4 stroke-[3] shrink-0" />
             </button>
 
             <button
@@ -144,18 +144,18 @@ export default function Introduction() {
                 setActiveTab('predictor');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center gap-2 transition-all border border-white/15"
+              className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all border border-white/15"
             >
-              <Calculator className="w-4 h-4" />
+              <Calculator className="w-4 h-4 shrink-0" />
               <span>Open Cost Predictor</span>
             </button>
 
             <button
               onClick={handleResetClick}
-              className="px-4 py-3 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-rose-200 border border-rose-500/40 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95"
+              className="px-4 py-3 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-rose-200 border border-rose-500/40 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
               title="Reset all values to 0"
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-4 h-4 shrink-0" />
               <span>Reset Values to 0</span>
             </button>
           </div>
