@@ -460,25 +460,25 @@ export default function FuelCalculator() {
                 onClick={() => setIsGhatRoadMode(!isGhatRoadMode)}
                 className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
                   isGhatRoadMode 
-                    ? 'bg-emerald-50/80 border-emerald-200' 
-                    : 'bg-slate-50 border-slate-200'
+                    ? 'bg-emerald-50/80 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/60' 
+                    : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl ${isGhatRoadMode ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                  <div className={`p-2 rounded-xl ${isGhatRoadMode ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
                     <Mountain className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs sm:text-sm text-slate-900">
-                      Munnar Ghat Road Hill Incline Adjustment
+                    <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+                       Munnar Ghat Road Hill Incline Adjustment
                     </h4>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-slate-500 dark:text-emerald-400 font-medium">
                       Accounts for hairpin bends and steep slopes (-18% mileage on hill climbs)
                     </p>
                   </div>
                 </div>
 
-                <div className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${isGhatRoadMode ? 'bg-emerald-600' : 'bg-slate-300'}`}>
+                <div className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${isGhatRoadMode ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'}`}>
                   <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${isGhatRoadMode ? 'translate-x-5' : ''}`}></div>
                 </div>
               </div>
@@ -747,18 +747,20 @@ export default function FuelCalculator() {
                   setIsGhatRoadMode(!isGhatRoadMode);
                 }}
                 className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                  isGhatRoadMode ? 'bg-emerald-50/80 border-emerald-200' : 'bg-slate-50 border-slate-200'
+                  isGhatRoadMode 
+                    ? 'bg-emerald-50/80 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-300' 
+                    : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Mountain className={`w-4 h-4 ${isGhatRoadMode ? 'text-emerald-600' : 'text-slate-400'}`} />
+                  <Mountain className={`w-4 h-4 ${isGhatRoadMode ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
                   <div>
-                    <h4 className="font-bold text-xs text-slate-900">Ghat Road Incline</h4>
-                    <span className="text-[10px] text-slate-500">-18% Hill drop</span>
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-white">Ghat Road Incline</h4>
+                    <span className="text-[10px] text-slate-500 dark:text-emerald-400 font-bold">-18% Hill drop</span>
                   </div>
                 </div>
 
-                <div className={`w-10 h-5 flex items-center rounded-full p-0.5 transition-colors ${isGhatRoadMode ? 'bg-emerald-600' : 'bg-slate-300'}`}>
+                <div className={`w-10 h-5 flex items-center rounded-full p-0.5 transition-colors ${isGhatRoadMode ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'}`}>
                   <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${isGhatRoadMode ? 'translate-x-5' : ''}`}></div>
                 </div>
               </div>
@@ -898,11 +900,11 @@ export default function FuelCalculator() {
                   </div>
 
                   {/* RENTAL OPTION FOR THIS INDIVIDUAL BIKE */}
-                  <div className="p-3 rounded-2xl bg-purple-50/40 border border-purple-100 space-y-2">
+                  <div className="p-3 rounded-2xl bg-purple-50/40 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-850/60 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <ReceiptText className="w-3.5 h-3.5 text-purple-700" />
-                        <span className="text-xs font-bold text-purple-950">
+                        <ReceiptText className="w-3.5 h-3.5 text-purple-700 dark:text-purple-400" />
+                        <span className="text-xs font-bold text-purple-950 dark:text-purple-200">
                           Is this bike rented?
                         </span>
                       </div>
@@ -913,7 +915,7 @@ export default function FuelCalculator() {
                           handleUpdateBike(bike.id, 'isRental', !bike.isRental);
                         }}
                         className={`w-9 h-5 flex items-center rounded-full p-0.5 cursor-pointer transition-colors ${
-                          bike.isRental ? 'bg-purple-600' : 'bg-slate-300'
+                          bike.isRental ? 'bg-purple-600' : 'bg-slate-300 dark:bg-slate-700'
                         }`}
                       >
                         <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${bike.isRental ? 'translate-x-4' : ''}`}></div>
@@ -921,12 +923,12 @@ export default function FuelCalculator() {
                     </div>
 
                     {bike.isRental && (
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-purple-200/50 animate-slideDown">
-                        <label className="text-[11px] font-bold text-purple-900">
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-purple-200/50 dark:border-purple-800/40 animate-slideDown">
+                        <label className="text-[11px] font-bold text-purple-900 dark:text-purple-300">
                           Rental Fee (₹):
                         </label>
                         <div className="relative w-32">
-                          <span className="absolute left-2.5 top-1.5 text-xs font-black text-purple-700">₹</span>
+                          <span className="absolute left-2.5 top-1.5 text-xs font-black text-purple-700 dark:text-purple-400">₹</span>
                           <input
                             type="number"
                             inputMode="decimal"
@@ -934,7 +936,7 @@ export default function FuelCalculator() {
                             onChange={(e) => handleUpdateBike(bike.id, 'rentalFee', e.target.value)}
                             placeholder="e.g. 1000"
                             min="0"
-                            className="w-full pl-6 pr-2 py-1.5 rounded-lg border border-purple-200 text-xs font-black text-slate-900 focus:outline-none focus:border-purple-500 bg-white text-right"
+                            className="w-full pl-6 pr-2 py-1.5 rounded-lg border border-purple-200 dark:border-purple-800 text-xs font-black text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 bg-white dark:bg-slate-900 text-right"
                           />
                         </div>
                       </div>
@@ -942,14 +944,14 @@ export default function FuelCalculator() {
                   </div>
 
                   {/* Individual Bike Calculated Results */}
-                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
                     <div>
                       <span className="text-[11px] text-slate-400 font-medium">Fuel Required:</span>
-                      <p className="text-sm font-black text-slate-800">
+                      <p className="text-sm font-black text-slate-800 dark:text-slate-100">
                         {bike.litres.toFixed(1)} Litres (₹{bike.fuelCost})
                       </p>
                       {bike.isRental && (
-                        <span className="text-[10px] text-purple-700 font-bold block">
+                        <span className="text-[10px] text-purple-700 dark:text-purple-400 font-bold block">
                           + Rental: ₹{bike.rentalCost}
                         </span>
                       )}
@@ -957,7 +959,7 @@ export default function FuelCalculator() {
 
                     <div className="text-right">
                       <span className="text-[11px] text-slate-400 font-medium">Total Bike Cost:</span>
-                      <p className="text-lg font-black text-emerald-700">
+                      <p className="text-lg font-black text-emerald-700 dark:text-emerald-400">
                         ₹{bike.totalBikeCost.toLocaleString('en-IN')}
                       </p>
                     </div>
