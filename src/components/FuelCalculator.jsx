@@ -282,7 +282,7 @@ export default function FuelCalculator() {
   };
 
   return (
-    <section className="space-y-6 animate-fadeIn">
+    <section className="space-y-6 animate-fadeIn w-full max-w-full overflow-hidden">
       
       {/* Header Banner & Mode Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
