@@ -1,4 +1,6 @@
-const CACHE_NAME = 'triptools-offline-v3';
+const CACHE_NAME = 'triptools-offline-v4';
+const TILE_CACHE = 'triptools-tiles-v1';
+
 const CORE_ASSETS = [
   '/',
   '/index.html',
@@ -26,7 +28,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
+          if (key !== CACHE_NAME && key !== TILE_CACHE) {
             return caches.delete(key);
           }
         })
@@ -42,6 +44,31 @@ self.addEventListener('fetch', (event) => {
 
   // Only handle GET requests
   if (request.method !== 'GET') {
+    return;
+  }
+
+  // Handle Map Tiles (CartoDB / OpenStreetMap) - Cache First Strategy
+  if (url.hostname.includes('cartocdn.com') || url.hostname.includes('openstreetmap.org')) {
+    event.respondWith(
+      caches.open(TILE_CACHE).then((cache) => {
+        return cache.match(request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return fetch(request)
+            .then((networkResponse) => {
+              if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
+                cache.put(request, networkResponse.clone());
+              }
+              return networkResponse;
+            })
+            .catch(() => {
+              // Return cached response if available
+              return cachedResponse || new Response('', { status: 408, statusText: 'Tile Offline' });
+            });
+        });
+      })
+    );
     return;
   }
 
@@ -71,7 +98,6 @@ self.addEventListener('fetch', (event) => {
     caches.match(request).then((cachedResponse) => {
       const networkFetch = fetch(request)
         .then((networkResponse) => {
-          // Cache successful same-origin or CORS responses
           if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -81,11 +107,9 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(() => {
-          // If offline and not in cache, fallback
           return cachedResponse;
         });
 
-      // Serve from local cache if present, otherwise fetch from network
       return cachedResponse || networkFetch;
     })
   );

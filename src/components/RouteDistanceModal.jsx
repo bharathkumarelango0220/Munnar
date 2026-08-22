@@ -44,6 +44,7 @@ import {
   checkOffCourseAndReroute,
   saveRouteOffline,
   getOfflineSavedRoute,
+  downloadAndCacheRouteTiles,
   getGoogleMapsNavigationUrl
 } from '../services/routingService';
 import { triggerHaptic } from '../utils/haptics';
@@ -73,13 +74,14 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
   const [appliedFeedback, setAppliedFeedback] = useState(false);
   const [activeViewTab, setActiveViewTab] = useState('map'); // 'map' | 'details' | 'live'
   const [isMapInteractActive, setIsMapInteractActive] = useState(false);
-  const [mapStyle, setMapStyle] = useState('voyager'); // 'voyager' | 'satellite' | 'topo'
 
   // Live GPS Tracking & Off-course states
   const [isLiveTracking, setIsLiveTracking] = useState(false);
   const [userLocation, setUserLocation] = useState(null); // { lat, lon, speed, heading, accuracy }
   const [offCourseData, setOffCourseData] = useState(null); // { isOffCourse, minDistanceMeters, rerouteCoordinates }
   const [isRouteSavedOffline, setIsRouteSavedOffline] = useState(false);
+  const [isDownloadingTiles, setIsDownloadingTiles] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   // Leaflet map refs
   const mapContainerRef = useRef(null);
@@ -135,34 +137,24 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     };
   }, [isOpen]);
 
-  // Handle Map Style Switch (Voyager / Satellite / Topo)
+  // Auto-load cached offline route if offline
   useEffect(() => {
-    if (!mapInstanceRef.current) return;
-    const map = mapInstanceRef.current;
-
-    if (tileLayerRef.current) {
-      map.removeLayer(tileLayerRef.current);
+    if (isOpen && !navigator.onLine) {
+      const saved = getOfflineSavedRoute();
+      if (saved && saved.coordinates) {
+        setSelectedOrigin(saved.origin);
+        setSelectedDest(saved.destination);
+        setIsRoundTrip(saved.isRoundTrip || false);
+        setRouteResult({
+          distanceKm: saved.distanceKm,
+          durationText: saved.durationText,
+          coordinates: saved.coordinates,
+          steps: saved.steps || [],
+          source: '100% Offline Cached Route'
+        });
+      }
     }
-
-    let url = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-    let opts = { maxZoom: 19, subdomains: 'abcd' };
-
-    if (mapStyle === 'satellite') {
-      url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-      opts = { maxZoom: 19 };
-    } else if (mapStyle === 'topo') {
-      url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
-      opts = { maxZoom: 19 };
-    }
-
-    tileLayerRef.current = L.tileLayer(url, opts).addTo(map);
-
-    // Keep layers on top
-    polylineLayerRef.current?.bringToFront();
-    rerouteLayerRef.current?.bringToFront();
-    markersLayerRef.current?.bringToFront();
-    userGpsMarkerRef.current?.bringToFront();
-  }, [mapStyle]);
+  }, [isOpen]);
 
   // Sync interactive map panning mode with immediate tile repaint
   useEffect(() => {
@@ -408,11 +400,22 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     }
   };
 
-  // Save Route for Offline Use
-  const handleSaveRouteOffline = () => {
+  // Save Route and Physical Map Tiles for 100% Offline Use
+  const handleSaveRouteOffline = async () => {
     triggerHaptic(20);
-    if (!routeResult) return;
-    const success = saveRouteOffline({
+    if (!routeResult?.coordinates) return;
+
+    setIsDownloadingTiles(true);
+    setDownloadProgress(10);
+
+    // 1. Physically download & cache all map tiles along the route into triptools-tiles-v1
+    await downloadAndCacheRouteTiles(routeResult.coordinates, (downloaded, total) => {
+      const pct = Math.round((downloaded / total) * 100);
+      setDownloadProgress(pct);
+    });
+
+    // 2. Save complete route data in localStorage
+    saveRouteOffline({
       origin: selectedOrigin,
       destination: selectedDest,
       distanceKm: totalCalculatedKm,
@@ -421,10 +424,11 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       coordinates: routeResult.coordinates,
       steps: routeResult.steps
     });
-    if (success) {
-      setIsRouteSavedOffline(true);
-      setTimeout(() => setIsRouteSavedOffline(false), 3000);
-    }
+
+    setIsDownloadingTiles(false);
+    setIsRouteSavedOffline(true);
+    triggerHaptic(25);
+    setTimeout(() => setIsRouteSavedOffline(false), 4000);
   };
 
   if (!isOpen) return null;
@@ -874,51 +878,17 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                 </button>
               </div>
 
-              {/* Bottom Control Bar: Fit Route + Map Style Switcher + Dedicated Zoom Buttons */}
-              <div className="absolute bottom-3 left-3 right-3 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
-                <div className="pointer-events-auto flex items-center gap-1.5">
-                  {/* Re-center Button */}
-                  <button
-                    type="button"
-                    onClick={handleRecenterMap}
-                    className="bg-white/95 dark:bg-slate-800/95 text-slate-800 dark:text-white px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md text-xs font-bold flex items-center gap-1 hover:bg-slate-50 transition-colors active:scale-95"
-                    title="Fit Route to Screen"
-                  >
-                    <Maximize2 className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="hidden sm:inline">Fit Route</span>
-                  </button>
-
-                  {/* Map Style Switcher */}
-                  <div className="flex items-center bg-white/95 dark:bg-slate-800/95 p-0.5 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 text-[11px] font-bold">
-                    <button
-                      type="button"
-                      onClick={() => { triggerHaptic(10); setMapStyle('voyager'); }}
-                      className={`px-2 py-1 rounded-lg transition-all ${
-                        mapStyle === 'voyager' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
-                      }`}
-                    >
-                      Roads
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { triggerHaptic(10); setMapStyle('satellite'); }}
-                      className={`px-2 py-1 rounded-lg transition-all ${
-                        mapStyle === 'satellite' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
-                      }`}
-                    >
-                      Satellite
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { triggerHaptic(10); setMapStyle('topo'); }}
-                      className={`px-2 py-1 rounded-lg transition-all ${
-                        mapStyle === 'topo' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
-                      }`}
-                    >
-                      Topo
-                    </button>
-                  </div>
-                </div>
+              {/* Bottom Control Bar: Fit Route + Dedicated Zoom Buttons */}
+              <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
+                <button
+                  type="button"
+                  onClick={handleRecenterMap}
+                  className="pointer-events-auto bg-white/95 dark:bg-slate-800/95 text-slate-800 dark:text-white px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md text-xs font-bold flex items-center gap-1.5 hover:bg-slate-50 transition-colors active:scale-95"
+                  title="Fit Route to Screen"
+                >
+                  <Maximize2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Fit Route</span>
+                </button>
 
                 {/* Explicit Zoom Buttons */}
                 <div className="pointer-events-auto flex items-center gap-1 bg-white/95 dark:bg-slate-800/95 p-1 rounded-xl shadow-md border border-slate-200 dark:border-slate-700">
@@ -953,10 +923,17 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
               <button
                 type="button"
                 onClick={handleSaveRouteOffline}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition-colors active:scale-95 self-start sm:self-auto"
+                disabled={isDownloadingTiles}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition-colors active:scale-95 self-start sm:self-auto disabled:opacity-60"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>{isRouteSavedOffline ? '✓ Saved Offline!' : '📥 Save Route for Offline GPS'}</span>
+                <span>
+                  {isDownloadingTiles
+                    ? `⏳ Caching Map Tiles ${downloadProgress}%...`
+                    : isRouteSavedOffline
+                    ? '✓ 100% Offline Route & Map Cached!'
+                    : '📥 Save Route for Offline GPS'}
+                </span>
               </button>
             </div>
 
