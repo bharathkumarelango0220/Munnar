@@ -38,13 +38,13 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
   const [isRoundTrip, setIsRoundTrip] = useState(false);
   
   // Origin search state
-  const [customOriginQuery, setCustomOriginQuery] = useState('');
+  const [customOriginQuery, setCustomOriginQuery] = useState(POPULAR_ORIGINS[0].name);
   const [originSuggestions, setOriginSuggestions] = useState([]);
   const [isSearchingOrigin, setIsSearchingOrigin] = useState(false);
   const [showOriginDropdown, setShowOriginDropdown] = useState(false);
 
   // Destination search state
-  const [customDestQuery, setCustomDestQuery] = useState('');
+  const [customDestQuery, setCustomDestQuery] = useState(POPULAR_DESTINATIONS[0].name);
   const [destSuggestions, setDestSuggestions] = useState([]);
   const [isSearchingDest, setIsSearchingDest] = useState(false);
   const [showDestDropdown, setShowDestDropdown] = useState(false);
@@ -306,13 +306,12 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
                   <input
                     type="text"
-                    value={customOriginQuery || selectedOrigin.name}
+                    value={customOriginQuery}
                     onChange={(e) => {
                       isSelectingOriginRef.current = false;
                       setCustomOriginQuery(e.target.value);
                     }}
                     onFocus={() => {
-                      if (!customOriginQuery) setCustomOriginQuery(selectedOrigin.name);
                       if (originSuggestions.length > 0) setShowOriginDropdown(true);
                     }}
                     placeholder="Search departure city..."
@@ -413,13 +412,12 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
                   <input
                     type="text"
-                    value={customDestQuery || selectedDest.name}
+                    value={customDestQuery}
                     onChange={(e) => {
                       isSelectingDestRef.current = false;
                       setCustomDestQuery(e.target.value);
                     }}
                     onFocus={() => {
-                      if (!customDestQuery) setCustomDestQuery(selectedDest.name);
                       if (destSuggestions.length > 0) setShowDestDropdown(true);
                     }}
                     placeholder="Search destination city..."
