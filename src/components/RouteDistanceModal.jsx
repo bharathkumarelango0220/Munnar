@@ -21,7 +21,12 @@ import {
   Milestone,
   Layers,
   Maximize2,
-  ArrowUpDown
+  ArrowUpDown,
+  Lock,
+  Unlock,
+  ZoomIn,
+  ZoomOut,
+  Hand
 } from 'lucide-react';
 import { 
   POPULAR_ORIGINS, 
@@ -51,6 +56,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
   const [routeResult, setRouteResult] = useState(null);
   const [appliedFeedback, setAppliedFeedback] = useState(false);
   const [activeViewTab, setActiveViewTab] = useState('map'); // 'map' | 'details'
+  const [isMapInteractActive, setIsMapInteractActive] = useState(false); // Controls 1-finger scroll-through vs 2-finger map pan
 
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -67,8 +73,11 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       if (!mapInstanceRef.current) {
         try {
           const map = L.map(mapContainerRef.current, {
-            zoomControl: true,
-            attributionControl: false
+            zoomControl: false,
+            attributionControl: false,
+            scrollWheelZoom: false, // Prevents desktop scroll wheel trap
+            dragging: false, // Prevents mobile 1-finger scroll trap by default
+            touchZoom: false
           }).setView([10.0889, 77.0595], 8);
 
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -92,6 +101,31 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       clearTimeout(initTimer);
     };
   }, [isOpen]);
+
+  // Sync interactive map panning mode
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    const map = mapInstanceRef.current;
+    if (isMapInteractActive) {
+      map.dragging.enable();
+      map.touchZoom.enable();
+      map.scrollWheelZoom.enable();
+    } else {
+      map.dragging.disable();
+      map.touchZoom.disable();
+      map.scrollWheelZoom.disable();
+    }
+  }, [isMapInteractActive]);
+
+  const handleZoomIn = () => {
+    triggerHaptic(10);
+    mapInstanceRef.current?.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    triggerHaptic(10);
+    mapInstanceRef.current?.zoomOut();
+  };
 
   // Handle Tab Switch Invalidate Size
   useEffect(() => {
@@ -531,31 +565,91 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
           </div>
 
           {/* TAB 1: INTERACTIVE LIVE MAP VIEW CONTAINER (Always Kept in DOM) */}
-          <div className={activeViewTab === 'map' ? 'space-y-3 block' : 'hidden'}>
+          <div className={activeViewTab === 'map' ? 'space-y-2 block' : 'hidden'}>
             <div className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-md">
               {/* Map Container */}
               <div 
                 ref={mapContainerRef} 
-                className="w-full h-72 sm:h-80 bg-slate-100 dark:bg-slate-950 relative z-10"
+                className={`w-full h-72 sm:h-80 bg-slate-100 dark:bg-slate-950 relative z-10 ${
+                  !isMapInteractActive ? 'pointer-events-none sm:pointer-events-auto' : 'pointer-events-auto'
+                }`}
               />
 
               {/* Floating Map Legend Overlay */}
-              <div className="absolute top-3 left-3 z-20 bg-slate-900/90 text-white px-3 py-1.5 rounded-xl border border-white/20 backdrop-blur-md text-[11px] font-bold flex items-center gap-2 shadow-lg">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>{selectedOrigin.name} ➔ {selectedDest.name}</span>
+              <div className="absolute top-3 left-3 z-20 bg-slate-900/90 text-white px-3 py-1.5 rounded-xl border border-white/20 backdrop-blur-md text-[11px] font-bold flex items-center gap-2 shadow-lg max-w-[55%] truncate">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0 animate-pulse"></span>
+                <span className="truncate">{selectedOrigin.name} ➔ {selectedDest.name}</span>
               </div>
 
-              {/* Re-center Button */}
-              <button
-                type="button"
-                onClick={handleRecenterMap}
-                className="absolute bottom-3 left-3 z-20 bg-white dark:bg-slate-800 text-slate-800 dark:text-white px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md text-xs font-bold flex items-center gap-1.5 hover:bg-slate-50 transition-colors"
-                title="Fit Route to Screen"
-              >
-                <Maximize2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Fit Route</span>
-              </button>
+              {/* Mobile Interaction Mode Floating Toggle Button */}
+              <div className="absolute top-3 right-3 z-20">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic(15);
+                    setIsMapInteractActive(!isMapInteractActive);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl border shadow-lg text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 ${
+                    isMapInteractActive
+                      ? 'bg-emerald-600 border-emerald-400 text-white shadow-emerald-600/30'
+                      : 'bg-slate-900/90 hover:bg-slate-900 text-white border-white/20 backdrop-blur-md'
+                  }`}
+                >
+                  {isMapInteractActive ? (
+                    <>
+                      <Lock className="w-3.5 h-3.5 text-emerald-200" />
+                      <span>Lock (Scroll Page)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Hand className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Pan & Zoom Map</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Bottom Control Bar: Fit Route + Dedicated Zoom Buttons */}
+              <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
+                {/* Re-center Button */}
+                <button
+                  type="button"
+                  onClick={handleRecenterMap}
+                  className="pointer-events-auto bg-white/95 dark:bg-slate-800/95 text-slate-800 dark:text-white px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md text-xs font-bold flex items-center gap-1.5 hover:bg-slate-50 transition-colors active:scale-95"
+                  title="Fit Route to Screen"
+                >
+                  <Maximize2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Fit Route</span>
+                </button>
+
+                {/* Explicit Zoom Buttons */}
+                <div className="pointer-events-auto flex items-center gap-1 bg-white/95 dark:bg-slate-800/95 p-1 rounded-xl shadow-md border border-slate-200 dark:border-slate-700">
+                  <button
+                    type="button"
+                    onClick={handleZoomIn}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 active:scale-90"
+                    title="Zoom In"
+                  >
+                    <ZoomIn className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  </button>
+                  <div className="w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
+                  <button
+                    type="button"
+                    onClick={handleZoomOut}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 active:scale-90"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                  </button>
+                </div>
+              </div>
+
             </div>
+
+            {/* Subtle Scroll Hint */}
+            <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 font-medium">
+              💡 {isMapInteractActive ? 'Map active: drag/pinch to move. Tap "Lock" to scroll page.' : 'Scroll page freely. Tap "Pan & Zoom Map" or use +/- buttons to inspect route.'}
+            </p>
           </div>
 
           {/* TAB 2: GHAT ROAD & MOUNTAIN INCLINE ANALYSIS */}
