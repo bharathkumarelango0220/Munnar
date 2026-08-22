@@ -114,16 +114,6 @@ export default function CreatorCard() {
               </a>
 
               <a
-                href="/TripTools_User_Manual.pdf"
-                download="TripTools_User_Manual.pdf"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm shadow-md active:scale-95 transition-all"
-                title="Download Comprehensive User Guide PDF"
-              >
-                <FileText className="w-4 h-4" />
-                <span>Download User Manual (PDF)</span>
-              </a>
-
-              <a
                 href="https://api.whatsapp.com/send?phone=918220802736&text=Hi%20Bharathkumar,%20I%20saw%20your%20TripTools%20app%20and%20would%20like%20to%20connect!"
                 target="_blank"
                 rel="noopener noreferrer"

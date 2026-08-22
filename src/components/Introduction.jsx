@@ -151,16 +151,6 @@ export default function Introduction() {
               <span>Open Cost Predictor</span>
             </button>
 
-            <a
-              href="/TripTools_User_Manual.pdf"
-              download="TripTools_User_Manual.pdf"
-              className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
-              title="Download Comprehensive User Guide PDF"
-            >
-              <FileText className="w-4 h-4 shrink-0 text-emerald-400" />
-              <span>User Manual (PDF) 📖</span>
-            </a>
-
             <button
               onClick={handleResetClick}
               className="px-4 py-3 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-rose-200 border border-rose-500/40 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
