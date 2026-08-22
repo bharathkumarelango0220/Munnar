@@ -138,7 +138,7 @@ export const POPULAR_DESTINATIONS = [
   },
   { 
     id: 'top_station', 
-    name: 'Top Station Viewpoint & Clouds', 
+    name: 'Top Station Viewpoint', 
     lat: 10.1245, 
     lon: 77.2435, 
     altitude: '1,880m MSL',
@@ -146,43 +146,67 @@ export const POPULAR_DESTINATIONS = [
   },
   { 
     id: 'kolukkumalai', 
-    name: 'Kolukkumalai Peak (Highest Tea Estate)', 
+    name: 'Kolukkumalai Peak', 
     lat: 10.0850, 
     lon: 77.2185, 
     altitude: '2,160m MSL',
-    attractions: '4x4 Off-Road Jeep Safari, World’s Highest Organic Tea Factory, Sunrise Clouds'
+    attractions: 'World’s Highest Organic Tea Factory, Sunrise Clouds'
   },
   { 
-    id: 'eravikulam', 
-    name: 'Eravikulam National Park (Rajamalai)', 
-    lat: 10.1980, 
-    lon: 77.0450, 
-    altitude: '2,000m MSL',
-    attractions: 'Endangered Nilgiri Tahr, Anamudi Peak Foothills, Shola Grasslands'
+    id: 'kodaikanal', 
+    name: 'Kodaikanal, TN', 
+    lat: 10.2381, 
+    lon: 77.4892, 
+    altitude: '2,133m MSL',
+    attractions: 'Princess of Hill Stations, Kodai Lake, Pillar Rocks'
   },
   { 
-    id: 'marayoor', 
-    name: 'Marayoor Sandalwood & Dolmens', 
-    lat: 10.2790, 
-    lon: 77.1620, 
-    altitude: '1,000m MSL',
-    attractions: 'Natural Sandalwood Reserve, Ancient Stone Age Dolmens, Jaggery Farms'
+    id: 'ooty', 
+    name: 'Ooty / Udhagamandalam, TN', 
+    lat: 11.4102, 
+    lon: 76.6950, 
+    altitude: '2,240m MSL',
+    attractions: 'Queen of Hill Stations, Nilgiri Mountain Railway, Botanical Garden'
   },
   { 
-    id: 'vattavada', 
-    name: 'Vattavada Organic Strawberry Valley', 
-    lat: 10.1830, 
-    lon: 77.2550, 
-    altitude: '1,900m MSL',
-    attractions: 'Strawberry Farms, Garlic Terraced Fields, Mountain Trekking'
+    id: 'wayanad', 
+    name: 'Wayanad (Kalpetta), KL', 
+    lat: 11.6050, 
+    lon: 76.0830, 
+    altitude: '1,200m MSL',
+    attractions: 'Chembra Peak, Banasura Sagar Dam, Edakkal Caves'
   },
   { 
-    id: 'anachal', 
-    name: 'Anachal / Chithirapuram (Resort Hub)', 
-    lat: 10.0210, 
-    lon: 77.0180, 
-    altitude: '1,350m MSL',
-    attractions: 'Scenic Tea Valleys, Luxury Hill Resorts, Spice Garden Tours'
+    id: 'vagamon', 
+    name: 'Vagamon Pine Forest, KL', 
+    lat: 9.6890, 
+    lon: 76.9050, 
+    altitude: '1,100m MSL',
+    attractions: 'Pine Valley, Kurisumala, Green Meadows'
+  },
+  { 
+    id: 'varkala', 
+    name: 'Varkala Cliff & Beach, KL', 
+    lat: 8.7379, 
+    lon: 76.7163, 
+    altitude: 'Sea Level',
+    attractions: 'Arabian Sea Cliff Views, Papanasam Beach'
+  },
+  { 
+    id: 'kochi_city', 
+    name: 'Kochi / Fort Kochi, KL', 
+    lat: 9.9312, 
+    lon: 76.2673, 
+    altitude: 'Sea Level',
+    attractions: 'Chinese Fishing Nets, Marine Drive, Mattancherry'
+  },
+  { 
+    id: 'bangalore_city', 
+    name: 'Bangalore / Bengaluru, KA', 
+    lat: 12.9716, 
+    lon: 77.5946, 
+    altitude: '920m MSL',
+    attractions: 'Silicon Valley, Lalbagh Botanical Gardens'
   }
 ];
 

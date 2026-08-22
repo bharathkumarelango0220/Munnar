@@ -20,7 +20,8 @@ import {
   Coins,
   Milestone,
   Layers,
-  Maximize2
+  Maximize2,
+  ArrowUpDown
 } from 'lucide-react';
 import { 
   POPULAR_ORIGINS, 
@@ -40,6 +41,10 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
   
   const [customOriginQuery, setCustomOriginQuery] = useState('');
   const [isSearchingCustom, setIsSearchingCustom] = useState(false);
+  
+  const [customDestQuery, setCustomDestQuery] = useState('');
+  const [isSearchingDestCustom, setIsSearchingDestCustom] = useState(false);
+
   const [isGpsLoading, setIsGpsLoading] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -246,10 +251,10 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
         state: 'Custom',
         lat: loc.lat,
         lon: loc.lon,
-        highway: 'Highway to Munnar Mountain Pass',
-        elevationGain: '+1,520m Climb',
+        highway: 'Highway Route Corridor',
+        elevationGain: '+1,500m Climb',
         hairpinBends: 16,
-        lastFuelStop: 'Last Foothill Petrol Bunk',
+        lastFuelStop: 'Highway Petrol Bunk',
         tolls: 'Estimated'
       });
       setCustomOriginQuery('');
@@ -257,6 +262,40 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     } else {
       alert(`Could not find "${customOriginQuery}". Try typing city name (e.g. Coimbatore, Salem, Kochi).`);
     }
+  };
+
+  // Handle custom destination search (ANY destination in India or Worldwide)
+  const handleSearchCustomDest = async (e) => {
+    e.preventDefault();
+    if (!customDestQuery.trim()) return;
+
+    setIsSearchingDestCustom(true);
+    triggerHaptic(10);
+    const loc = await geocodeLocation(customDestQuery);
+    setIsSearchingDestCustom(false);
+
+    if (loc) {
+      setSelectedDest({
+        id: 'custom_dest_' + Date.now(),
+        name: loc.name,
+        lat: loc.lat,
+        lon: loc.lon,
+        altitude: 'Selected Point',
+        attractions: 'Custom Destination'
+      });
+      setCustomDestQuery('');
+      triggerHaptic(20);
+    } else {
+      alert(`Could not find "${customDestQuery}". Try typing a city, hill station or landmark name (e.g. Ooty, Kodaikanal, Goa, Wayanad).`);
+    }
+  };
+
+  // Swap Departure & Destination
+  const handleSwapLocations = () => {
+    triggerHaptic(15);
+    const temp = selectedOrigin;
+    setSelectedOrigin(selectedDest);
+    setSelectedDest(temp);
   };
 
   const handleApply = () => {
@@ -351,109 +390,144 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
         <div className="p-4 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
           
           {/* TOP ROUTE SELECTORS: ORIGIN & DESTINATION */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            {/* Origin Box */}
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span>1. Departure City</span>
-                </label>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              {/* Origin Box */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>1. Departure City</span>
+                  </label>
 
-                <button
-                  type="button"
-                  onClick={handleUseCurrentLocation}
-                  disabled={isGpsLoading}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition-colors active:scale-95"
-                >
-                  <LocateFixed className="w-3 h-3" />
-                  <span>{isGpsLoading ? 'Getting GPS...' : 'My Live GPS'}</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={handleUseCurrentLocation}
+                    disabled={isGpsLoading}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition-colors active:scale-95"
+                  >
+                    <LocateFixed className="w-3 h-3" />
+                    <span>{isGpsLoading ? 'Getting GPS...' : 'My Live GPS'}</span>
+                  </button>
+                </div>
+
+                {/* City Presets Chips */}
+                <div className="grid grid-cols-2 gap-1.5 max-h-32 overflow-y-auto custom-scrollbar pr-1">
+                  {POPULAR_ORIGINS.map((orig) => {
+                    const isSelected = selectedOrigin.id === orig.id;
+                    return (
+                      <button
+                        key={orig.id}
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic(10);
+                          setSelectedOrigin(orig);
+                        }}
+                        className={`p-2 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
+                          isSelected
+                            ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20 shadow-xs'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        <span className="truncate">{orig.name}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-medium ml-1">({orig.state})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom Search Input */}
+                <form onSubmit={handleSearchCustomOrigin} className="flex gap-1.5 pt-1">
+                  <input
+                    type="text"
+                    value={customOriginQuery}
+                    onChange={(e) => setCustomOriginQuery(e.target.value)}
+                    placeholder="Search any starting city..."
+                    className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSearchingCustom}
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold transition-all shrink-0 active:scale-95"
+                  >
+                    {isSearchingCustom ? '...' : 'Search'}
+                  </button>
+                </form>
               </div>
 
-              {/* City Presets Chips */}
-              <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto custom-scrollbar pr-1">
-                {POPULAR_ORIGINS.map((orig) => {
-                  const isSelected = selectedOrigin.id === orig.id;
-                  return (
-                    <button
-                      key={orig.id}
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic(10);
-                        setSelectedOrigin(orig);
-                      }}
-                      className={`p-2 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
-                        isSelected
-                          ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20 shadow-xs'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
-                      }`}
-                    >
-                      <span className="truncate">{orig.name}</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-medium ml-1">({orig.state})</span>
-                    </button>
-                  );
-                })}
+              {/* Destination Box */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                    <span>2. Destination City / Place</span>
+                  </label>
+                  {selectedDest.altitude && (
+                    <span className="text-[11px] font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/80 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-800">
+                      {selectedDest.altitude}
+                    </span>
+                  )}
+                </div>
+
+                {/* Destinations Grid */}
+                <div className="grid grid-cols-2 gap-1.5 max-h-32 overflow-y-auto custom-scrollbar pr-1">
+                  {POPULAR_DESTINATIONS.map((dest) => {
+                    const isSelected = selectedDest.id === dest.id;
+                    return (
+                      <button
+                        key={dest.id}
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic(10);
+                          setSelectedDest(dest);
+                        }}
+                        className={`p-2 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
+                          isSelected
+                            ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/60 text-teal-900 dark:text-teal-200 ring-2 ring-teal-500/20 shadow-xs'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        <span className="truncate">{dest.name}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0 ml-1" />}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom Destination Search Form */}
+                <form onSubmit={handleSearchCustomDest} className="flex gap-1.5 pt-1">
+                  <input
+                    type="text"
+                    value={customDestQuery}
+                    onChange={(e) => setCustomDestQuery(e.target.value)}
+                    placeholder="Type ANY destination (e.g. Ooty, Goa, Wayanad)..."
+                    className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:border-teal-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSearchingDestCustom}
+                    className="px-3 py-1.5 rounded-xl bg-teal-800 dark:bg-teal-700 hover:bg-teal-700 text-white text-xs font-bold transition-all shrink-0 active:scale-95"
+                  >
+                    {isSearchingDestCustom ? '...' : 'Search'}
+                  </button>
+                </form>
               </div>
 
-              {/* Custom Search Input */}
-              <form onSubmit={handleSearchCustomOrigin} className="flex gap-1.5 pt-1">
-                <input
-                  type="text"
-                  value={customOriginQuery}
-                  onChange={(e) => setCustomOriginQuery(e.target.value)}
-                  placeholder="Or type any city name..."
-                  className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:border-emerald-500"
-                />
-                <button
-                  type="submit"
-                  disabled={isSearchingCustom}
-                  className="px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold transition-all shrink-0 active:scale-95"
-                >
-                  {isSearchingCustom ? '...' : 'Search'}
-                </button>
-              </form>
             </div>
 
-            {/* Destination Box */}
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                  <span>2. Munnar Viewpoint</span>
-                </label>
-                <span className="text-[11px] font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/80 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-800">
-                  {selectedDest.altitude}
-                </span>
-              </div>
-
-              {/* Destinations Grid */}
-              <div className="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-                {POPULAR_DESTINATIONS.map((dest) => {
-                  const isSelected = selectedDest.id === dest.id;
-                  return (
-                    <button
-                      key={dest.id}
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic(10);
-                        setSelectedDest(dest);
-                      }}
-                      className={`p-2 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
-                        isSelected
-                          ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/60 text-teal-900 dark:text-teal-200 ring-2 ring-teal-500/20 shadow-xs'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
-                      }`}
-                    >
-                      <span className="truncate">{dest.name}</span>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0 ml-1" />}
-                    </button>
-                  );
-                })}
-              </div>
+            {/* Quick Swap Button */}
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={handleSwapLocations}
+                className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-emerald-600 border border-slate-200 dark:border-slate-700 shadow-xs transition-all flex items-center gap-1.5 text-xs font-bold active:scale-95"
+                title="Swap Departure & Destination"
+              >
+                <ArrowUpDown className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Swap Departure ⇄ Destination</span>
+              </button>
             </div>
-
           </div>
 
           {/* TAB 1: INTERACTIVE LIVE MAP VIEW CONTAINER (Always Kept in DOM) */}
