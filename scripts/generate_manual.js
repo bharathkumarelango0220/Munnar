@@ -3,7 +3,7 @@ import 'jspdf-autotable';
 import fs from 'fs';
 import path from 'path';
 
-async function generateManualPDF() {
+async function generateVisualManualPDF() {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -13,46 +13,76 @@ async function generateManualPDF() {
   const pageWidth = doc.internal.pageSize.getWidth(); // 210
   const pageHeight = doc.internal.pageSize.getHeight(); // 297
 
-  // Helper functions for styling
+  // Helper to load image as base64 data URI
+  const loadImageData = (filename) => {
+    const filePath = path.resolve('screenshots', filename);
+    if (fs.existsSync(filePath)) {
+      const buffer = fs.readFileSync(filePath);
+      return `data:image/png;base64,${buffer.toString('base64')}`;
+    }
+    return null;
+  };
+
+  const imgHome = loadImageData('1_home_tab.png');
+  const imgFuel = loadImageData('2_fuel_calculator.png');
+  const imgRoute = loadImageData('3_route_modal.png');
+  const imgPredictor = loadImageData('4_cost_predictor.png');
+  const imgTracker = loadImageData('5_expense_tracker.png');
+  const imgAnalytics = loadImageData('6_analytics.png');
+  const imgReports = loadImageData('7_reports.png');
+
+  // Styling palette
   const primaryColor = [5, 150, 105]; // Emerald #059669
   const darkBg = [8, 12, 20]; // #080c14
   const slateDark = [15, 23, 42]; // #0f172a
-  const slateLight = [241, 245, 249];
-  const accentGold = [217, 119, 6]; // Amber #d97706
   const textColor = [30, 41, 59];
 
-  // Header & Footer on each page
+  // Global Header and Footer
   const addHeaderFooter = (pageNumber, totalPages, title) => {
     if (pageNumber === 1) return; // Skip cover
 
     // Top Header Bar
     doc.setFillColor(8, 12, 20);
-    doc.rect(0, 0, pageWidth, 15, 'F');
+    doc.rect(0, 0, pageWidth, 13, 'F');
 
     doc.setFillColor(5, 150, 105);
-    doc.rect(0, 14, pageWidth, 1.5, 'F');
+    doc.rect(0, 12, pageWidth, 1.2, 'F');
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setTextColor(255, 255, 255);
-    doc.text('TRIPTOOLS - OFFICIAL USER MANUAL & FEATURE GUIDE', 14, 9.5);
+    doc.text('TRIPTOOLS • VISUAL STEP-BY-STEP USER MANUAL', 14, 8.5);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(167, 243, 208);
-    doc.text(title.toUpperCase(), pageWidth - 14, 9.5, { align: 'right' });
+    doc.text(title.toUpperCase(), pageWidth - 14, 8.5, { align: 'right' });
 
     // Bottom Footer
     doc.setFillColor(248, 250, 252);
-    doc.rect(0, pageHeight - 12, pageWidth, 12, 'F');
+    doc.rect(0, pageHeight - 10, pageWidth, 10, 'F');
     doc.setDrawColor(226, 232, 240);
-    doc.line(0, pageHeight - 12, pageWidth, pageHeight - 12);
+    doc.line(0, pageHeight - 10, pageWidth, pageHeight - 10);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(7.5);
     doc.setTextColor(100, 116, 139);
-    doc.text('Crafted with pride by Bharathkumar E • Live App: munnartools.vercel.app', 14, pageHeight - 5);
-    doc.text(`Page ${pageNumber} of ${totalPages}`, pageWidth - 14, pageHeight - 5, { align: 'right' });
+    doc.text('Crafted with pride by Bharathkumar E • Live Website: munnartools.vercel.app', 14, pageHeight - 4);
+    doc.text(`Page ${pageNumber} of ${totalPages}`, pageWidth - 14, pageHeight - 4, { align: 'right' });
+  };
+
+  // Helper to draw a framed screenshot container
+  const drawScreenshotFrame = (imgData, y, width = 182, height = 98) => {
+    const x = (pageWidth - width) / 2;
+    // Outer shadow container
+    doc.setFillColor(241, 245, 249);
+    doc.roundedRect(x - 1, y - 1, width + 2, height + 2, 3, 3, 'F');
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(x - 1, y - 1, width + 2, height + 2, 3, 3, 'D');
+
+    if (imgData) {
+      doc.addImage(imgData, 'PNG', x, y, width, height);
+    }
   };
 
   // ==========================================
@@ -63,154 +93,150 @@ async function generateManualPDF() {
 
   // Decorative Emerald Accent Banner
   doc.setFillColor(...primaryColor);
-  doc.rect(0, 40, 12, 110, 'F');
+  doc.rect(0, 30, 10, 120, 'F');
 
   // Cover Badge
   doc.setFillColor(16, 185, 129);
-  doc.roundedRect(25, 45, 55, 8, 2, 2, 'F');
+  doc.roundedRect(22, 32, 62, 7.5, 2, 2, 'F');
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(255, 255, 255);
-  doc.text('COMPLETE USER GUIDE 2026', 28, 50.5);
+  doc.text('OFFICIAL VISUAL USER MANUAL', 25, 37.5);
 
   // Main Title
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(28);
+  doc.setFontSize(26);
   doc.setTextColor(255, 255, 255);
-  doc.text('TripTools', 25, 68);
+  doc.text('TripTools Travel Suite', 22, 53);
 
-  doc.setFontSize(16);
+  doc.setFontSize(14);
   doc.setTextColor(52, 211, 153);
-  doc.text('Smart Mountain Travel & Expense Companion', 25, 78);
+  doc.text('Visual Step-by-Step Feature Manual & User Guide', 22, 62);
 
   // Description
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10.5);
+  doc.setFontSize(9.5);
   doc.setTextColor(203, 213, 225);
   doc.text(
-    'A comprehensive, beginner-friendly manual explaining every feature, tool,\nand calculation formula in simple English with visual workflow diagrams.\nOptimized for Munnar, South India Highways, and Mountain Road Trips.',
-    25,
-    90
+    'A complete visual guide featuring actual screenshot walkthroughs of every single tool,\ncalculating mountain fuel with ghat penalties, route distance discovery, budget predictions,\nlive group expense splitting, and one-tap PDF statements.',
+    22,
+    72
   );
 
-  // Key Feature Highlights Box
+  // Embedded Mini Preview Image
+  if (imgHome) {
+    const previewWidth = 166;
+    const previewHeight = 85;
+    doc.setFillColor(15, 23, 42);
+    doc.roundedRect(22, 86, previewWidth, previewHeight, 3, 3, 'F');
+    doc.setDrawColor(5, 150, 105);
+    doc.roundedRect(22, 86, previewWidth, previewHeight, 3, 3, 'D');
+    doc.addImage(imgHome, 'PNG', 23, 87, previewWidth - 2, previewHeight - 2);
+  }
+
+  // Creator & Product Details Card
   doc.setFillColor(15, 23, 42);
-  doc.roundedRect(25, 115, pageWidth - 50, 85, 4, 4, 'F');
+  doc.roundedRect(22, 182, 166, 95, 3, 3, 'F');
   doc.setDrawColor(30, 41, 59);
-  doc.roundedRect(25, 115, pageWidth - 50, 85, 4, 4, 'D');
+  doc.roundedRect(22, 182, 166, 95, 3, 3, 'D');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(255, 255, 255);
-  doc.text('Core Modules Covered in This Manual:', 32, 126);
+  doc.setFontSize(11);
+  doc.setTextColor(52, 211, 153);
+  doc.text('PRODUCT & DEVELOPER SPECIFICATIONS', 28, 192);
 
-  const modules = [
-    '1. 🧭 Route Distance Suite (Google Maps Verified 160 KM & 250+ TN Cities)',
-    '2. ⛽ Smart Mountain Fuel & Vehicle Rental Cost Calculator',
-    '3. 💰 AI Tour Cost & Multi-Day Budget Predictor',
-    '4. 📒 Live Group Expense Ledger & Instant "Who Owes Whom" Splitter',
-    '5. 📷 AI Smart Receipt & Bill OCR Scanner',
-    '6. 📊 Real-Time Spending Analytics & Over-Budget Gauges',
-    '7. 📄 One-Tap PDF Settlement Statement & WhatsApp Trip Sharing'
+  const devDetails = [
+    ['Product Name:', 'TripTools (Munnar Trip Companion Suite)'],
+    ['Developer / Engineer:', 'Bharathkumar E (Full-Stack Engineer & UI Specialist)'],
+    ['Live Application URL:', 'https://munnartools.vercel.app'],
+    ['Creator Portfolio:', 'https://apexassure.vercel.app/'],
+    ['Direct WhatsApp / Phone:', '+91 8220802736'],
+    ['Official Email:', 'bharathkumarelango02@gmail.com'],
+    ['Target Regions:', 'Munnar Ghats, Tamil Nadu Highways, Kerala, South India'],
+    ['Offline Availability:', '100% Zero-Network Mountain PWA Ready']
   ];
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9.5);
-  doc.setTextColor(226, 232, 240);
-  modules.forEach((mod, idx) => {
-    doc.text(mod, 32, 137 + idx * 8.5);
+  doc.autoTable({
+    startY: 196,
+    margin: { left: 28, right: 28 },
+    theme: 'plain',
+    body: devDetails,
+    styles: { fontSize: 8.5, textColor: [226, 232, 240], cellPadding: 1.5 },
+    columnStyles: {
+      0: { fontStyle: 'bold', textColor: [52, 211, 153], cellWidth: 45 },
+      1: { textColor: [255, 255, 255] }
+    }
   });
 
-  // Creator & App Metadata Box
-  doc.setFillColor(15, 23, 42);
-  doc.roundedRect(25, 215, pageWidth - 50, 50, 4, 4, 'F');
-  doc.setDrawColor(5, 150, 105);
-  doc.roundedRect(25, 215, pageWidth - 50, 50, 4, 4, 'D');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(52, 211, 153);
-  doc.text('DEVELOPER & PRODUCT DETAILS', 32, 224);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(241, 245, 249);
-  doc.text('Creator / Developer: Bharathkumar E', 32, 232);
-  doc.text('Live Website: https://munnartools.vercel.app', 32, 238);
-  doc.text('Portfolio: https://apexassure.vercel.app/', 32, 244);
-  doc.text('Support WhatsApp / Phone: +91 8220802736', 32, 250);
-  doc.text('Email Contact: bharathkumarelango02@gmail.com', 32, 256);
-
   // ==========================================
-  // PAGE 2: TABLE OF CONTENTS & QUICK WORKFLOW
+  // PAGE 2: TABLE OF CONTENTS & QUICK FLOW
   // ==========================================
   doc.addPage();
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
+  doc.setFontSize(16);
   doc.setTextColor(...primaryColor);
-  doc.text('Table of Contents', 14, 25);
+  doc.text('Table of Contents & Quick Visual Flow', 14, 22);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setTextColor(...textColor);
-  doc.text('This manual provides clear explanations and step-by-step illustrations for all modules.', 14, 32);
+  doc.text('This manual explains each section of the site with actual screenshots and simple English guides.', 14, 28);
 
   doc.autoTable({
-    startY: 38,
+    startY: 33,
     theme: 'grid',
-    head: [['Module #', 'Module Name', 'Primary Purpose', 'Page']],
+    head: [['Module #', 'Module Name', 'Visual Screenshot & Key Purpose', 'Page']],
     body: [
-      ['Module 1', 'Home & Munnar Sightseeing Guide', 'Weather, Ghat Helplines & Spot Directory', 'Page 3'],
-      ['Module 2', 'Smart Mountain Fuel Calculator', 'Uphill physics, Vehicle mileage & Fuel Split', 'Page 4'],
-      ['Module 3', 'Route Distance & Highway Suite', '100% Free 250+ TN cities & Google Verified Distances', 'Page 5'],
-      ['Module 4', 'AI Tour Cost & Budget Predictor', 'Predict total tour expenses for groups in seconds', 'Page 6'],
-      ['Module 5', 'Live Group Expense Ledger & OCR', 'Record bills, AI scanner & "Who Owes Whom"', 'Page 7'],
-      ['Module 6', 'Spending Analytics & PDF Generator', 'Visual charts, PDF statements & WhatsApp sharing', 'Page 8'],
-      ['Module 7', 'Offline Mountain Mode & Pro Tips', 'Using tools in zero-network ghats & hill safety', 'Page 9']
+      ['Module 1', 'Home & Sightseeing Guide', 'Live weather, mist alerts, emergency helplines & top spot cards', 'Page 3'],
+      ['Module 2', 'Smart Mountain Fuel Calculator', 'Vehicle presets, uphill low-gear penalty (+25%) & per-head split', 'Page 4'],
+      ['Module 3', 'Route Distance & Highway Suite', '100% Free 250+ TN cities, 160 KM corridor, 24/7 bunks & hairpin rules', 'Page 5'],
+      ['Module 4', 'AI Tour Cost & Budget Predictor', '3-Day tour estimation across stay, food, 4x4 jeep & emergency reserve', 'Page 6'],
+      ['Module 5', 'Live Expense Ledger & OCR Scanner', 'Offline bill logging, photo receipt scanning & "Who Owes Whom"', 'Page 7'],
+      ['Module 6', 'Spending Analytics & PDF Reports', 'Budget health radar, visual charts, official PDF statements & WhatsApp', 'Page 8'],
+      ['Module 7', 'Offline Mountain Mode & Pro Tips', 'Ghat driving safety, engine braking rules & zero-network guide', 'Page 9']
     ],
     headStyles: { fillColor: [5, 150, 105], textColor: [255, 255, 255], fontStyle: 'bold' },
-    styles: { fontSize: 9, cellPadding: 3.5 }
+    styles: { fontSize: 8, cellPadding: 2.5 }
   });
 
-  // Visual Workflow Diagram
-  let finalY = doc.lastAutoTable.finalY + 10;
+  let p2Y = doc.lastAutoTable.finalY + 8;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
+  doc.setFontSize(12);
   doc.setTextColor(...primaryColor);
-  doc.text('End-to-End Travel Planning Flowchart', 14, finalY);
+  doc.text('Visual 5-Step Trip Planning Flowchart', 14, p2Y);
 
-  finalY += 6;
+  p2Y += 4;
   doc.setFillColor(248, 250, 252);
-  doc.roundedRect(14, finalY, pageWidth - 28, 85, 3, 3, 'F');
+  doc.roundedRect(14, p2Y, pageWidth - 28, 88, 3, 3, 'F');
   doc.setDrawColor(203, 213, 225);
-  doc.roundedRect(14, finalY, pageWidth - 28, 85, 3, 3, 'D');
+  doc.roundedRect(14, p2Y, pageWidth - 28, 88, 3, 3, 'D');
 
-  const steps = [
-    { num: 'STEP 1', title: 'Find Exact Route & Distance', desc: 'Select your city (e.g. Madurai ➔ Munnar = 160 KM). Check 24/7 bunks.' },
-    { num: 'STEP 2', title: 'Calculate Mountain Petrol Split', desc: 'Choose vehicle (Car/Bike/EV). Apply ghat uphill penalty and split per head.' },
-    { num: 'STEP 3', title: 'Predict Total Tour Budget', desc: 'Select duration & luxury level. Generate daily stay, food & sightseeing costs.' },
-    { num: 'STEP 4', title: 'Record Live Expenses Offline', desc: 'Log bills or snap receipts with AI OCR. Real-time equal or custom bill split.' },
-    { num: 'STEP 5', title: 'Generate PDF Settlement Sheet', desc: 'Download official trip statement and share debt settlement on WhatsApp.' }
+  const visualSteps = [
+    { step: 'STEP 1', title: 'Open Route Distance Suite', desc: 'Type departure city (e.g. Madurai) ➔ Destination (Munnar = 160 KM). Check 24/7 bunks.' },
+    { step: 'STEP 2', title: 'Calculate Fuel & Rental Share', desc: 'Select vehicle (Car/Bike/EV). Apply mountain uphill penalty and calculate cost per friend.' },
+    { step: 'STEP 3', title: 'Predict Total Tour Budget', desc: 'Set days & group size. Predict room rates, dining, and Kolukkumalai 4x4 jeep safari.' },
+    { step: 'STEP 4', title: 'Log Live Expenses with OCR', desc: 'Snap photo receipts or enter expenses offline. Instant "Who Owes Whom" split.' },
+    { step: 'STEP 5', title: 'Export PDF Statement & WhatsApp', desc: 'Download official settlement PDF statement and share net balances on WhatsApp.' }
   ];
 
-  steps.forEach((s, idx) => {
-    const boxY = finalY + 5 + idx * 15.5;
+  visualSteps.forEach((vs, idx) => {
+    const bY = p2Y + 5 + idx * 16;
     doc.setFillColor(5, 150, 105);
-    doc.roundedRect(18, boxY, 22, 11, 2, 2, 'F');
+    doc.roundedRect(18, bY, 20, 11, 2, 2, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
+    doc.setFontSize(7.5);
     doc.setTextColor(255, 255, 255);
-    doc.text(s.num, 29, boxY + 7, { align: 'center' });
+    doc.text(vs.step, 28, bY + 7, { align: 'center' });
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.5);
+    doc.setFontSize(9);
     doc.setTextColor(15, 23, 42);
-    doc.text(s.title, 44, boxY + 4.5);
+    doc.text(vs.title, 42, bY + 4.5);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
-    doc.text(s.desc, 44, boxY + 9.5);
+    doc.text(vs.desc, 42, bY + 9.5);
   });
 
   // ==========================================
@@ -218,68 +244,37 @@ async function generateManualPDF() {
   // ==========================================
   doc.addPage();
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(15);
   doc.setTextColor(...primaryColor);
-  doc.text('Module 1: Home Dashboard & Sightseeing Guide', 14, 25);
+  doc.text('Module 1: Home Dashboard & Sightseeing Guide', 14, 20);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9.5);
+  doc.setFontSize(8.5);
   doc.setTextColor(...textColor);
-  doc.text(
-    'The Home Dashboard provides immediate situational awareness upon opening the app.\nIt equips travelers with live weather conditions, emergency contacts, and tourist spots.',
-    14,
-    32
-  );
+  doc.text('Here is the actual screenshot of your Home page showing the live weather, emergency bar, and attractions:', 14, 26);
 
-  doc.autoTable({
-    startY: 42,
-    theme: 'striped',
-    head: [['Feature Name', 'How to Use It', 'Why It Is Useful for You']],
-    body: [
-      [
-        'Live Mountain Weather & Mist Forecast',
-        'Displayed at the top of the Home tab. Shows temperature, humidity, and mist status.',
-        'Helps you choose the right time to start ghat drives before heavy 5 PM fog sets in.'
-      ],
-      [
-        '24/7 Emergency Ghat Helplines',
-        'Direct tap-to-call buttons for Police (100), Ambulance (108), Forest Dept, and Fire.',
-        'Instant emergency calling during vehicle breakdowns or medical alerts in mountain passes.'
-      ],
-      [
-        'Munnar Top Attractions Directory',
-        'Browse photo cards of Top Station, Eravikulam, Kolukkumalai, Tea Museum, etc.',
-        'View entry ticket costs, opening timings, best photography hours, and altitude.'
-      ],
-      [
-        'Quick Category Filters',
-        'Filter spots by "Waterfalls", "Viewpoints", "Sunrise/Trek", and "Tea Gardens".',
-        'Quickly plan a custom daily itinerary based on your group\'s personal preferences.'
-      ]
-    ],
-    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-    styles: { fontSize: 8.5, cellPadding: 3 }
-  });
+  // 1. Actual Screenshot
+  drawScreenshotFrame(imgHome, 30, 182, 92);
 
-  let p3Y = doc.lastAutoTable.finalY + 8;
+  // 2. Feature Explanation Below Image
+  let p3TextY = 126;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
+  doc.setFontSize(10.5);
   doc.setTextColor(...primaryColor);
-  doc.text('⭐ Top Recommended Attractions & Entry Fees', 14, p3Y);
+  doc.text('🔍 Step-by-Step Feature Breakdown of the Home Screen:', 14, p3TextY);
 
   doc.autoTable({
-    startY: p3Y + 4,
-    theme: 'grid',
-    head: [['Attraction Name', 'Key Highlights', 'Timings', 'Approx. Ticket']],
+    startY: p3TextY + 3,
+    theme: 'striped',
+    head: [['UI Element', 'How to Use It on Your Screen', 'Benefit for Tourists']],
     body: [
-      ['Eravikulam National Park', 'Nilgiri Tahr endangered goat, Anamudi View', '7:30 AM - 4:00 PM', '₹200 (Adults)'],
-      ['Kolukkumalai Sunrise', 'World\'s Highest Tea Estate & 4x4 Jeep Safari', '4:30 AM - 9:00 AM', '₹2,500 / Jeep'],
-      ['Top Station', 'Panoramic cloud-bed valley view bordering Tamil Nadu', '6:00 AM - 6:00 PM', '₹50 / Person'],
-      ['Mattupetty Dam & Lake', 'Speed boating, elephant sightings, serene lake', '9:30 AM - 5:00 PM', '₹500 / Speedboat'],
-      ['Cheeyappara & Valara Falls', 'Multi-tier roadside waterfall on Kochi-Munnar NH', 'Open 24/7', 'Free Entry']
+      ['🌤️ Live Mountain Weather', 'Top left banner shows real-time temperature, mist alert, and humidity.', 'Plan ghat drives before dense 5 PM fog rolls in.'],
+      ['🚨 24/7 Emergency Helplines', 'Direct 1-tap call buttons for Police (100), Ambulance (108), and Forest Dept.', 'Instant access during vehicle breakdown in mountain passes.'],
+      ['🏞️ Tourist Spot Cards', 'Photo cards of Top Station, Kolukkumalai, Eravikulam, and Tea Museum.', 'Displays exact entry fees, timings, and altitude.'],
+      ['🏷️ Category Filter Badges', 'Tap "Waterfalls", "Viewpoints", "Sunrise/Trek", or "Tea Gardens".', 'Quickly organize your personal daily sightseeing route.']
     ],
-    headStyles: { fillColor: [5, 150, 105], textColor: [255, 255, 255] },
-    styles: { fontSize: 8.5, cellPadding: 2.5 }
+    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
+    styles: { fontSize: 7.8, cellPadding: 2.2 }
   });
 
   // ==========================================
@@ -287,139 +282,77 @@ async function generateManualPDF() {
   // ==========================================
   doc.addPage();
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(15);
   doc.setTextColor(...primaryColor);
-  doc.text('Module 2: Smart Mountain Fuel & Rental Calculator', 14, 25);
+  doc.text('Module 2: Smart Mountain Fuel & Rental Calculator', 14, 20);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9.5);
+  doc.setFontSize(8.5);
   doc.setTextColor(...textColor);
-  doc.text(
-    'Mountain driving in low gears (2nd & 3rd) consumes 20% to 35% more fuel than highway cruising.\nThis calculator uses calibrated physics to predict exact liters, petrol costs, and split per friend.',
-    14,
-    32
-  );
+  doc.text('Actual screenshot of the Smart Fuel Calculator showing mountain physics, vehicle presets, and rental split:', 14, 26);
+
+  // 1. Actual Screenshot
+  drawScreenshotFrame(imgFuel, 30, 182, 92);
+
+  // 2. Feature Explanation
+  let p4TextY = 126;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(...primaryColor);
+  doc.text('⛽ How the Mountain Fuel Calculations Work:', 14, p4TextY);
 
   doc.autoTable({
-    startY: 42,
+    startY: p4TextY + 3,
     theme: 'striped',
-    head: [['Input Field', 'Description & How to Set It', 'Impact on Calculation']],
+    head: [['Screen Control', 'What to Enter / Select', 'How It Computes the Total']],
     body: [
-      [
-        'Total Distance (KM)',
-        'Enter manual KM or tap "Route Finder" to load verified highway distances.',
-        'Base multiplier for fuel consumption and rental usage.'
-      ],
-      [
-        'Vehicle Type Selector',
-        'Choose Hatchback, Sedan, SUV, Bike/Scooter, Royal Enfield 350, or EV.',
-        'Auto-fills standard highway mileage and adjusts ghat torque penalties.'
-      ],
-      [
-        'Terrain Penalty Mode',
-        'Select "Highway Only" (0% penalty) or "Mountain Ghats" (+25% fuel penalty).',
-        'Compensates for steep uphill climbing and heavy hairpin braking.'
-      ],
-      [
-        'Daily Vehicle Rental Rate',
-        'Optional field. Enter self-drive car or rented bike rental per day (e.g. ₹500/day).',
-        'Combines fuel cost + rental price into a unified single trip total.'
-      ],
-      [
-        'Number of Travelers',
-        'Enter how many people are sharing the ride (e.g. 4 friends in a car).',
-        'Calculates the exact per-person share to collect without arguments.'
-      ]
+      ['Total Distance (KM)', 'Type KM manually or tap "Route Finder" to load verified distances.', 'Base multiplier for total fuel required.'],
+      ['Vehicle Type Chips', 'Tap Hatchback (16 km/l), SUV (12 km/l), Bike (40 km/l), RE 350, or EV.', 'Auto-fills standard highway mileage and torque factors.'],
+      ['Mountain Ghat Penalty', 'Switch ON "Mountain Ghats" for steep uphill climbs in 2nd/3rd gear.', 'Applies +25% fuel penalty to compensate for mountain climbs.'],
+      ['Daily Vehicle Rental', 'Optional: Enter self-drive rental per day (e.g. ₹500/day bike, ₹2,000 car).', 'Combines rental cost + fuel into one final bill.'],
+      ['Passenger Split', 'Select number of travelers sharing the vehicle (e.g. 4 friends).', 'Divides grand total equally so everyone pays their fair share.']
     ],
-    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-    styles: { fontSize: 8.5, cellPadding: 3 }
+    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
+    styles: { fontSize: 7.8, cellPadding: 2.2 }
   });
-
-  let p4Y = doc.lastAutoTable.finalY + 8;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(...primaryColor);
-  doc.text('📐 Real-World Mountain Fuel Formula Explained', 14, p4Y);
-
-  p4Y += 4;
-  doc.setFillColor(248, 250, 252);
-  doc.roundedRect(14, p4Y, pageWidth - 28, 38, 3, 3, 'F');
-  doc.setDrawColor(203, 213, 225);
-  doc.roundedRect(14, p4Y, pageWidth - 28, 38, 3, 3, 'D');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(15, 23, 42);
-  doc.text('1. Effective Mountain Mileage = Standard Mileage ÷ (1 + Ghat Penalty Percentage)', 18, p4Y + 8);
-  doc.text('2. Liters Needed = Total Distance (KM) ÷ Effective Mountain Mileage', 18, p4Y + 16);
-  doc.text('3. Total Fuel Cost = Liters Needed × Fuel Price per Liter (₹)', 18, p4Y + 24);
-  doc.text('4. Cost Per Person = (Total Fuel Cost + Total Rental Fee) ÷ Passenger Count', 18, p4Y + 32);
 
   // ==========================================
   // PAGE 5: MODULE 3 — ROUTE DISTANCE SUITE
   // ==========================================
   doc.addPage();
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(15);
   doc.setTextColor(...primaryColor);
-  doc.text('Module 3: Route Distance & Highway Intelligence Suite', 14, 25);
+  doc.text('Module 3: Route Distance & Highway Intelligence Suite', 14, 20);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9.5);
+  doc.setFontSize(8.5);
   doc.setTextColor(...textColor);
-  doc.text(
-    'A 100% Free, zero-API-cost navigation intelligence suite covering all 38 Tamil Nadu districts\nand major South Indian corridors calibrated exactly against verified Google Maps routes.',
-    14,
-    32
-  );
+  doc.text('Actual screenshot of the Route Distance Modal with verified Google Maps 160 KM distance and 24/7 bunks:', 14, 26);
+
+  // 1. Actual Screenshot
+  drawScreenshotFrame(imgRoute, 30, 182, 92);
+
+  // 2. Feature Explanation
+  let p5TextY = 126;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(...primaryColor);
+  doc.text('🧭 Key Road & Route Intelligence Features:', 14, p5TextY);
 
   doc.autoTable({
-    startY: 42,
-    theme: 'grid',
-    head: [['Popular Route Corridor', 'Highway Route', 'Verified KM', 'Driving Time']],
+    startY: p5TextY + 3,
+    theme: 'striped',
+    head: [['Feature on Screen', 'How to Use It', 'Why It Matters on Mountain Roads']],
     body: [
-      ['Madurai ➔ Munnar Town', 'NH 85 via Theni, Bodi Mettu & Gap Road', '160 KM', '3h 45m'],
-      ['Coimbatore ➔ Munnar Town', 'SH 17 via Pollachi & Udumalpet Ghats', '158 KM', '4h 15m'],
-      ['Kochi / Ernakulam ➔ Munnar', 'NH 85 via Muvattupuzha, Kothamangalam & Adimali', '128 KM', '3h 30m'],
-      ['Chennai ➔ Munnar Town', 'NH 45 / NH 85 via Trichy, Dindigul & Theni', '575 KM', '9h 30m'],
-      ['Bangalore ➔ Munnar Town', 'NH 44 via Salem, Dindigul & Theni', '480 KM', '8h 45m'],
-      ['Theni ➔ Munnar Town', 'NH 85 Direct Mountain Pass', '84 KM', '2h 15m'],
-      ['Bodi (Bodinayakanur) ➔ Munnar', 'Lockhart Gap Road Mountain Corridor', '68 KM', '1h 55m'],
-      ['Tirunelveli ➔ Munnar Town', 'NH 44 / NH 85 via Virudhunagar & Theni', '245 KM', '5h 15m']
+      ['🔍 250+ Free City Search', 'Type any Tamil Nadu district, taluk, or Kerala town (e.g. Madurai, Pollachi, Theni).', '100% Free instant autocomplete with zero API costs.'],
+      ['📏 Verified 160 KM Banner', 'Displays Google Maps verified distance: Madurai ➔ Munnar = 160 KM (3h 45m).', 'Guarantees 100% accuracy without highway detours.'],
+      ['🔄 One-Way vs Round Trip', 'Tap "One-Way" (160 KM) or "Round Trip" (320 KM 2×).', 'Instantly doubles distance for complete return journey planning.'],
+      ['⛽ 24/7 Fuel Bunk Strategy', 'Tells you the last 24/7 pump (Theni Bypass) before entering Munnar.', 'Crucial warning: Munnar hill station bunks close at 8:00 PM.'],
+      ['🏔️ Ghat Road Hairpin Guide', 'Displays hairpin curve count and 2nd/3rd gear engine braking advice.', 'Prevents dangerous brake pad overheating on steep downhills.']
     ],
-    headStyles: { fillColor: [5, 150, 105], textColor: [255, 255, 255] },
-    styles: { fontSize: 8.5, cellPadding: 2.5 }
-  });
-
-  let p5Y = doc.lastAutoTable.finalY + 8;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(...primaryColor);
-  doc.text('⛽ Valuable Mountain Highway Road Intelligence', 14, p5Y);
-
-  p5Y += 4;
-  doc.setFillColor(248, 250, 252);
-  doc.roundedRect(14, p5Y, pageWidth - 28, 55, 3, 3, 'F');
-  doc.setDrawColor(203, 213, 225);
-  doc.roundedRect(14, p5Y, pageWidth - 28, 55, 3, 3, 'D');
-
-  const roadCards = [
-    { title: '⛽ Last 24/7 Fuel Bunk Strategy:', desc: 'Top up full tank at Theni Bypass or Adimali base bunks. Hill station pumps in Munnar town close at 8:00 PM.' },
-    { title: '🏔️ Ghat Road & Hairpin Curves:', desc: 'Routes feature 15-20 hairpin curves. Never ride neutral downhills — always use 2nd/3rd gear engine braking.' },
-    { title: '☕ FASTag Tolls & Scenic Stops:', desc: 'Displays exact toll checkpoints and scenic photo spots (Cheeyappara Falls, Lockhart Gap Viewpoint).' },
-    { title: '⚡ 1-Tap Fuel Integration:', desc: 'Tap "Apply 160 KM to Fuel Calculator" to automatically transfer the distance into the fuel split engine.' }
-  ];
-
-  roadCards.forEach((rc, i) => {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(15, 23, 42);
-    doc.text(rc.title, 18, p5Y + 9 + i * 12);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(71, 85, 105);
-    doc.text(rc.desc, 18, p5Y + 14 + i * 12);
+    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
+    styles: { fontSize: 7.8, cellPadding: 2.2 }
   });
 
   // ==========================================
@@ -427,58 +360,38 @@ async function generateManualPDF() {
   // ==========================================
   doc.addPage();
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(15);
   doc.setTextColor(...primaryColor);
-  doc.text('Module 4: AI Tour Cost & Budget Predictor', 14, 25);
+  doc.text('Module 4: AI Tour Cost & Budget Predictor', 14, 20);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9.5);
+  doc.setFontSize(8.5);
   doc.setTextColor(...textColor);
-  doc.text(
-    'Plan complete tour budgets before leaving home. The AI engine predicts realistic expenses\nbased on group size, trip duration, and chosen travel style (Backpacker, Moderate, Luxury).',
-    14,
-    32
-  );
+  doc.text('Actual screenshot of the Tour Cost Predictor showing full multi-day budget breakdown and sliders:', 14, 26);
+
+  // 1. Actual Screenshot
+  drawScreenshotFrame(imgPredictor, 30, 182, 92);
+
+  // 2. Feature Explanation
+  let p6TextY = 126;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(...primaryColor);
+  doc.text('💰 How the AI Tour Budget Predictor Works:', 14, p6TextY);
 
   doc.autoTable({
-    startY: 42,
+    startY: p6TextY + 3,
     theme: 'striped',
-    head: [['Category', 'Budget / Backpacker', 'Moderate / Family', 'Luxury / Honeymoon']],
+    head: [['Control on Screen', 'Setting / Option', 'Automated Budget Breakdown Output']],
     body: [
-      ['🏨 Stay & Hotels', 'Homestays (₹800 - ₹1,500/night)', '3-Star Resorts (₹2,500 - ₹4,500)', '5-Star Valley Villas (₹7,000+)'],
-      ['🍲 Food & Dining', 'Local Kerala Mess (₹350/day)', 'Multi-Cuisine Cafes (₹750/day)', 'Fine Dining Buffets (₹1,500/day)'],
-      ['🚙 Transport', 'KSRTC Public Bus & Shared Auto', 'Private Cab / Self-Drive Car', 'Dedicated Innova Crysta / SUV'],
-      ['🎟️ Sightseeing & Jeep', 'National Park & Dam entry', 'Tea Museum & Boating', 'Kolukkumalai Sunrise 4x4 Jeep Safari'],
-      ['🛡️ Emergency Buffer', '₹500 / Person Reserve', '₹1,500 / Person Reserve', '₹3,000 / Person Reserve']
+      ['👥 Group Size & Days Sliders', 'Drag sliders for number of people (e.g. 4) and trip days (e.g. 3 Days).', 'Calculates total room-nights and daily meal multiples.'],
+      ['⭐ Travel Style Selector', 'Choose "Backpacker", "Standard / Family", or "Luxury / Honeymoon".', 'Auto-adjusts hotel tier rates from ₹1,200 to ₹7,000+/night.'],
+      ['🏨 Stay & Rooms', 'Predicted room charges based on group size and luxury level.', 'Includes resort taxes and hill-view premiums.'],
+      ['🍲 Food & Dining', 'Estimated breakfast, lunch, tea, and dinner costs per person.', 'Covers authentic Kerala meals and local tea snacks.'],
+      ['🚙 Sightseeing & Jeep Safari', 'Includes Kolukkumalai 4x4 Jeep Safari and National Park entry fees.', 'Prevents surprise costs at tourist ticket counters.']
     ],
-    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-    styles: { fontSize: 8.5, cellPadding: 3 }
-  });
-
-  let p6Y = doc.lastAutoTable.finalY + 8;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(...primaryColor);
-  doc.text('💡 How to Use the Predictor in 3 Quick Steps:', 14, p6Y);
-
-  p6Y += 4;
-  doc.setFillColor(248, 250, 252);
-  doc.roundedRect(14, p6Y, pageWidth - 28, 48, 3, 3, 'F');
-  doc.setDrawColor(203, 213, 225);
-  doc.roundedRect(14, p6Y, pageWidth - 28, 48, 3, 3, 'D');
-
-  const pSteps = [
-    '1. Set Duration & People: Slide trip length (e.g. 3 Days / 2 Nights) and group size (e.g. 4 Travelers).',
-    '2. Select Travel Style: Tap "Budget", "Standard", or "Luxury" to auto-tune daily spending rates.',
-    '3. View Grand Total & Split: See the complete estimated budget + per-person share instantly.',
-    '4. Set as Target Budget: Tap "Apply as Trip Budget" to monitor actual spending against this goal!'
-  ];
-
-  pSteps.forEach((ps, idx) => {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(30, 41, 59);
-    doc.text(ps, 18, p6Y + 9 + idx * 10);
+    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
+    styles: { fontSize: 7.8, cellPadding: 2.2 }
   });
 
   // ==========================================
@@ -486,68 +399,38 @@ async function generateManualPDF() {
   // ==========================================
   doc.addPage();
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(15);
   doc.setTextColor(...primaryColor);
-  doc.text('Module 5: Live Group Expense Ledger & OCR Scanner', 14, 25);
+  doc.text('Module 5: Live Group Expense Ledger & OCR Scanner', 14, 20);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9.5);
+  doc.setFontSize(8.5);
   doc.setTextColor(...textColor);
-  doc.text(
-    'Eliminate money disputes during group vacations. Record bills offline, split costs fairly,\nand calculate exact net balances ("Who owes whom") with 1-tap AI bill scanning.',
-    14,
-    32
-  );
+  doc.text('Actual screenshot of the Live Expense Ledger with logged vacation bills and "Who Owes Whom" settlements:', 14, 26);
 
-  doc.autoTable({
-    startY: 42,
-    theme: 'striped',
-    head: [['Feature', 'Description', 'How It Helps Your Group']],
-    body: [
-      [
-        '➕ 1-Tap Add Expense',
-        'Tap the floating (+) button to log amount, category, payer, and split participants.',
-        'Records expenses in under 5 seconds with offline local memory.'
-      ],
-      [
-        '📷 AI Smart Receipt Scanner',
-        'Snap a photo or upload hotel bills and food receipts directly from mobile.',
-        'Auto-extracts bill total, date, and category tags without manual typing.'
-      ],
-      [
-        '👥 Smart Bill Splitter',
-        'Choose "Equal Split" across all members or "Custom Split" for selective diners.',
-        'Prevents unfair splitting when only some friends order non-veg or specialty dishes.'
-      ],
-      [
-        '🤝 "Who Owes Whom" Engine',
-        'Algorithm minimizes transaction count to settle all group debts in fewest payments.',
-        'Shows simple clear settlements: e.g., "Praveen pays ₹450 to Bharath".'
-      ]
-    ],
-    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-    styles: { fontSize: 8.5, cellPadding: 3 }
-  });
+  // 1. Actual Screenshot
+  drawScreenshotFrame(imgTracker, 30, 182, 92);
 
-  let p7Y = doc.lastAutoTable.finalY + 8;
+  // 2. Feature Explanation
+  let p7TextY = 126;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
+  doc.setFontSize(10.5);
   doc.setTextColor(...primaryColor);
-  doc.text('📊 Example Group Debt Settlement Calculation', 14, p7Y);
+  doc.text('📝 How to Record Expenses & Settle Debts Offline:', 14, p7TextY);
 
-  p7Y += 4;
   doc.autoTable({
-    startY: p7Y,
-    theme: 'grid',
-    head: [['Friend Name', 'Total Paid by Person', 'Fair Share Owed', 'Net Settlement Balance']],
+    startY: p7TextY + 3,
+    theme: 'striped',
+    head: [['Feature on Screen', 'How to Use It', 'Benefit to Vacation Groups']],
     body: [
-      ['Bharath (Payer 1)', '₹4,800 (Resort Booking)', '₹2,000', '+₹2,800 (Will Receive)'],
-      ['Karthik (Payer 2)', '₹2,200 (Fuel & Jeep)', '₹2,000', '+₹200 (Will Receive)'],
-      ['Dinesh (Member)', '₹1,000 (Dinner)', '₹2,000', '-₹1,000 (Owes Bharath)'],
-      ['Praveen (Member)', '₹0 (Joined trip)', '₹2,000', '-₹2,000 (Owes ₹1,800 to Bharath, ₹200 to Karthik)']
+      ['➕ Floating (+) Add Expense', 'Tap the green (+) button in bottom-right corner to log any bill.', 'Log expense in 5 seconds without internet connection.'],
+      ['📷 AI Receipt Vision Scanner', 'Tap camera icon to snap hotel, petrol, or restaurant bills.', 'Auto-reads bill amount, date, and category via AI OCR.'],
+      ['🏷️ Category Tagging', 'Tag bills as Food, Stay, Fuel, Tickets, Activities, Shopping, or Misc.', 'Organizes spending for clean analytics and PDF reports.'],
+      ['👥 Who Paid & Split Modes', 'Select which friend paid (e.g. Bharath) and who participated.', 'Supports Equal Split or Custom Split for individual diners.'],
+      ['🤝 "Who Owes Whom" Card', 'Displays exact net balances: e.g., "Praveen owes ₹450 to Bharath".', 'Settles all vacation debts with zero arguments or confusion.']
     ],
-    headStyles: { fillColor: [5, 150, 105], textColor: [255, 255, 255] },
-    styles: { fontSize: 8.5, cellPadding: 2.5 }
+    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
+    styles: { fontSize: 7.8, cellPadding: 2.2 }
   });
 
   // ==========================================
@@ -555,77 +438,48 @@ async function generateManualPDF() {
   // ==========================================
   doc.addPage();
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(15);
   doc.setTextColor(...primaryColor);
-  doc.text('Module 6: Spending Analytics & PDF Report Generator', 14, 25);
+  doc.text('Module 6: Spending Analytics & PDF Report Generator', 14, 20);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9.5);
+  doc.setFontSize(8.5);
   doc.setTextColor(...textColor);
-  doc.text(
-    'Keep your spending disciplined and export formal travel statements at the end of the trip.\nGenerate official audit PDF reports or share formatted text summaries on WhatsApp.',
-    14,
-    32
-  );
+  doc.text('Actual screenshots of the Analytics health radar and official PDF statement generator:', 14, 26);
+
+  // 2 Mini Screenshots Side-by-Side
+  const splitW = 89;
+  const splitH = 88;
+  drawScreenshotFrame(imgAnalytics, 30, splitW, splitH);
+  drawScreenshotFrame(imgReports, 30, splitW, splitH);
+  // Shift right screenshot
+  doc.setFillColor(241, 245, 249);
+  doc.roundedRect(pageWidth - 14 - splitW - 1, 29, splitW + 2, splitH + 2, 3, 3, 'F');
+  doc.setDrawColor(203, 213, 225);
+  doc.roundedRect(pageWidth - 14 - splitW - 1, 29, splitW + 2, splitH + 2, 3, 3, 'D');
+  if (imgReports) {
+    doc.addImage(imgReports, 'PNG', pageWidth - 14 - splitW, 30, splitW, splitH);
+  }
+
+  // 2. Feature Explanation
+  let p8TextY = 124;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(...primaryColor);
+  doc.text('📊 Understanding Your Trip Analytics & PDF Statements:', 14, p8TextY);
 
   doc.autoTable({
-    startY: 42,
+    startY: p8TextY + 3,
     theme: 'striped',
-    head: [['Feature Name', 'Functionality', 'Output & Benefit']],
+    head: [['UI Element', 'What It Tells You', 'Action to Take']],
     body: [
-      [
-        '🎯 Budget Health Gauge',
-        'Visual meter displaying % of budget used (Green < 75%, Amber 75-95%, Red > 95%).',
-        'Gives instant visual warning before your group accidentally exceeds the trip budget.'
-      ],
-      [
-        '🥧 Category Breakdown Chart',
-        'Interactive distribution of Food, Stay, Fuel, Activities, and Shopping.',
-        'Identifies where the majority of vacation money is being spent.'
-      ],
-      [
-        '📄 Formal PDF Report Generator',
-        '1-Tap compiles complete expense tables, payer ledger, and debt settlement sheet.',
-        'Downloadable print-ready PDF statement for personal records or office reimbursement.'
-      ],
-      [
-        '📲 WhatsApp Instant Share',
-        'Formats the complete trip settlement summary into a clean WhatsApp message.',
-        'Post directly into your friends\' trip group chat with one tap.'
-      ]
+      ['🎯 Budget Health Gauge', 'Shows percentage of trip budget spent (Green < 75%, Red > 95%).', 'Warns group to slow down discretionary spending before overspending.'],
+      ['🥧 Category Breakdown', 'Pie chart showing percentage spent on Stay vs Food vs Fuel.', 'Identifies where the majority of vacation money went.'],
+      ['📄 Download PDF Statement', 'Generates official A4 PDF settlement statement with digital verification.', 'Save for personal audit records or submit for office reimbursement.'],
+      ['📲 Share on WhatsApp', '1-Tap compiles debt settlement into formatted WhatsApp message.', 'Post directly into your trip friends group chat for instant UPI payment.']
     ],
-    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-    styles: { fontSize: 8.5, cellPadding: 3 }
-  });
-
-  let p8Y = doc.lastAutoTable.finalY + 8;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(...primaryColor);
-  doc.text('📲 Example WhatsApp Trip Statement Output', 14, p8Y);
-
-  p8Y += 4;
-  doc.setFillColor(248, 250, 252);
-  doc.roundedRect(14, p8Y, pageWidth - 28, 52, 3, 3, 'F');
-  doc.setDrawColor(203, 213, 225);
-  doc.roundedRect(14, p8Y, pageWidth - 28, 52, 3, 3, 'D');
-
-  const waLines = [
-    '🗺️ *Munnar Vacation Settlement Statement*',
-    '💰 *Total Trip Spent:* ₹8,000 (4 Travelers • ₹2,000 / Person)',
-    '🏨 Stay: ₹4,800 | ⛽ Fuel: ₹2,200 | 🍲 Food: ₹1,000',
-    '',
-    '🤝 *Settlement Summary:*',
-    '• Dinesh pays ₹1,000 to Bharath',
-    '• Praveen pays ₹1,800 to Bharath & ₹200 to Karthik',
-    'Generated via TripTools (https://munnartools.vercel.app)'
-  ];
-
-  waLines.forEach((wal, idx) => {
-    doc.setFont('helvetica', idx === 0 || idx === 1 || idx === 4 ? 'bold' : 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(15, 23, 42);
-    doc.text(wal, 18, p8Y + 8 + idx * 5.5);
+    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
+    styles: { fontSize: 7.8, cellPadding: 2.2 }
   });
 
   // ==========================================
@@ -633,60 +487,73 @@ async function generateManualPDF() {
   // ==========================================
   doc.addPage();
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(15);
   doc.setTextColor(...primaryColor);
-  doc.text('Module 7: Offline Mountain Mode & Safety Guidelines', 14, 25);
+  doc.text('Module 7: Offline Mountain Mode & Safety Guidelines', 14, 20);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9.5);
+  doc.setFontSize(8.5);
   doc.setTextColor(...textColor);
-  doc.text(
-    'Munnar\'s high-altitude valleys and ghat passes (Gap Road, Top Station, Marayoor) often have\nzero cellular connectivity. Here is how TripTools ensures uninterrupted offline functionality.',
-    14,
-    32
-  );
+  doc.text('Essential guidelines for operating TripTools with zero mobile network and staying safe on Munnar ghats:', 14, 26);
 
   doc.autoTable({
-    startY: 42,
+    startY: 32,
     theme: 'grid',
-    head: [['Offline Feature', 'How It Works With 0 Mobile Signal', 'Reliability Guarantee']],
+    head: [['Offline Technology in TripTools', 'How It Works with 0 Mobile Signal', 'Reliability Guarantee']],
     body: [
-      ['📴 Service Worker App Shell', 'Stores full HTML/CSS/JS bundle on device storage.', 'Loads in < 0.1 seconds with zero internet.'],
-      ['💾 Local Expense Persistence', 'All bills & group splits save directly into browser storage.', 'Data is never lost when closing or refreshing tabs.'],
-      ['🗺️ 250+ Embedded City Coordinates', 'Exact GPS coordinates and distances built into app code.', 'Search and calculate routes completely offline.'],
-      ['🔋 Battery & Data Optimization', 'Zero continuous background polling or battery drain.', 'Preserves maximum mobile battery on long drives.']
+      ['📴 Service Worker App Shell', 'Caches the entire web application code on your phone.', 'App opens in 0.05 seconds even with mobile data turned OFF.'],
+      ['💾 Local Memory Storage', 'Expenses, budgets, and names save directly into device storage.', 'Zero data loss when closing browser or rebooting your phone.'],
+      ['🗺️ Embedded 250+ TN City Coordinates', 'Exact GPS coordinates and highway distances built into code.', 'Route distances and fuel calculation work 100% offline.'],
+      ['🔋 Battery & Data Saver Mode', 'Zero continuous background sync polling.', 'Preserves maximum mobile battery on 8-hour mountain drives.']
     ],
     headStyles: { fillColor: [5, 150, 105], textColor: [255, 255, 255] },
-    styles: { fontSize: 8.5, cellPadding: 3 }
+    styles: { fontSize: 8, cellPadding: 2.8 }
   });
 
   let p9Y = doc.lastAutoTable.finalY + 8;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(...primaryColor);
-  doc.text('🏔️ Essential Munnar Mountain Driving Safety Rules', 14, p9Y);
+  doc.text('🏔️ Vital Munnar Mountain Driving Safety Rules', 14, p9Y);
 
   p9Y += 4;
   doc.setFillColor(254, 243, 199);
-  doc.roundedRect(14, p9Y, pageWidth - 28, 54, 3, 3, 'F');
+  doc.roundedRect(14, p9Y, pageWidth - 28, 62, 3, 3, 'F');
   doc.setDrawColor(245, 158, 11);
-  doc.roundedRect(14, p9Y, pageWidth - 28, 54, 3, 3, 'D');
+  doc.roundedRect(14, p9Y, pageWidth - 28, 62, 3, 3, 'D');
 
-  const safetyRules = [
-    '1. Uphill Right-of-Way: Vehicles climbing uphill always have the right of way. Give way safely on narrow turns.',
-    '2. Engine Braking on Downhills: Never coast down mountain slopes in Neutral. Keep vehicle in 2nd or 3rd gear.',
-    '3. Heavy Evening Fog: Gap Road and Top Station experience dense mist after 5:00 PM. Use low-beam yellow fog lamps.',
-    '4. Wildlife Safety (Chinnar / Marayoor): Watch for wild elephants crossing between 6:00 PM and 6:00 AM. Never honk.'
+  const safetyItems = [
+    '1. Uphill Right-of-Way: Vehicles climbing uphill have legal right of way. Safely stop and give way on single-lane roads.',
+    '2. Engine Braking on Downhills: NEVER coast down ghat slopes in Neutral or with clutch depressed. Always stay in 2nd or 3rd gear to allow engine compression to brake the vehicle.',
+    '3. Evening Mist & Fog: Lockhart Gap Road and Top Station experience dense fog after 5:00 PM. Keep yellow low-beam fog lamps ON and follow road white margin lines.',
+    '4. Night Elephant Corridors: Drive slowly between 6:00 PM and 6:00 AM on Marayoor & Chinnar roads. Never honk or flash high beams at wild elephants.'
   ];
 
-  safetyRules.forEach((sr, idx) => {
+  safetyItems.forEach((si, idx) => {
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8.2);
     doc.setTextColor(120, 53, 15);
-    doc.text(sr, 18, p9Y + 9 + idx * 11);
+    doc.text(si, 18, p9Y + 9 + idx * 13, { maxWidth: pageWidth - 36 });
   });
 
-  // Apply Headers & Footers to all pages
+  // Final Summary & Support Card
+  let p9BotY = p9Y + 68;
+  doc.setFillColor(15, 23, 42);
+  doc.roundedRect(14, p9BotY, pageWidth - 28, 22, 3, 3, 'F');
+  doc.setDrawColor(5, 150, 105);
+  doc.roundedRect(14, p9BotY, pageWidth - 28, 22, 3, 3, 'D');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(52, 211, 153);
+  doc.text('Need Support or Custom Web Development?', 20, p9BotY + 7);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(241, 245, 249);
+  doc.text('Contact Developer Bharathkumar E on WhatsApp: +91 8220802736 | Portfolio: https://apexassure.vercel.app', 20, p9BotY + 14);
+
+  // Apply Headers and Footers
   const totalPages = doc.internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
@@ -706,10 +573,10 @@ async function generateManualPDF() {
   const outputPath = path.resolve('public/TripTools_User_Manual.pdf');
   const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
   fs.writeFileSync(outputPath, pdfBuffer);
-  console.log(`✅ User Manual PDF successfully generated at: ${outputPath} (${(pdfBuffer.length / 1024).toFixed(1)} KB)`);
+  console.log(`✅ Visual Screenshot User Manual PDF successfully generated at: ${outputPath} (${(pdfBuffer.length / (1024 * 1024)).toFixed(2)} MB)`);
 }
 
-generateManualPDF().catch(err => {
-  console.error('Error generating PDF:', err);
+generateVisualManualPDF().catch(err => {
+  console.error('Error generating visual PDF:', err);
   process.exit(1);
 });
