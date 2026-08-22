@@ -103,13 +103,15 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
             attributionControl: false,
             scrollWheelZoom: false,
             dragging: false,
-            touchZoom: false
+            touchZoom: false,
+            doubleClickZoom: false
           }).setView([10.0889, 77.0595], 8);
 
-          // Standard Vibrant OpenStreetMap Tiles (No dark filter)
+          // Standard Vibrant OpenStreetMap Tiles (Crisp & High Contrast)
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            subdomains: ['a', 'b', 'c']
+            subdomains: ['a', 'b', 'c'],
+            crossOrigin: true
           }).addTo(map);
 
           polylineLayerRef.current = L.layerGroup().addTo(map);
@@ -125,14 +127,14 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       if (mapInstanceRef.current) {
         mapInstanceRef.current.invalidateSize();
       }
-    }, 200);
+    }, 150);
 
     return () => {
       clearTimeout(initTimer);
     };
   }, [isOpen]);
 
-  // Sync interactive map panning mode
+  // Sync interactive map panning mode with immediate tile repaint
   useEffect(() => {
     if (!mapInstanceRef.current) return;
     const map = mapInstanceRef.current;
@@ -140,11 +142,18 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       map.dragging.enable();
       map.touchZoom.enable();
       map.scrollWheelZoom.enable();
+      map.doubleClickZoom.enable();
     } else {
       map.dragging.disable();
       map.touchZoom.disable();
       map.scrollWheelZoom.disable();
+      map.doubleClickZoom.disable();
     }
+    
+    // Invalidate size to guarantee smooth tile rendering
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 50);
   }, [isMapInteractActive]);
 
   // Handle Tab Switch Invalidate Size
@@ -784,9 +793,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
               {/* Map Container - Bright, vibrant, clean */}
               <div 
                 ref={mapContainerRef} 
-                className={`w-full h-72 sm:h-80 bg-slate-50 dark:bg-slate-900 relative z-10 ${
-                  !isMapInteractActive ? 'pointer-events-none sm:pointer-events-auto' : 'pointer-events-auto'
-                }`}
+                className="w-full h-72 sm:h-80 bg-slate-100 dark:bg-slate-800 relative z-10"
               />
 
               {/* Floating Map Legend Overlay */}
