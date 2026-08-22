@@ -25,7 +25,8 @@ import {
   Palette,
   Terminal,
   Calendar,
-  Briefcase
+  Briefcase,
+  FileText
 } from 'lucide-react';
 
 export default function CreatorCard() {
@@ -110,6 +111,16 @@ export default function CreatorCard() {
                 <Globe className="w-4 h-4" />
                 <span>View Portfolio 🌐</span>
                 <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+
+              <a
+                href="/TripTools_User_Manual.pdf"
+                download="TripTools_User_Manual.pdf"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm shadow-md active:scale-95 transition-all"
+                title="Download Comprehensive User Guide PDF"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Download User Manual (PDF)</span>
               </a>
 
               <a

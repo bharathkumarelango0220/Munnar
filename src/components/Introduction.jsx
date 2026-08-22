@@ -13,7 +13,8 @@ import {
   ShieldCheck, 
   RotateCcw,
   User,
-  HardDrive
+  HardDrive,
+  FileText
 } from 'lucide-react';
 
 export default function Introduction() {
@@ -149,6 +150,16 @@ export default function Introduction() {
               <Calculator className="w-4 h-4 shrink-0" />
               <span>Open Cost Predictor</span>
             </button>
+
+            <a
+              href="/TripTools_User_Manual.pdf"
+              download="TripTools_User_Manual.pdf"
+              className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
+              title="Download Comprehensive User Guide PDF"
+            >
+              <FileText className="w-4 h-4 shrink-0 text-emerald-400" />
+              <span>User Manual (PDF) 📖</span>
+            </a>
 
             <button
               onClick={handleResetClick}
