@@ -60,11 +60,37 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
   const [routeResult, setRouteResult] = useState(null);
   const [appliedFeedback, setAppliedFeedback] = useState(false);
 
-  const originInputRef = useRef(null);
-  const destInputRef = useRef(null);
+  const isSelectingOriginRef = useRef(false);
+  const isSelectingDestRef = useRef(false);
+  const originBoxRef = useRef(null);
+  const destBoxRef = useRef(null);
+
+  // Click outside listener to dismiss dropdowns
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (originBoxRef.current && !originBoxRef.current.contains(e.target)) {
+        setShowOriginDropdown(false);
+      }
+      if (destBoxRef.current && !destBoxRef.current.contains(e.target)) {
+        setShowDestDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
 
   // Origin Search Suggestions Debounce
   useEffect(() => {
+    if (isSelectingOriginRef.current) {
+      isSelectingOriginRef.current = false;
+      setShowOriginDropdown(false);
+      setOriginSuggestions([]);
+      return;
+    }
     if (!customOriginQuery || customOriginQuery.trim().length === 0) {
       setOriginSuggestions([]);
       setShowOriginDropdown(false);
@@ -82,6 +108,12 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
 
   // Destination Search Suggestions Debounce
   useEffect(() => {
+    if (isSelectingDestRef.current) {
+      isSelectingDestRef.current = false;
+      setShowDestDropdown(false);
+      setDestSuggestions([]);
+      return;
+    }
     if (!customDestQuery || customDestQuery.trim().length === 0) {
       setDestSuggestions([]);
       setShowDestDropdown(false);
@@ -157,9 +189,11 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
           lastFuelStop: 'Nearest Highway Fuel Pump',
           tolls: 'FASTag Tolls'
         };
+        isSelectingOriginRef.current = true;
         setSelectedOrigin(userLoc);
         setCustomOriginQuery(userLoc.name);
         setShowOriginDropdown(false);
+        setOriginSuggestions([]);
       },
       (err) => {
         setIsGpsLoading(false);
@@ -174,12 +208,16 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     triggerHaptic(15);
     const prevOrigin = selectedOrigin;
     const prevDest = selectedDest;
+    isSelectingOriginRef.current = true;
+    isSelectingDestRef.current = true;
     setSelectedOrigin(prevDest);
     setSelectedDest(prevOrigin);
     setCustomOriginQuery(prevDest.name);
     setCustomDestQuery(prevOrigin.name);
     setShowOriginDropdown(false);
     setShowDestDropdown(false);
+    setOriginSuggestions([]);
+    setDestSuggestions([]);
   };
 
   // Apply Calculated Distance to Fuel Calculator
@@ -253,7 +291,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               
               {/* 1. Departure Box */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 relative">
+              <div ref={originBoxRef} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 relative">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
                     <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -276,10 +314,10 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                   <div className="relative flex items-center">
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
                     <input
-                      ref={originInputRef}
                       type="text"
                       value={customOriginQuery}
                       onChange={(e) => {
+                        isSelectingOriginRef.current = false;
                         setCustomOriginQuery(e.target.value);
                       }}
                       onFocus={() => { 
@@ -292,6 +330,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                       <button
                         type="button"
                         onClick={() => {
+                          isSelectingOriginRef.current = true;
                           setCustomOriginQuery('');
                           setOriginSuggestions([]);
                           setShowOriginDropdown(false);
@@ -312,6 +351,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                           type="button"
                           onClick={() => {
                             triggerHaptic(10);
+                            isSelectingOriginRef.current = true;
                             setSelectedOrigin({
                               id: item.id,
                               name: item.name,
@@ -326,6 +366,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                             });
                             setCustomOriginQuery(item.name);
                             setShowOriginDropdown(false);
+                            setOriginSuggestions([]);
                           }}
                           className="w-full text-left p-2 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-xl transition-colors flex items-center justify-between text-xs"
                         >
@@ -352,9 +393,11 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                         type="button"
                         onClick={() => {
                           triggerHaptic(10);
+                          isSelectingOriginRef.current = true;
                           setSelectedOrigin(orig);
                           setCustomOriginQuery(orig.name);
                           setShowOriginDropdown(false);
+                          setOriginSuggestions([]);
                         }}
                         className={`p-1.5 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
                           isSelected
@@ -371,7 +414,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
               </div>
 
               {/* 2. Destination Box */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 relative">
+              <div ref={destBoxRef} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 relative">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
@@ -389,10 +432,10 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                   <div className="relative flex items-center">
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
                     <input
-                      ref={destInputRef}
                       type="text"
                       value={customDestQuery}
                       onChange={(e) => {
+                        isSelectingDestRef.current = false;
                         setCustomDestQuery(e.target.value);
                       }}
                       onFocus={() => { 
@@ -405,6 +448,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                       <button
                         type="button"
                         onClick={() => {
+                          isSelectingDestRef.current = true;
                           setCustomDestQuery('');
                           setDestSuggestions([]);
                           setShowDestDropdown(false);
@@ -425,6 +469,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                           type="button"
                           onClick={() => {
                             triggerHaptic(10);
+                            isSelectingDestRef.current = true;
                             setSelectedDest({
                               id: item.id,
                               name: item.name,
@@ -435,6 +480,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                             });
                             setCustomDestQuery(item.name);
                             setShowDestDropdown(false);
+                            setDestSuggestions([]);
                           }}
                           className="w-full text-left p-2 hover:bg-teal-50 dark:hover:bg-teal-950/60 rounded-xl transition-colors flex items-center justify-between text-xs"
                         >
@@ -461,9 +507,11 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                         type="button"
                         onClick={() => {
                           triggerHaptic(10);
+                          isSelectingDestRef.current = true;
                           setSelectedDest(dest);
                           setCustomDestQuery(dest.name);
                           setShowDestDropdown(false);
+                          setDestSuggestions([]);
                         }}
                         className={`p-1.5 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
                           isSelected
