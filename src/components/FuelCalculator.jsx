@@ -17,10 +17,13 @@ import {
   ReceiptText,
   BadgePercent,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  MapPin,
+  Route
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { triggerHaptic } from '../utils/haptics';
+import RouteDistanceModal from './RouteDistanceModal';
 
 const SINGLE_VEHICLE_PRESETS = [
   { id: 'bike', label: 'Motorcycle / Bike', icon: Bike, defaultMileage: 32, fuelType: 'petrol' },
@@ -32,6 +35,7 @@ const SINGLE_VEHICLE_PRESETS = [
 
 export default function FuelCalculator() {
   const getStorage = () => localStorage;
+  const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);
 
   const [calcMode, setCalcMode] = useState(() => {
     try {
@@ -375,9 +379,22 @@ export default function FuelCalculator() {
                 
                 {/* Distance Input */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    Travel Distance (KM) *
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Travel Distance (KM) *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic(15);
+                        setIsRouteModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 hover:underline active:scale-95 transition-transform"
+                    >
+                      <MapPin className="w-3 h-3" />
+                      <span>🗺️ Route Finder</span>
+                    </button>
+                  </div>
                   <div className="relative">
                     <input
                       type="number"
@@ -670,12 +687,26 @@ export default function FuelCalculator() {
               
               {/* Trip Distance */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Trip Distance for All Bikes (KM) *
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Trip Distance for All Bikes (KM) *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic(15);
+                      setIsRouteModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 hover:underline active:scale-95 transition-transform"
+                  >
+                    <MapPin className="w-3 h-3" />
+                    <span>🗺️ Route Finder</span>
+                  </button>
+                </div>
                 <div className="relative">
                   <input
                     type="number"
+                    inputMode="decimal"
                     value={multiDistanceKm}
                     onChange={(e) => setMultiDistanceKm(e.target.value)}
                     placeholder="e.g. 250"
@@ -1031,6 +1062,19 @@ export default function FuelCalculator() {
           </span>
         </div>
       </div>
+
+      {/* Smart Route & Distance Calculator Modal (100% Free OSRM & OpenStreetMap API) */}
+      <RouteDistanceModal
+        isOpen={isRouteModalOpen}
+        onClose={() => setIsRouteModalOpen(false)}
+        onApplyDistance={(calculatedKm) => {
+          if (calcMode === 'single') {
+            setDistanceKm(calculatedKm.toString());
+          } else {
+            setMultiDistanceKm(calculatedKm.toString());
+          }
+        }}
+      />
 
     </section>
   );
