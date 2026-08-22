@@ -92,6 +92,8 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
   const userGpsMarkerRef = useRef(null);
   const rerouteLayerRef = useRef(null);
   const watchPositionIdRef = useRef(null);
+  const userHasInteractedWithMapRef = useRef(false);
+  const isLiveGpsOriginSetRef = useRef(false);
 
   // Initialize and Maintain Leaflet Map Instance
   useEffect(() => {
@@ -110,6 +112,11 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
             touchZoom: false,
             doubleClickZoom: false
           }).setView([10.0889, 77.0595], 8);
+
+          // Track manual user zoom / pan to prevent auto-zooming out or camera hijacking
+          map.on('zoomstart dragstart movestart', () => {
+            userHasInteractedWithMapRef.current = true;
+          });
 
           // Ultra-Fast, Colorful, High-Contrast CartoDB Voyager Tiles (No CORS issues, 100% reliable)
           tileLayerRef.current = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -284,8 +291,10 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
           .bindPopup(`<b>Destination:</b><br/>${selectedDest.name}`)
           .addTo(markersLayerRef.current);
 
-        // Fit map bounds to show full road route
-        map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+        // Fit map bounds only if user hasn't manually zoomed/panned to prevent camera reset
+        if (!userHasInteractedWithMapRef.current) {
+          map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+        }
       } catch (err) {
         console.warn('[Leaflet] Layer draw error:', err);
       }
@@ -320,7 +329,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     };
   }, [selectedOrigin, selectedDest, isOpen]);
 
-  // Live GPS Tracking & Real-Time True Road Rerouting
+  // Live GPS Tracking & Real-Time Position Updating without camera hijacking
   const handleToggleLiveTracking = () => {
     triggerHaptic(20);
     if (isLiveTracking) {
@@ -331,6 +340,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       setIsLiveTracking(false);
       setUserLocation(null);
       setOffCourseData(null);
+      isLiveGpsOriginSetRef.current = false;
       if (userGpsMarkerRef.current) userGpsMarkerRef.current.clearLayers();
     } else {
       if (!navigator.geolocation) {
@@ -339,10 +349,10 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       }
 
       setIsLiveTracking(true);
-      let isFirstFix = true;
+      isLiveGpsOriginSetRef.current = false;
 
       watchPositionIdRef.current = navigator.geolocation.watchPosition(
-        async (pos) => {
+        (pos) => {
           const lat = pos.coords.latitude;
           const lon = pos.coords.longitude;
           const speed = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0; // km/h
@@ -351,24 +361,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
 
           setUserLocation({ lat, lon, speed, heading, accuracy });
 
-          // 1. On first GPS lock, auto-set departure to Live Location to calculate the EXACT driving road route!
-          if (isFirstFix) {
-            isFirstFix = false;
-            setSelectedOrigin({
-              id: 'live_gps_loc',
-              name: '📍 My Live Location (GPS)',
-              state: 'GPS',
-              lat,
-              lon,
-              highway: 'Direct GPS Highway Route',
-              elevationGain: '+1,500m Climb',
-              hairpinBends: 16,
-              lastFuelStop: 'Nearest Highway Fuel Pump',
-              tolls: 'Estimated'
-            });
-          }
-
-          // 2. Draw Live User Location on Map
+          // 1. Draw Live User Location on Map
           if (mapInstanceRef.current && userGpsMarkerRef.current) {
             userGpsMarkerRef.current.clearLayers();
 
@@ -384,25 +377,10 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
               .addTo(userGpsMarkerRef.current);
           }
 
-          // 3. Check Off-Course & Auto-Reroute with Real Driving Road Geometry
+          // 2. Check Off-Course without camera hijacking
           if (routeResult?.coordinates) {
             const check = checkOffCourseAndReroute(lat, lon, routeResult.coordinates);
             setOffCourseData(check);
-
-            // If user moved > 400m away from the route, automatically re-route along actual roads
-            if (check.isOffCourse && check.minDistanceMeters > 400) {
-              try {
-                const rerouteRes = await calculateRouteDistance(
-                  { lat, lon },
-                  { lat: selectedDest.lat, lon: selectedDest.lon }
-                );
-                if (rerouteRes && rerouteRes.coordinates) {
-                  setRouteResult(rerouteRes);
-                }
-              } catch (e) {
-                console.warn('Auto road reroute error:', e);
-              }
-            }
           }
         },
         (err) => {
@@ -414,12 +392,21 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     }
   };
 
+  // Center Map Camera on Current User GPS Position
+  const handleCenterOnMyGps = () => {
+    triggerHaptic(10);
+    if (userLocation && mapInstanceRef.current) {
+      mapInstanceRef.current.panTo([userLocation.lat, userLocation.lon]);
+    }
+  };
+
   // Manual Force Reroute from Live GPS
   const handleForceRerouteFromGps = async () => {
     triggerHaptic(20);
     if (!userLocation) return;
     setIsCalculating(true);
     try {
+      userHasInteractedWithMapRef.current = false; // allow camera to fit the newly calculated route once
       const rerouteRes = await calculateRouteDistance(
         { lat: userLocation.lat, lon: userLocation.lon },
         { lat: selectedDest.lat, lon: selectedDest.lon }
@@ -553,6 +540,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
 
   const handleRecenterMap = () => {
     triggerHaptic(10);
+    userHasInteractedWithMapRef.current = false;
     if (mapInstanceRef.current && routeResult?.coordinates) {
       const bounds = L.latLngBounds(routeResult.coordinates);
       mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40] });
@@ -934,17 +922,31 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                 </button>
               </div>
 
-              {/* Bottom Control Bar: Fit Route + Dedicated Zoom Buttons */}
+              {/* Bottom Control Bar: Fit Route + Center on Me + Dedicated Zoom Buttons */}
               <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
-                <button
-                  type="button"
-                  onClick={handleRecenterMap}
-                  className="pointer-events-auto bg-white/95 dark:bg-slate-800/95 text-slate-800 dark:text-white px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md text-xs font-bold flex items-center gap-1.5 hover:bg-slate-50 transition-colors active:scale-95"
-                  title="Fit Route to Screen"
-                >
-                  <Maximize2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Fit Route</span>
-                </button>
+                <div className="pointer-events-auto flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleRecenterMap}
+                    className="bg-white/95 dark:bg-slate-800/95 text-slate-800 dark:text-white px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md text-xs font-bold flex items-center gap-1 hover:bg-slate-50 transition-colors active:scale-95"
+                    title="Fit Route to Screen"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="hidden sm:inline">Fit Route</span>
+                  </button>
+
+                  {isLiveTracking && userLocation && (
+                    <button
+                      type="button"
+                      onClick={handleCenterOnMyGps}
+                      className="bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 px-2.5 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800 shadow-md text-xs font-bold flex items-center gap-1 hover:bg-blue-100 transition-colors active:scale-95 animate-fadeIn"
+                      title="Center Map on Live GPS"
+                    >
+                      <LocateFixed className="w-3.5 h-3.5 text-blue-600" />
+                      <span>My Location</span>
+                    </button>
+                  )}
+                </div>
 
                 {/* Explicit Zoom Buttons */}
                 <div className="pointer-events-auto flex items-center gap-1 bg-white/95 dark:bg-slate-800/95 p-1 rounded-xl shadow-md border border-slate-200 dark:border-slate-700">
