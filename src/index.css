@@ -414,7 +414,17 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
   font-family: inherit !important;
   z-index: 10 !important;
   border-radius: 1.5rem !important;
-  background: #f8fafc !important;
+  background: #cbd5e1 !important;
+}
+
+.leaflet-tile {
+  filter: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.leaflet-tile-pane {
+  z-index: 2 !important;
 }
 
 .custom-leaflet-marker {
@@ -423,6 +433,7 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
   justify-content: center !important;
   background: transparent !important;
   border: none !important;
+  z-index: 1000 !important;
 }
 
 /* User Live GPS Pulsing Marker */

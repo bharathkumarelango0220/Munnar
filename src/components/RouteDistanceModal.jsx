@@ -73,6 +73,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
   const [appliedFeedback, setAppliedFeedback] = useState(false);
   const [activeViewTab, setActiveViewTab] = useState('map'); // 'map' | 'details' | 'live'
   const [isMapInteractActive, setIsMapInteractActive] = useState(false);
+  const [mapStyle, setMapStyle] = useState('voyager'); // 'voyager' | 'satellite' | 'topo'
 
   // Live GPS Tracking & Off-course states
   const [isLiveTracking, setIsLiveTracking] = useState(false);
@@ -83,6 +84,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
   // Leaflet map refs
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const tileLayerRef = useRef(null);
   const polylineLayerRef = useRef(null);
   const markersLayerRef = useRef(null);
   const userGpsMarkerRef = useRef(null);
@@ -107,11 +109,10 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
             doubleClickZoom: false
           }).setView([10.0889, 77.0595], 8);
 
-          // Standard Vibrant OpenStreetMap Tiles (Crisp & High Contrast)
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          // Ultra-Fast, Colorful, High-Contrast CartoDB Voyager Tiles (No CORS issues, 100% reliable)
+          tileLayerRef.current = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             maxZoom: 19,
-            subdomains: ['a', 'b', 'c'],
-            crossOrigin: true
+            subdomains: 'abcd'
           }).addTo(map);
 
           polylineLayerRef.current = L.layerGroup().addTo(map);
@@ -133,6 +134,35 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       clearTimeout(initTimer);
     };
   }, [isOpen]);
+
+  // Handle Map Style Switch (Voyager / Satellite / Topo)
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    const map = mapInstanceRef.current;
+
+    if (tileLayerRef.current) {
+      map.removeLayer(tileLayerRef.current);
+    }
+
+    let url = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    let opts = { maxZoom: 19, subdomains: 'abcd' };
+
+    if (mapStyle === 'satellite') {
+      url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      opts = { maxZoom: 19 };
+    } else if (mapStyle === 'topo') {
+      url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
+      opts = { maxZoom: 19 };
+    }
+
+    tileLayerRef.current = L.tileLayer(url, opts).addTo(map);
+
+    // Keep layers on top
+    polylineLayerRef.current?.bringToFront();
+    rerouteLayerRef.current?.bringToFront();
+    markersLayerRef.current?.bringToFront();
+    userGpsMarkerRef.current?.bringToFront();
+  }, [mapStyle]);
 
   // Sync interactive map panning mode with immediate tile repaint
   useEffect(() => {
@@ -844,17 +874,51 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                 </button>
               </div>
 
-              {/* Bottom Control Bar: Fit Route + Dedicated Zoom Buttons */}
-              <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
-                <button
-                  type="button"
-                  onClick={handleRecenterMap}
-                  className="pointer-events-auto bg-white/95 dark:bg-slate-800/95 text-slate-800 dark:text-white px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md text-xs font-bold flex items-center gap-1.5 hover:bg-slate-50 transition-colors active:scale-95"
-                  title="Fit Route to Screen"
-                >
-                  <Maximize2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Fit Route</span>
-                </button>
+              {/* Bottom Control Bar: Fit Route + Map Style Switcher + Dedicated Zoom Buttons */}
+              <div className="absolute bottom-3 left-3 right-3 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+                <div className="pointer-events-auto flex items-center gap-1.5">
+                  {/* Re-center Button */}
+                  <button
+                    type="button"
+                    onClick={handleRecenterMap}
+                    className="bg-white/95 dark:bg-slate-800/95 text-slate-800 dark:text-white px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md text-xs font-bold flex items-center gap-1 hover:bg-slate-50 transition-colors active:scale-95"
+                    title="Fit Route to Screen"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="hidden sm:inline">Fit Route</span>
+                  </button>
+
+                  {/* Map Style Switcher */}
+                  <div className="flex items-center bg-white/95 dark:bg-slate-800/95 p-0.5 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 text-[11px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => { triggerHaptic(10); setMapStyle('voyager'); }}
+                      className={`px-2 py-1 rounded-lg transition-all ${
+                        mapStyle === 'voyager' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                      }`}
+                    >
+                      Roads
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { triggerHaptic(10); setMapStyle('satellite'); }}
+                      className={`px-2 py-1 rounded-lg transition-all ${
+                        mapStyle === 'satellite' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                      }`}
+                    >
+                      Satellite
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { triggerHaptic(10); setMapStyle('topo'); }}
+                      className={`px-2 py-1 rounded-lg transition-all ${
+                        mapStyle === 'topo' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                      }`}
+                    >
+                      Topo
+                    </button>
+                  </div>
+                </div>
 
                 {/* Explicit Zoom Buttons */}
                 <div className="pointer-events-auto flex items-center gap-1 bg-white/95 dark:bg-slate-800/95 p-1 rounded-xl shadow-md border border-slate-200 dark:border-slate-700">
