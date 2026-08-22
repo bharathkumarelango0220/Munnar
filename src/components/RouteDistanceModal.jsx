@@ -19,7 +19,8 @@ import {
   ShieldAlert,
   Coins,
   Milestone,
-  Layers
+  Layers,
+  Maximize2
 } from 'lucide-react';
 import { 
   POPULAR_ORIGINS, 
@@ -51,56 +52,64 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
   const polylineLayerRef = useRef(null);
   const markersLayerRef = useRef(null);
 
-  // Initialize and update Leaflet Map
+  // Initialize and Maintain Leaflet Map Instance
   useEffect(() => {
     if (!isOpen) return;
 
-    // Small delay to ensure modal DOM is mounted
-    const timer = setTimeout(() => {
+    const initTimer = setTimeout(() => {
       if (!mapContainerRef.current) return;
 
       if (!mapInstanceRef.current) {
-        // Create Leaflet Map instance
-        const map = L.map(mapContainerRef.current, {
-          zoomControl: false,
-          attributionControl: false
-        }).setView([10.0889, 77.0595], 9);
+        try {
+          const map = L.map(mapContainerRef.current, {
+            zoomControl: true,
+            attributionControl: false
+          }).setView([10.0889, 77.0595], 8);
 
-        // OpenStreetMap Crisp Tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 18,
-        }).addTo(map);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+          }).addTo(map);
 
-        // Add sleek zoom control
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-        mapInstanceRef.current = map;
-        polylineLayerRef.current = L.layerGroup().addTo(map);
-        markersLayerRef.current = L.layerGroup().addTo(map);
+          polylineLayerRef.current = L.layerGroup().addTo(map);
+          markersLayerRef.current = L.layerGroup().addTo(map);
+          mapInstanceRef.current = map;
+        } catch (e) {
+          console.warn('[Leaflet] Map init error:', e);
+        }
       }
 
-      // Invalidate size to handle modal transitions
-      mapInstanceRef.current.invalidateSize();
-    }, 150);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [isOpen, activeViewTab]);
-
-  // Clean up Leaflet on unmount
-  useEffect(() => {
-    return () => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
+        mapInstanceRef.current.invalidateSize();
       }
-    };
-  }, []);
+    }, 200);
 
-  // Update Route Polyline & Markers on Map
+    return () => {
+      clearTimeout(initTimer);
+    };
+  }, [isOpen]);
+
+  // Handle Tab Switch Invalidate Size
   useEffect(() => {
-    if (!isOpen || !mapInstanceRef.current || !routeResult?.coordinates) return;
+    if (activeViewTab === 'map' && mapInstanceRef.current) {
+      setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+      }, 100);
+    }
+  }, [activeViewTab]);
+
+  // Clean up Leaflet on modal close
+  useEffect(() => {
+    if (!isOpen && mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+      polylineLayerRef.current = null;
+      markersLayerRef.current = null;
+    }
+  }, [isOpen]);
+
+  // Draw Route Polyline & Markers on Map
+  useEffect(() => {
+    if (!isOpen || !mapInstanceRef.current || !routeResult) return;
 
     const map = mapInstanceRef.current;
     if (polylineLayerRef.current) polylineLayerRef.current.clearLayers();
@@ -109,43 +118,47 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     const coords = routeResult.coordinates;
 
     if (coords && coords.length > 0) {
-      // 1. Draw glowing polyline
-      const polyline = L.polyline(coords, {
-        color: '#10b981', // emerald-500
-        weight: 5,
-        opacity: 0.9,
-        lineCap: 'round',
-        lineJoin: 'round'
-      }).addTo(polylineLayerRef.current);
+      try {
+        // 1. Draw glowing green road polyline
+        const polyline = L.polyline(coords, {
+          color: '#059669', // emerald-600
+          weight: 6,
+          opacity: 0.9,
+          lineCap: 'round',
+          lineJoin: 'round'
+        }).addTo(polylineLayerRef.current);
 
-      // 2. Custom Start Marker Icon (A)
-      const startIcon = L.divIcon({
-        className: 'custom-leaflet-marker',
-        html: `<div style="background-color: #047857; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">A</div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
-      });
+        // 2. Custom Start Marker Icon (A)
+        const startIcon = L.divIcon({
+          className: 'custom-leaflet-marker',
+          html: `<div style="background-color: #047857; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; border: 2.5px solid white; box-shadow: 0 4px 14px rgba(0,0,0,0.35);">A</div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
 
-      // 3. Custom Destination Marker Icon (B - Munnar)
-      const destIcon = L.divIcon({
-        className: 'custom-leaflet-marker',
-        html: `<div style="background-color: #0f766e; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; border: 2.5px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">🏔️</div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
-      });
+        // 3. Custom Destination Marker Icon (B - Munnar)
+        const destIcon = L.divIcon({
+          className: 'custom-leaflet-marker',
+          html: `<div style="background-color: #0f766e; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; border: 2.5px solid white; box-shadow: 0 4px 16px rgba(0,0,0,0.45);">🏔️</div>`,
+          iconSize: [34, 34],
+          iconAnchor: [17, 17]
+        });
 
-      L.marker([selectedOrigin.lat, selectedOrigin.lon], { icon: startIcon })
-        .bindPopup(`<b>Starting Point:</b><br/>${selectedOrigin.name}`)
-        .addTo(markersLayerRef.current);
+        L.marker([selectedOrigin.lat, selectedOrigin.lon], { icon: startIcon })
+          .bindPopup(`<b>Starting Point:</b><br/>${selectedOrigin.name}`)
+          .addTo(markersLayerRef.current);
 
-      L.marker([selectedDest.lat, selectedDest.lon], { icon: destIcon })
-        .bindPopup(`<b>Destination:</b><br/>${selectedDest.name}`)
-        .addTo(markersLayerRef.current);
+        L.marker([selectedDest.lat, selectedDest.lon], { icon: destIcon })
+          .bindPopup(`<b>Munnar Destination:</b><br/>${selectedDest.name}`)
+          .addTo(markersLayerRef.current);
 
-      // Fit map bounds to show full route
-      map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+        // Fit map bounds to show full road route
+        map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+      } catch (err) {
+        console.warn('[Leaflet] Layer draw error:', err);
+      }
     }
-  }, [routeResult, isOpen]);
+  }, [routeResult, isOpen, selectedOrigin, selectedDest]);
 
   // Auto-calculate route whenever origin, destination changes
   useEffect(() => {
@@ -269,6 +282,14 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       `Plan & calculate exact trip petrol split on: https://munnartools.vercel.app`;
     
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleRecenterMap = () => {
+    triggerHaptic(10);
+    if (mapInstanceRef.current && routeResult?.coordinates) {
+      const bounds = L.latLngBounds(routeResult.coordinates);
+      mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40] });
+    }
   };
 
   const googleMapsUrl = getGoogleMapsNavigationUrl(selectedOrigin, selectedDest);
@@ -435,24 +456,33 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
 
           </div>
 
-          {/* TAB 1: INTERACTIVE LIVE MAP VIEW */}
-          {activeViewTab === 'map' && (
-            <div className="space-y-3 animate-fadeIn">
-              <div className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-md">
-                {/* Map Container */}
-                <div 
-                  ref={mapContainerRef} 
-                  className="w-full h-72 sm:h-80 bg-slate-100 dark:bg-slate-950 relative z-10"
-                />
+          {/* TAB 1: INTERACTIVE LIVE MAP VIEW CONTAINER (Always Kept in DOM) */}
+          <div className={activeViewTab === 'map' ? 'space-y-3 block' : 'hidden'}>
+            <div className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-md">
+              {/* Map Container */}
+              <div 
+                ref={mapContainerRef} 
+                className="w-full h-72 sm:h-80 bg-slate-100 dark:bg-slate-950 relative z-10"
+              />
 
-                {/* Floating Map Legend Overlay */}
-                <div className="absolute top-3 left-3 z-20 bg-slate-900/90 text-white px-3 py-1.5 rounded-xl border border-white/20 backdrop-blur-md text-[11px] font-bold flex items-center gap-2 shadow-lg">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>{selectedOrigin.name} ➔ {selectedDest.name}</span>
-                </div>
+              {/* Floating Map Legend Overlay */}
+              <div className="absolute top-3 left-3 z-20 bg-slate-900/90 text-white px-3 py-1.5 rounded-xl border border-white/20 backdrop-blur-md text-[11px] font-bold flex items-center gap-2 shadow-lg">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>{selectedOrigin.name} ➔ {selectedDest.name}</span>
               </div>
+
+              {/* Re-center Button */}
+              <button
+                type="button"
+                onClick={handleRecenterMap}
+                className="absolute bottom-3 left-3 z-20 bg-white dark:bg-slate-800 text-slate-800 dark:text-white px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md text-xs font-bold flex items-center gap-1.5 hover:bg-slate-50 transition-colors"
+                title="Fit Route to Screen"
+              >
+                <Maximize2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Fit Route</span>
+              </button>
             </div>
-          )}
+          </div>
 
           {/* TAB 2: GHAT ROAD & MOUNTAIN INCLINE ANALYSIS */}
           {activeViewTab === 'details' && (
@@ -557,7 +587,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
               {routeResult && (
                 <div className="sm:text-right space-y-1">
                   <div className="flex items-center sm:justify-end gap-1.5 text-xs text-teal-300 font-bold">
-                    <Clock className="w-4 h-4" />
+                    <Clock className="w-3.5 h-3.5" />
                     <span>Est. Drive: {isRoundTrip ? `2 × ${routeResult.durationText}` : routeResult.durationText}</span>
                   </div>
                   <span className="text-[10px] text-slate-400 block">{routeResult.source}</span>

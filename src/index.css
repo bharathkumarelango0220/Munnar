@@ -409,6 +409,25 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
   padding-top: env(safe-area-inset-top, 0.5rem);
 }
 
+/* Leaflet Map Customizations */
+.leaflet-container {
+  font-family: inherit !important;
+  z-index: 10 !important;
+  border-radius: 1.5rem !important;
+}
+
+.custom-leaflet-marker {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+html.dark .leaflet-tile {
+  filter: brightness(0.85) contrast(1.1) saturate(0.9);
+}
+
 /* Print styles */
 @media print {
   body {
