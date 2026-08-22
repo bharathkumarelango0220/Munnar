@@ -973,9 +973,9 @@ export default function FuelCalculator() {
             <button
               type="button"
               onClick={handleAddBike}
-              className="w-full py-4 px-6 rounded-2xl border-2 border-dashed border-emerald-500/40 hover:border-emerald-500 bg-emerald-50/60 hover:bg-emerald-50 text-emerald-800 font-black text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xs hover:shadow-md transition-all active:scale-98 group"
+              className="w-full py-4 px-6 rounded-2xl border-2 border-dashed border-emerald-500/40 hover:border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/50 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 font-black text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xs hover:shadow-md transition-all active:scale-98 group"
             >
-              <div className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
+              <div className="w-6 h-6 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white dark:text-slate-950 flex items-center justify-center font-bold text-xs group-hover:scale-110 transition-transform">
                 <Plus className="w-4 h-4 stroke-[3]" />
               </div>
               <span>+ Add Another Bike to Convoy</span>

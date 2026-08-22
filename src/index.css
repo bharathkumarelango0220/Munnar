@@ -176,13 +176,19 @@ html.dark textarea:focus {
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
 }
 
-/* 5. Tinted Accent Cards & Status Badges */
-html.dark .bg-emerald-50 {
-  background-color: rgba(6, 78, 59, 0.5) !important;
-  border-color: rgba(16, 185, 129, 0.5) !important;
+/* 5. Tinted Accent Cards & Status Badges (High Contrast in Dark Mode) */
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/80,
+html.dark .bg-emerald-50\/60,
+html.dark .bg-emerald-50\/50,
+html.dark .bg-emerald-50\/40,
+html.dark [class*="bg-emerald-50"] {
+  background-color: rgba(6, 78, 59, 0.45) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
 }
 
-html.dark .bg-emerald-100 {
+html.dark .bg-emerald-100,
+html.dark [class*="bg-emerald-100"] {
   background-color: rgba(16, 185, 129, 0.25) !important;
 }
 
@@ -197,12 +203,18 @@ html.dark .text-emerald-600 {
   color: #34d399 !important;
 }
 
-html.dark .bg-teal-50 {
-  background-color: rgba(19, 78, 74, 0.5) !important;
-  border-color: rgba(20, 184, 166, 0.5) !important;
+html.dark .bg-teal-50,
+html.dark .bg-teal-50\/80,
+html.dark .bg-teal-50\/60,
+html.dark .bg-teal-50\/50,
+html.dark .bg-teal-50\/40,
+html.dark [class*="bg-teal-50"] {
+  background-color: rgba(19, 78, 74, 0.45) !important;
+  border-color: rgba(20, 184, 166, 0.4) !important;
 }
 
-html.dark .bg-teal-100 {
+html.dark .bg-teal-100,
+html.dark [class*="bg-teal-100"] {
   background-color: rgba(20, 184, 166, 0.25) !important;
 }
 
@@ -217,12 +229,18 @@ html.dark .text-teal-600 {
   color: #2dd4bf !important;
 }
 
-html.dark .bg-purple-50 {
-  background-color: rgba(88, 28, 135, 0.5) !important;
-  border-color: rgba(168, 85, 247, 0.5) !important;
+html.dark .bg-purple-50,
+html.dark .bg-purple-50\/80,
+html.dark .bg-purple-50\/60,
+html.dark .bg-purple-50\/50,
+html.dark .bg-purple-50\/40,
+html.dark [class*="bg-purple-50"] {
+  background-color: rgba(88, 28, 135, 0.45) !important;
+  border-color: rgba(168, 85, 247, 0.4) !important;
 }
 
-html.dark .bg-purple-100 {
+html.dark .bg-purple-100,
+html.dark [class*="bg-purple-100"] {
   background-color: rgba(168, 85, 247, 0.25) !important;
 }
 
@@ -237,12 +255,18 @@ html.dark .text-purple-600 {
   color: #c084fc !important;
 }
 
-html.dark .bg-amber-50 {
-  background-color: rgba(120, 53, 15, 0.5) !important;
-  border-color: rgba(245, 158, 11, 0.5) !important;
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/80,
+html.dark .bg-amber-50\/60,
+html.dark .bg-amber-50\/50,
+html.dark .bg-amber-50\/40,
+html.dark [class*="bg-amber-50"] {
+  background-color: rgba(120, 53, 15, 0.45) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
 }
 
-html.dark .bg-amber-100 {
+html.dark .bg-amber-100,
+html.dark [class*="bg-amber-100"] {
   background-color: rgba(245, 158, 11, 0.25) !important;
 }
 
@@ -257,12 +281,18 @@ html.dark .text-amber-600 {
   color: #fbbf24 !important;
 }
 
-html.dark .bg-rose-50 {
-  background-color: rgba(136, 19, 55, 0.5) !important;
-  border-color: rgba(244, 63, 94, 0.5) !important;
+html.dark .bg-rose-50,
+html.dark .bg-rose-50\/80,
+html.dark .bg-rose-50\/60,
+html.dark .bg-rose-50\/50,
+html.dark .bg-rose-50\/40,
+html.dark [class*="bg-rose-50"] {
+  background-color: rgba(136, 19, 55, 0.45) !important;
+  border-color: rgba(244, 63, 94, 0.4) !important;
 }
 
-html.dark .bg-rose-100 {
+html.dark .bg-rose-100,
+html.dark [class*="bg-rose-100"] {
   background-color: rgba(244, 63, 94, 0.25) !important;
 }
 
@@ -277,12 +307,18 @@ html.dark .text-rose-600 {
   color: #fb7185 !important;
 }
 
-html.dark .bg-blue-50 {
-  background-color: rgba(30, 58, 138, 0.5) !important;
-  border-color: rgba(59, 130, 246, 0.5) !important;
+html.dark .bg-blue-50,
+html.dark .bg-blue-50\/80,
+html.dark .bg-blue-50\/60,
+html.dark .bg-blue-50\/50,
+html.dark .bg-blue-50\/40,
+html.dark [class*="bg-blue-50"] {
+  background-color: rgba(30, 58, 138, 0.45) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
 }
 
-html.dark .bg-blue-100 {
+html.dark .bg-blue-100,
+html.dark [class*="bg-blue-100"] {
   background-color: rgba(59, 130, 246, 0.25) !important;
 }
 
