@@ -50,8 +50,21 @@ export default function App() {
       setIsOnline(false);
     };
 
+    let ticking = false;
+    let lastState = false;
+
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 320);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const shouldShow = window.scrollY > 350;
+          if (shouldShow !== lastState) {
+            lastState = shouldShow;
+            setShowScrollTop(shouldShow);
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     window.addEventListener('online', handleOnline);

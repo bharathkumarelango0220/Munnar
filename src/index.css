@@ -9,22 +9,21 @@
   }
   
   html {
-    scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
-    touch-action: manipulation;
   }
 
   body {
-    @apply bg-slate-50 dark:bg-[#080c14] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200;
+    @apply bg-slate-50 dark:bg-[#080c14] text-slate-900 dark:text-slate-100 font-sans;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    touch-action: manipulation;
-    overscroll-behavior-y: none;
   }
 
-  button, a, input, select, textarea, [role="button"] {
-    touch-action: manipulation;
+  /* Only apply touch-action manipulation to touch devices */
+  @media (pointer: coarse) {
+    button, a, input, select, textarea, [role="button"] {
+      touch-action: manipulation;
+    }
   }
 }
 
@@ -320,32 +319,6 @@ html.dark nav button:hover {
   color: #ffffff !important;
 }
 
-/* Universal Dark Mode Hover Contrast Rules */
-html.dark .hover\:bg-white:hover,
-html.dark .hover\:bg-white\/50:hover,
-html.dark .hover\:bg-white\/60:hover,
-html.dark .hover\:bg-white\/70:hover,
-html.dark .hover\:bg-white\/80:hover,
-html.dark [class*="hover:bg-white"]:hover {
-  background-color: #1e293b !important;
-  color: #ffffff !important;
-}
-
-html.dark .hover\:bg-slate-50:hover,
-html.dark .hover\:bg-slate-100:hover,
-html.dark .hover\:bg-slate-200:hover,
-html.dark [class*="hover:bg-slate"]:hover {
-  background-color: #1e293b !important;
-  color: #ffffff !important;
-}
-
-html.dark .hover\:text-slate-900:hover,
-html.dark .hover\:text-slate-800:hover,
-html.dark .hover\:text-slate-700:hover,
-html.dark [class*="hover:text-slate"]:hover {
-  color: #ffffff !important;
-}
-
 /* 8. Shadows in Dark Mode */
 html.dark .shadow-soft,
 html.dark .shadow-md,
@@ -353,20 +326,20 @@ html.dark .shadow-xl {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45) !important;
 }
 
-/* 9. Mobile Performance & Smooth 60FPS Scrolling */
-@media (max-width: 768px) {
-  /* Eliminate heavy GPU blur filters on mobile to prevent scroll lagging */
-  .blur-3xl,
-  .blur-2xl {
-    display: none !important;
-  }
-  
-  .backdrop-blur-md,
-  .backdrop-blur-sm,
-  .backdrop-blur-lg {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
+/* 9. Global Ultra-Smooth 144Hz PC & Mobile GPU Optimization */
+.blur-3xl,
+.blur-2xl,
+.blur-xl {
+  display: none !important;
+}
+
+.backdrop-blur-xl,
+.backdrop-blur-lg,
+.backdrop-blur-md,
+.backdrop-blur-sm,
+.backdrop-blur-xs {
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
 }
 
 /* 10. Dedicated Mobile View Typography & Perfect Text Wrap Optimization (< 640px) */
