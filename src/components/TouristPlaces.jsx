@@ -133,7 +133,7 @@ export default function TouristPlaces() {
             return (
               <div
                 key={place.id}
-                className="group bg-white rounded-3xl border border-slate-200/90 shadow-soft hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1"
+                className="group bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-soft hover:shadow-xl transition-shadow duration-200 overflow-hidden flex flex-col content-auto"
               >
                 {/* Place Image Banner */}
                 <div 
