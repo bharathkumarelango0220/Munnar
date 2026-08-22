@@ -414,6 +414,7 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
   font-family: inherit !important;
   z-index: 10 !important;
   border-radius: 1.5rem !important;
+  background: #f8fafc !important;
 }
 
 .custom-leaflet-marker {
@@ -424,8 +425,44 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
   border: none !important;
 }
 
-html.dark .leaflet-tile {
-  filter: brightness(0.85) contrast(1.1) saturate(0.9);
+/* User Live GPS Pulsing Marker */
+.user-gps-pulse-marker {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.user-gps-pulse-marker::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.4);
+  animation: gpsPulse 2s infinite ease-out;
+}
+
+.user-gps-pulse-marker .gps-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+@keyframes gpsPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
 }
 
 /* Print styles */

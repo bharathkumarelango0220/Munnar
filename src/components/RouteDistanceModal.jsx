@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   X, 
   MapPin, 
@@ -11,28 +11,39 @@ import {
   Mountain, 
   Clock, 
   Route, 
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
-  Share2,
-  Fuel,
-  ShieldAlert,
-  Coins,
-  Milestone,
-  Layers,
-  Maximize2,
-  ArrowUpDown,
-  Lock,
-  Unlock,
-  ZoomIn,
-  ZoomOut,
-  Hand
+  CheckCircle2, 
+  AlertCircle, 
+  ExternalLink, 
+  Share2, 
+  Fuel, 
+  ShieldAlert, 
+  Coins, 
+  Milestone, 
+  Layers, 
+  Maximize2, 
+  ArrowUpDown, 
+  Lock, 
+  Unlock, 
+  ZoomIn, 
+  ZoomOut, 
+  Hand, 
+  Download, 
+  Radio, 
+  Search, 
+  Wifi, 
+  WifiOff, 
+  Gauge, 
+  AlertTriangle,
+  RotateCcw
 } from 'lucide-react';
 import { 
   POPULAR_ORIGINS, 
   POPULAR_DESTINATIONS, 
+  searchCitiesHybrid, 
   calculateRouteDistance, 
-  geocodeLocation,
+  checkOffCourseAndReroute,
+  saveRouteOffline,
+  getOfflineSavedRoute,
   getGoogleMapsNavigationUrl
 } from '../services/routingService';
 import { triggerHaptic } from '../utils/haptics';
@@ -44,24 +55,39 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
   const [selectedDest, setSelectedDest] = useState(POPULAR_DESTINATIONS[0]);
   const [isRoundTrip, setIsRoundTrip] = useState(false);
   
+  // Origin search & autocomplete suggestions
   const [customOriginQuery, setCustomOriginQuery] = useState('');
-  const [isSearchingCustom, setIsSearchingCustom] = useState(false);
-  
+  const [originSuggestions, setOriginSuggestions] = useState([]);
+  const [isSearchingOrigin, setIsSearchingOrigin] = useState(false);
+  const [showOriginDropdown, setShowOriginDropdown] = useState(false);
+
+  // Destination search & autocomplete suggestions
   const [customDestQuery, setCustomDestQuery] = useState('');
-  const [isSearchingDestCustom, setIsSearchingDestCustom] = useState(false);
+  const [destSuggestions, setDestSuggestions] = useState([]);
+  const [isSearchingDest, setIsSearchingDest] = useState(false);
+  const [showDestDropdown, setShowDestDropdown] = useState(false);
 
   const [isGpsLoading, setIsGpsLoading] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
-
   const [routeResult, setRouteResult] = useState(null);
   const [appliedFeedback, setAppliedFeedback] = useState(false);
-  const [activeViewTab, setActiveViewTab] = useState('map'); // 'map' | 'details'
-  const [isMapInteractActive, setIsMapInteractActive] = useState(false); // Controls 1-finger scroll-through vs 2-finger map pan
+  const [activeViewTab, setActiveViewTab] = useState('map'); // 'map' | 'details' | 'live'
+  const [isMapInteractActive, setIsMapInteractActive] = useState(false);
 
+  // Live GPS Tracking & Off-course states
+  const [isLiveTracking, setIsLiveTracking] = useState(false);
+  const [userLocation, setUserLocation] = useState(null); // { lat, lon, speed, heading, accuracy }
+  const [offCourseData, setOffCourseData] = useState(null); // { isOffCourse, minDistanceMeters, rerouteCoordinates }
+  const [isRouteSavedOffline, setIsRouteSavedOffline] = useState(false);
+
+  // Leaflet map refs
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const polylineLayerRef = useRef(null);
   const markersLayerRef = useRef(null);
+  const userGpsMarkerRef = useRef(null);
+  const rerouteLayerRef = useRef(null);
+  const watchPositionIdRef = useRef(null);
 
   // Initialize and Maintain Leaflet Map Instance
   useEffect(() => {
@@ -75,17 +101,21 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
           const map = L.map(mapContainerRef.current, {
             zoomControl: false,
             attributionControl: false,
-            scrollWheelZoom: false, // Prevents desktop scroll wheel trap
-            dragging: false, // Prevents mobile 1-finger scroll trap by default
+            scrollWheelZoom: false,
+            dragging: false,
             touchZoom: false
           }).setView([10.0889, 77.0595], 8);
 
+          // Standard Vibrant OpenStreetMap Tiles (No dark filter)
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
+            subdomains: ['a', 'b', 'c']
           }).addTo(map);
 
           polylineLayerRef.current = L.layerGroup().addTo(map);
+          rerouteLayerRef.current = L.layerGroup().addTo(map);
           markersLayerRef.current = L.layerGroup().addTo(map);
+          userGpsMarkerRef.current = L.layerGroup().addTo(map);
           mapInstanceRef.current = map;
         } catch (e) {
           console.warn('[Leaflet] Map init error:', e);
@@ -117,16 +147,6 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     }
   }, [isMapInteractActive]);
 
-  const handleZoomIn = () => {
-    triggerHaptic(10);
-    mapInstanceRef.current?.zoomIn();
-  };
-
-  const handleZoomOut = () => {
-    triggerHaptic(10);
-    mapInstanceRef.current?.zoomOut();
-  };
-
   // Handle Tab Switch Invalidate Size
   useEffect(() => {
     if (activeViewTab === 'map' && mapInstanceRef.current) {
@@ -136,15 +156,57 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     }
   }, [activeViewTab]);
 
-  // Clean up Leaflet on modal close
+  // Clean up Leaflet and GPS on modal close
   useEffect(() => {
-    if (!isOpen && mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
-      polylineLayerRef.current = null;
-      markersLayerRef.current = null;
+    if (!isOpen) {
+      if (watchPositionIdRef.current) {
+        navigator.geolocation.clearWatch(watchPositionIdRef.current);
+        watchPositionIdRef.current = null;
+      }
+      setIsLiveTracking(false);
+
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        polylineLayerRef.current = null;
+        rerouteLayerRef.current = null;
+        markersLayerRef.current = null;
+        userGpsMarkerRef.current = null;
+      }
     }
   }, [isOpen]);
+
+  // Origin Search Suggestions Debounce
+  useEffect(() => {
+    if (!customOriginQuery.trim() || customOriginQuery.length < 1) {
+      setOriginSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearchingOrigin(true);
+      const results = await searchCitiesHybrid(customOriginQuery);
+      setOriginSuggestions(results);
+      setIsSearchingOrigin(false);
+      setShowOriginDropdown(true);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [customOriginQuery]);
+
+  // Destination Search Suggestions Debounce
+  useEffect(() => {
+    if (!customDestQuery.trim() || customDestQuery.length < 1) {
+      setDestSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearchingDest(true);
+      const results = await searchCitiesHybrid(customDestQuery);
+      setDestSuggestions(results);
+      setIsSearchingDest(false);
+      setShowDestDropdown(true);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [customDestQuery]);
 
   // Draw Route Polyline & Markers on Map
   useEffect(() => {
@@ -160,7 +222,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       try {
         // 1. Draw glowing green road polyline
         const polyline = L.polyline(coords, {
-          color: '#059669', // emerald-600
+          color: '#059669', // vibrant emerald-600
           weight: 6,
           opacity: 0.9,
           lineCap: 'round',
@@ -175,7 +237,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
           iconAnchor: [15, 15]
         });
 
-        // 3. Custom Destination Marker Icon (B - Munnar)
+        // 3. Custom Destination Marker Icon (B)
         const destIcon = L.divIcon({
           className: 'custom-leaflet-marker',
           html: `<div style="background-color: #0f766e; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; border: 2.5px solid white; box-shadow: 0 4px 16px rgba(0,0,0,0.45);">🏔️</div>`,
@@ -188,7 +250,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
           .addTo(markersLayerRef.current);
 
         L.marker([selectedDest.lat, selectedDest.lon], { icon: destIcon })
-          .bindPopup(`<b>Munnar Destination:</b><br/>${selectedDest.name}`)
+          .bindPopup(`<b>Destination:</b><br/>${selectedDest.name}`)
           .addTo(markersLayerRef.current);
 
         // Fit map bounds to show full road route
@@ -227,13 +289,112 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     };
   }, [selectedOrigin, selectedDest, isOpen]);
 
+  // Live GPS Tracking & Real-Time Off-Course Rerouting
+  const handleToggleLiveTracking = () => {
+    triggerHaptic(20);
+    if (isLiveTracking) {
+      if (watchPositionIdRef.current) {
+        navigator.geolocation.clearWatch(watchPositionIdRef.current);
+        watchPositionIdRef.current = null;
+      }
+      setIsLiveTracking(false);
+      setUserLocation(null);
+      setOffCourseData(null);
+      if (userGpsMarkerRef.current) userGpsMarkerRef.current.clearLayers();
+      if (rerouteLayerRef.current) rerouteLayerRef.current.clearLayers();
+    } else {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+
+      setIsLiveTracking(true);
+      watchPositionIdRef.current = navigator.geolocation.watchPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const speed = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0; // km/h
+          const heading = pos.coords.heading || 0;
+          const accuracy = Math.round(pos.coords.accuracy || 0);
+
+          setUserLocation({ lat, lon, speed, heading, accuracy });
+
+          // Draw Live User Location on Map
+          if (mapInstanceRef.current && userGpsMarkerRef.current) {
+            userGpsMarkerRef.current.clearLayers();
+
+            const pulseIcon = L.divIcon({
+              className: 'custom-leaflet-marker',
+              html: `<div class="user-gps-pulse-marker"><div class="gps-dot"></div></div>`,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12]
+            });
+
+            L.marker([lat, lon], { icon: pulseIcon })
+              .bindPopup(`<b>Your Live Position</b><br/>Speed: ${speed} km/h<br/>Accuracy: ±${accuracy}m`)
+              .addTo(userGpsMarkerRef.current);
+          }
+
+          // Check if User went Off-Course & Calculate Dynamic Offline Reroute
+          if (routeResult?.coordinates) {
+            const check = checkOffCourseAndReroute(
+              lat, 
+              lon, 
+              routeResult.coordinates, 
+              { lat: selectedDest.lat, lon: selectedDest.lon }
+            );
+
+            setOffCourseData(check);
+
+            // If off course, draw high-visibility dashed re-route connector on map
+            if (rerouteLayerRef.current) {
+              rerouteLayerRef.current.clearLayers();
+              if (check.isOffCourse && check.rerouteCoordinates) {
+                L.polyline(check.rerouteCoordinates, {
+                  color: '#f59e0b', // amber-500
+                  weight: 5,
+                  dashArray: '8, 8',
+                  opacity: 0.95
+                }).addTo(rerouteLayerRef.current);
+              }
+            }
+          }
+        },
+        (err) => {
+          console.warn('GPS watch error:', err);
+          setIsLiveTracking(false);
+        },
+        { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+      );
+    }
+  };
+
+  // Save Route for Offline Use
+  const handleSaveRouteOffline = () => {
+    triggerHaptic(20);
+    if (!routeResult) return;
+    const success = saveRouteOffline({
+      origin: selectedOrigin,
+      destination: selectedDest,
+      distanceKm: totalCalculatedKm,
+      isRoundTrip,
+      durationText: routeResult.durationText,
+      coordinates: routeResult.coordinates,
+      steps: routeResult.steps
+    });
+    if (success) {
+      setIsRouteSavedOffline(true);
+      setTimeout(() => setIsRouteSavedOffline(false), 3000);
+    }
+  };
+
   if (!isOpen) return null;
 
   const totalCalculatedKm = routeResult 
     ? (isRoundTrip ? routeResult.distanceKm * 2 : routeResult.distanceKm) 
     : 0;
 
-  // Handle GPS location
+  // Handle Current GPS as Origin
   const handleUseCurrentLocation = () => {
     triggerHaptic(15);
     if (!navigator.geolocation) {
@@ -251,7 +412,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
           state: 'GPS',
           lat: pos.coords.latitude,
           lon: pos.coords.longitude,
-          highway: 'Direct GPS Point to Munnar Ghats',
+          highway: 'Direct GPS Point to Mountain Corridor',
           elevationGain: '+1,500m Climb',
           hairpinBends: 16,
           lastFuelStop: 'Nearest Highway Fuel Pump',
@@ -266,62 +427,6 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       },
       { timeout: 8000 }
     );
-  };
-
-  // Handle custom origin search
-  const handleSearchCustomOrigin = async (e) => {
-    e.preventDefault();
-    if (!customOriginQuery.trim()) return;
-
-    setIsSearchingCustom(true);
-    triggerHaptic(10);
-    const loc = await geocodeLocation(customOriginQuery);
-    setIsSearchingCustom(false);
-
-    if (loc) {
-      setSelectedOrigin({
-        id: 'custom_' + Date.now(),
-        name: loc.name,
-        state: 'Custom',
-        lat: loc.lat,
-        lon: loc.lon,
-        highway: 'Highway Route Corridor',
-        elevationGain: '+1,500m Climb',
-        hairpinBends: 16,
-        lastFuelStop: 'Highway Petrol Bunk',
-        tolls: 'Estimated'
-      });
-      setCustomOriginQuery('');
-      triggerHaptic(20);
-    } else {
-      alert(`Could not find "${customOriginQuery}". Try typing city name (e.g. Coimbatore, Salem, Kochi).`);
-    }
-  };
-
-  // Handle custom destination search (ANY destination in India or Worldwide)
-  const handleSearchCustomDest = async (e) => {
-    e.preventDefault();
-    if (!customDestQuery.trim()) return;
-
-    setIsSearchingDestCustom(true);
-    triggerHaptic(10);
-    const loc = await geocodeLocation(customDestQuery);
-    setIsSearchingDestCustom(false);
-
-    if (loc) {
-      setSelectedDest({
-        id: 'custom_dest_' + Date.now(),
-        name: loc.name,
-        lat: loc.lat,
-        lon: loc.lon,
-        altitude: 'Selected Point',
-        attractions: 'Custom Destination'
-      });
-      setCustomDestQuery('');
-      triggerHaptic(20);
-    } else {
-      alert(`Could not find "${customDestQuery}". Try typing a city, hill station or landmark name (e.g. Ooty, Kodaikanal, Goa, Wayanad).`);
-    }
   };
 
   // Swap Departure & Destination
@@ -349,7 +454,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       `🚗 *Route:* ${selectedOrigin.name} ➔ ${selectedDest.name}\n` +
       `📏 *Total Distance:* ${totalCalculatedKm} KM (${isRoundTrip ? 'Round Trip' : 'One-Way'})\n` +
       `⏱️ *Driving Duration:* ${routeResult?.durationText || 'N/A'}\n` +
-      `🛣️ *Highway:* ${selectedOrigin.highway || 'Ghat Road'}\n` +
+      `🛣️ *Highway:* ${selectedOrigin.highway || 'Mountain Corridor'}\n` +
       `🏔️ *Elevation Gain:* ${selectedOrigin.elevationGain || '+1,500m'}\n` +
       `⛽ *Last Fuel Stop:* ${selectedOrigin.lastFuelStop || 'Town Bunk'}\n\n` +
       `Plan & calculate exact trip petrol split on: https://munnartools.vercel.app`;
@@ -365,11 +470,21 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     }
   };
 
+  const handleZoomIn = () => {
+    triggerHaptic(10);
+    mapInstanceRef.current?.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    triggerHaptic(10);
+    mapInstanceRef.current?.zoomOut();
+  };
+
   const googleMapsUrl = getGoogleMapsNavigationUrl(selectedOrigin, selectedDest);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-slideUp flex flex-col max-h-[92vh]">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-slideUp flex flex-col max-h-[94vh]">
         
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 p-4 sm:p-5 text-white relative shrink-0">
@@ -380,12 +495,13 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
             <X className="w-5 h-5" />
           </button>
           
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-500/30">
-              OpenStreetMap & OSRM Engine
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-500/30 flex items-center gap-1">
+              <Wifi className="w-3 h-3 text-emerald-400" />
+              <span>Offline-First Live GPS Engine</span>
             </span>
             <span className="text-[10px] sm:text-[11px] text-slate-300 font-semibold">
-              Live Mountain Topology & Route Architect
+              OpenStreetMap & OSRM Mountain Topology
             </span>
           </div>
 
@@ -394,7 +510,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
               <span>🗺️ Smart Route & Mountain Distance Suite</span>
             </h2>
 
-            {/* Sub Nav Toggle on Mobile / Desktop */}
+            {/* Sub Nav Toggle */}
             <div className="flex items-center gap-1 bg-white/10 p-1 rounded-xl self-start sm:self-auto">
               <button
                 type="button"
@@ -404,7 +520,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>Interactive Map</span>
+                <span>Vibrant Map</span>
               </button>
               <button
                 type="button"
@@ -414,21 +530,21 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                 }`}
               >
                 <Mountain className="w-3.5 h-3.5" />
-                <span>Ghat Road Analysis</span>
+                <span>Ghat Road Insights</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Scrollable Body */}
-        <div className="p-4 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
           
-          {/* TOP ROUTE SELECTORS: ORIGIN & DESTINATION */}
+          {/* TOP ROUTE SELECTORS: ORIGIN & DESTINATION WITH INSTANT AUTOCOMPLETE */}
           <div className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
-              {/* Origin Box */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+              {/* Departure Box */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2.5 relative">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
                     <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -446,9 +562,62 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                   </button>
                 </div>
 
-                {/* City Presets Chips */}
-                <div className="grid grid-cols-2 gap-1.5 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-                  {POPULAR_ORIGINS.map((orig) => {
+                {/* Instant Autocomplete Search Input */}
+                <div className="relative">
+                  <div className="relative flex items-center">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={customOriginQuery}
+                      onChange={(e) => setCustomOriginQuery(e.target.value)}
+                      onFocus={() => { if (originSuggestions.length > 0) setShowOriginDropdown(true); }}
+                      placeholder="Type ANY city name (e.g. Coimbatore, Salem, Kochi)..."
+                      className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-xs"
+                    />
+                  </div>
+
+                  {/* Autocomplete Dropdown */}
+                  {showOriginDropdown && originSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl z-40 max-h-48 overflow-y-auto custom-scrollbar p-1">
+                      {originSuggestions.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic(10);
+                            setSelectedOrigin({
+                              id: item.id,
+                              name: item.name,
+                              state: item.state,
+                              lat: item.lat,
+                              lon: item.lon,
+                              highway: 'Highway Route Corridor',
+                              elevationGain: '+1,500m Climb',
+                              hairpinBends: 16,
+                              lastFuelStop: 'Highway Fuel Pump',
+                              tolls: 'Estimated'
+                            });
+                            setCustomOriginQuery(item.name);
+                            setShowOriginDropdown(false);
+                          }}
+                          className="w-full text-left p-2 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-xl transition-colors flex items-center justify-between text-xs"
+                        >
+                          <div>
+                            <span className="font-bold text-slate-900 dark:text-white">{item.shortName}</span>
+                            <span className="text-[11px] text-slate-400 dark:text-slate-400 ml-1.5">({item.state})</span>
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                            {item.tag}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Popular Departure Quick Chips */}
+                <div className="grid grid-cols-2 gap-1.5 max-h-28 overflow-y-auto custom-scrollbar pr-1 pt-1">
+                  {POPULAR_ORIGINS.slice(0, 6).map((orig) => {
                     const isSelected = selectedOrigin.id === orig.id;
                     return (
                       <button
@@ -457,8 +626,10 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                         onClick={() => {
                           triggerHaptic(10);
                           setSelectedOrigin(orig);
+                          setCustomOriginQuery(orig.name);
+                          setShowOriginDropdown(false);
                         }}
-                        className={`p-2 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
+                        className={`p-1.5 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
                           isSelected
                             ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20 shadow-xs'
                             : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
@@ -470,28 +641,10 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                     );
                   })}
                 </div>
-
-                {/* Custom Search Input */}
-                <form onSubmit={handleSearchCustomOrigin} className="flex gap-1.5 pt-1">
-                  <input
-                    type="text"
-                    value={customOriginQuery}
-                    onChange={(e) => setCustomOriginQuery(e.target.value)}
-                    placeholder="Search any starting city..."
-                    className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:border-emerald-500"
-                  />
-                  <button
-                    type="submit"
-                    disabled={isSearchingCustom}
-                    className="px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold transition-all shrink-0 active:scale-95"
-                  >
-                    {isSearchingCustom ? '...' : 'Search'}
-                  </button>
-                </form>
               </div>
 
               {/* Destination Box */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2.5 relative">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
@@ -504,9 +657,58 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                   )}
                 </div>
 
-                {/* Destinations Grid */}
-                <div className="grid grid-cols-2 gap-1.5 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-                  {POPULAR_DESTINATIONS.map((dest) => {
+                {/* Instant Autocomplete Search Input */}
+                <div className="relative">
+                  <div className="relative flex items-center">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={customDestQuery}
+                      onChange={(e) => setCustomDestQuery(e.target.value)}
+                      onFocus={() => { if (destSuggestions.length > 0) setShowDestDropdown(true); }}
+                      placeholder="Type ANY destination (e.g. Ooty, Goa, Wayanad)..."
+                      className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 shadow-xs"
+                    />
+                  </div>
+
+                  {/* Autocomplete Dropdown */}
+                  {showDestDropdown && destSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl z-40 max-h-48 overflow-y-auto custom-scrollbar p-1">
+                      {destSuggestions.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic(10);
+                            setSelectedDest({
+                              id: item.id,
+                              name: item.name,
+                              lat: item.lat,
+                              lon: item.lon,
+                              altitude: item.tag,
+                              attractions: 'Selected Destination'
+                            });
+                            setCustomDestQuery(item.name);
+                            setShowDestDropdown(false);
+                          }}
+                          className="w-full text-left p-2 hover:bg-teal-50 dark:hover:bg-teal-950/60 rounded-xl transition-colors flex items-center justify-between text-xs"
+                        >
+                          <div>
+                            <span className="font-bold text-slate-900 dark:text-white">{item.shortName}</span>
+                            <span className="text-[11px] text-slate-400 dark:text-slate-400 ml-1.5">({item.state})</span>
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-900/60 text-teal-700 dark:text-teal-300">
+                            {item.tag}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Popular Destination Quick Chips */}
+                <div className="grid grid-cols-2 gap-1.5 max-h-28 overflow-y-auto custom-scrollbar pr-1 pt-1">
+                  {POPULAR_DESTINATIONS.slice(0, 6).map((dest) => {
                     const isSelected = selectedDest.id === dest.id;
                     return (
                       <button
@@ -515,8 +717,10 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                         onClick={() => {
                           triggerHaptic(10);
                           setSelectedDest(dest);
+                          setCustomDestQuery(dest.name);
+                          setShowDestDropdown(false);
                         }}
-                        className={`p-2 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
+                        className={`p-1.5 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
                           isSelected
                             ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/60 text-teal-900 dark:text-teal-200 ring-2 ring-teal-500/20 shadow-xs'
                             : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
@@ -528,24 +732,6 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                     );
                   })}
                 </div>
-
-                {/* Custom Destination Search Form */}
-                <form onSubmit={handleSearchCustomDest} className="flex gap-1.5 pt-1">
-                  <input
-                    type="text"
-                    value={customDestQuery}
-                    onChange={(e) => setCustomDestQuery(e.target.value)}
-                    placeholder="Type ANY destination (e.g. Ooty, Goa, Wayanad)..."
-                    className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:border-teal-500"
-                  />
-                  <button
-                    type="submit"
-                    disabled={isSearchingDestCustom}
-                    className="px-3 py-1.5 rounded-xl bg-teal-800 dark:bg-teal-700 hover:bg-teal-700 text-white text-xs font-bold transition-all shrink-0 active:scale-95"
-                  >
-                    {isSearchingDestCustom ? '...' : 'Search'}
-                  </button>
-                </form>
               </div>
 
             </div>
@@ -564,13 +750,41 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
             </div>
           </div>
 
-          {/* TAB 1: INTERACTIVE LIVE MAP VIEW CONTAINER (Always Kept in DOM) */}
+          {/* TAB 1: VIBRANT INTERACTIVE MAP VIEW CONTAINER */}
           <div className={activeViewTab === 'map' ? 'space-y-2 block' : 'hidden'}>
+            
+            {/* Live Tracking & Off-Course Real-Time Status Alerts */}
+            {isLiveTracking && offCourseData && (
+              <div className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
+                offCourseData.isOffCourse 
+                  ? 'bg-amber-500/10 border-amber-500/40 text-amber-900 dark:text-amber-200' 
+                  : 'bg-emerald-500/10 border-emerald-500/40 text-emerald-900 dark:text-emerald-200'
+              }`}>
+                <div className="flex items-center gap-2 text-xs font-bold">
+                  {offCourseData.isOffCourse ? (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-amber-500 animate-bounce" />
+                      <span>⚠️ Off-Course ({offCourseData.minDistanceMeters}m off). Re-routing connecting vector active!</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      <span>🟢 Live on Route (Speed: {userLocation?.speed || 0} km/h • GPS ±{userLocation?.accuracy || 0}m)</span>
+                    </>
+                  )}
+                </div>
+                
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-800 border">
+                  Live GPS
+                </span>
+              </div>
+            )}
+
             <div className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-md">
-              {/* Map Container */}
+              {/* Map Container - Bright, vibrant, clean */}
               <div 
                 ref={mapContainerRef} 
-                className={`w-full h-72 sm:h-80 bg-slate-100 dark:bg-slate-950 relative z-10 ${
+                className={`w-full h-72 sm:h-80 bg-slate-50 dark:bg-slate-900 relative z-10 ${
                   !isMapInteractActive ? 'pointer-events-none sm:pointer-events-auto' : 'pointer-events-auto'
                 }`}
               />
@@ -581,8 +795,22 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                 <span className="truncate">{selectedOrigin.name} ➔ {selectedDest.name}</span>
               </div>
 
-              {/* Mobile Interaction Mode Floating Toggle Button */}
-              <div className="absolute top-3 right-3 z-20">
+              {/* Top-Right Action Badges: Live GPS + Lock/Unlock Map */}
+              <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleToggleLiveTracking}
+                  className={`px-3 py-1.5 rounded-xl border shadow-lg text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 ${
+                    isLiveTracking
+                      ? 'bg-blue-600 border-blue-400 text-white shadow-blue-600/40 animate-pulse'
+                      : 'bg-slate-900/90 hover:bg-slate-900 text-white border-white/20 backdrop-blur-md'
+                  }`}
+                  title="Toggle Live GPS Tracking with Automatic Re-routing"
+                >
+                  <Radio className="w-3.5 h-3.5 text-blue-300" />
+                  <span>{isLiveTracking ? 'Tracking Live' : '🛰️ Live GPS'}</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -598,12 +826,12 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                   {isMapInteractActive ? (
                     <>
                       <Lock className="w-3.5 h-3.5 text-emerald-200" />
-                      <span>Lock (Scroll Page)</span>
+                      <span>Lock</span>
                     </>
                   ) : (
                     <>
                       <Hand className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Pan & Zoom Map</span>
+                      <span>Pan & Zoom</span>
                     </>
                   )}
                 </button>
@@ -611,7 +839,6 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
 
               {/* Bottom Control Bar: Fit Route + Dedicated Zoom Buttons */}
               <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
-                {/* Re-center Button */}
                 <button
                   type="button"
                   onClick={handleRecenterMap}
@@ -646,10 +873,22 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
 
             </div>
 
-            {/* Subtle Scroll Hint */}
-            <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 font-medium">
-              💡 {isMapInteractActive ? 'Map active: drag/pinch to move. Tap "Lock" to scroll page.' : 'Scroll page freely. Tap "Pan & Zoom Map" or use +/- buttons to inspect route.'}
-            </p>
+            {/* Scroll Hint & Offline Save Button */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                💡 {isMapInteractActive ? 'Map active: drag/pinch to move. Tap "Lock" to scroll page.' : 'Scroll page freely. Tap "Pan & Zoom" or use +/- to inspect.'}
+              </p>
+
+              <button
+                type="button"
+                onClick={handleSaveRouteOffline}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition-colors active:scale-95 self-start sm:self-auto"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>{isRouteSavedOffline ? '✓ Saved Offline!' : '📥 Save Route for Offline GPS'}</span>
+              </button>
+            </div>
+
           </div>
 
           {/* TAB 2: GHAT ROAD & MOUNTAIN INCLINE ANALYSIS */}
@@ -689,7 +928,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
                 <span className="text-[11px] text-slate-500">Along highway corridor</span>
               </div>
 
-              {/* Recommended Fuel Stop Advisory Card */}
+              {/* Crucial Ghat Road Fuel Advisory */}
               <div className="sm:col-span-2 md:col-span-3 p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3">
                 <div className="p-2 rounded-xl bg-amber-500 text-slate-950 shrink-0">
                   <Fuel className="w-4 h-4" />
