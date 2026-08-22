@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import { triggerHaptic } from '../utils/haptics';
 import { 
   Plane, 
   Fuel, 
@@ -34,10 +35,11 @@ export default function BottomNav() {
             <button
               key={item.id}
               onClick={() => {
+                triggerHaptic(12);
                 setActiveTab(item.id);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition-all relative ${
+              className={`flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition-all relative active:scale-95 ${
                 isActive 
                   ? 'text-emerald-700 dark:text-emerald-400 font-black' 
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'

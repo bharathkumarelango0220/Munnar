@@ -23,6 +23,7 @@ import {
   Camera,
   Check
 } from 'lucide-react';
+import { triggerHaptic } from '../utils/haptics';
 
 export default function ExpenseTracker() {
   const { 
@@ -321,7 +322,10 @@ export default function ExpenseTracker() {
               <div className="py-10 text-center text-slate-400 text-xs space-y-2">
                 <p>No expenses recorded yet.</p>
                 <button
-                  onClick={() => setIsAddExpenseModalOpen(true)}
+                  onClick={() => {
+                    triggerHaptic(15);
+                    setIsAddExpenseModalOpen(true);
+                  }}
                   className="text-xs font-bold text-emerald-700 hover:underline inline-flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -329,46 +333,31 @@ export default function ExpenseTracker() {
                 </button>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="space-y-1.5 divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredExpenses.map((exp) => {
                   const cat = categoryDefinitions[exp.category] || { name: exp.category };
                   return (
-                    <div key={exp.id} className="py-3 flex items-center justify-between gap-3 hover:bg-slate-50/50 rounded-xl px-2 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">
-                          {exp.paymentMode || 'UPI'}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-xs sm:text-sm text-slate-900">{exp.title}</h4>
-                          <p className="text-[11px] text-slate-400">
-                            {cat.name} • {exp.date} {exp.time ? `at ${exp.time}` : ''}
-                            {exp.note ? ` • "${exp.note}"` : ''}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm sm:text-base font-black text-slate-900">
-                          ₹{Number(exp.amount).toLocaleString('en-IN')}
-                        </span>
-                        <button
-                          onClick={() => deleteExpense(exp.id)}
-                          className="text-slate-300 hover:text-rose-600 transition-colors p-1"
-                          title="Delete expense"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
+                    <ExpenseItemRow 
+                      key={exp.id} 
+                      exp={exp} 
+                      cat={cat} 
+                      onDelete={(id) => {
+                        triggerHaptic(20);
+                        deleteExpense(id);
+                      }} 
+                    />
                   );
                 })}
               </div>
             )}
 
             {/* Reset Trip Button */}
-            <div className="pt-4 border-t border-slate-100 flex justify-end">
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
               <button
-                onClick={resetAllDataToZero}
+                onClick={() => {
+                  triggerHaptic(20);
+                  resetAllDataToZero();
+                }}
                 className="text-xs font-bold text-slate-400 hover:text-rose-600 transition-colors flex items-center gap-1"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -381,5 +370,89 @@ export default function ExpenseTracker() {
       )}
 
     </section>
+  );
+}
+
+// Swipeable Expense Item Subcomponent for Native Mobile UX
+function ExpenseItemRow({ exp, cat, onDelete }) {
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchOffset, setTouchOffset] = useState(0);
+
+  const handleTouchStart = (e) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    if (touchStart === null) return;
+    const currentTouch = e.targetTouches[0].clientX;
+    const diff = currentTouch - touchStart;
+    if (diff < 0) {
+      // Swiping left
+      setTouchOffset(Math.max(-75, diff));
+    } else if (touchOffset < 0 && diff > 0) {
+      // Swiping right to close
+      setTouchOffset(Math.min(0, -75 + diff));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchOffset < -40) {
+      setTouchOffset(-70);
+    } else {
+      setTouchOffset(0);
+    }
+    setTouchStart(null);
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl group">
+      {/* Background Delete Action revealed on swipe */}
+      <div className="absolute inset-y-0 right-0 w-20 bg-rose-600 flex items-center justify-center text-white rounded-r-2xl">
+        <button
+          type="button"
+          onClick={() => onDelete(exp.id)}
+          className="w-full h-full flex flex-col items-center justify-center text-[10px] font-black uppercase tracking-wider gap-0.5 active:bg-rose-700"
+          title="Delete expense"
+        >
+          <Trash2 className="w-4 h-4" />
+          <span>Delete</span>
+        </button>
+      </div>
+
+      <div 
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ transform: `translateX(${touchOffset}px)` }}
+        className="py-3 flex items-center justify-between gap-3 bg-white dark:bg-slate-900 rounded-2xl px-2 transition-transform duration-150 relative z-10"
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold shrink-0">
+            {exp.paymentMode || 'UPI'}
+          </div>
+          <div>
+            <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-tight">{exp.title}</h4>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+              {cat.name} • {exp.date} {exp.time ? `at ${exp.time}` : ''}
+              {exp.note ? ` • "${exp.note}"` : ''}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0">
+          <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+            ₹{Number(exp.amount).toLocaleString('en-IN')}
+          </span>
+          <button
+            type="button"
+            onClick={() => onDelete(exp.id)}
+            className="text-slate-300 dark:text-slate-600 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-1"
+            title="Delete expense"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

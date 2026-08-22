@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { triggerHaptic } from '../utils/haptics';
 import { 
   X, 
   Plus, 
@@ -59,6 +60,7 @@ export default function AddExpenseModal() {
       return;
     }
 
+    triggerHaptic(25);
     addExpense({
       category: category || activeCategories[0]?.id || 'other',
       amount: numAmount,
@@ -79,7 +81,7 @@ export default function AddExpenseModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-100 animate-slideUp">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 animate-slideUp">
         
         {/* Modal Header */}
         <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 p-5 text-white relative">
@@ -117,13 +119,14 @@ export default function AddExpenseModal() {
 
           {/* Amount Input */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               Expense Amount (₹ INR) *
             </label>
             <div className="relative">
               <span className="absolute left-4 top-3 text-lg font-black text-emerald-700">₹</span>
               <input
                 type="number"
+                inputMode="decimal"
                 required
                 min="1"
                 step="any"
@@ -133,7 +136,7 @@ export default function AddExpenseModal() {
                   setAmount(e.target.value);
                   setError('');
                 }}
-                className="w-full pl-9 pr-4 py-3 rounded-2xl border-2 border-slate-200 text-xl font-black text-slate-900 focus:outline-none focus:border-emerald-500 transition-colors shadow-xs"
+                className="w-full pl-9 pr-4 py-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 text-xl font-black text-slate-900 dark:text-white bg-white dark:bg-slate-800 focus:outline-none focus:border-emerald-500 transition-colors shadow-xs"
               />
             </div>
 
@@ -143,8 +146,11 @@ export default function AddExpenseModal() {
                 <button
                   key={q}
                   type="button"
-                  onClick={() => setAmount(q.toString())}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 text-xs font-bold transition-colors flex-shrink-0 border border-slate-200"
+                  onClick={() => {
+                    triggerHaptic(10);
+                    setAmount(q.toString());
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors flex-shrink-0 border border-slate-200 dark:border-slate-700"
                 >
                   +₹{q}
                 </button>

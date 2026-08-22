@@ -15,6 +15,7 @@ import AddExpenseModal from './components/AddExpenseModal';
 import SetBudgetModal from './components/SetBudgetModal';
 import AIReceiptScannerModal from './components/AIReceiptScannerModal';
 import ErrorBoundary from './components/ErrorBoundary';
+import { triggerHaptic } from './utils/haptics';
 import { 
   Heart, 
   ExternalLink, 
@@ -28,13 +29,16 @@ import {
   MapPin,
   Globe,
   WifiOff,
-  Wifi
+  Wifi,
+  Plus,
+  Camera
 } from 'lucide-react';
 
 export default function App() {
-  const { activeTab, setActiveTab } = useApp();
+  const { activeTab, setActiveTab, setIsAddExpenseModalOpen, setIsReceiptScannerOpen } = useApp();
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [showOnlineToast, setShowOnlineToast] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -46,15 +50,22 @@ export default function App() {
       setIsOnline(false);
     };
 
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 320);
+    };
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
   const scrollToTop = () => {
+    triggerHaptic(10);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -204,6 +215,36 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Scroll to Top Pill */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          className="fixed bottom-20 left-4 z-40 p-3 rounded-2xl bg-slate-900/90 hover:bg-slate-900 dark:bg-slate-800/90 dark:hover:bg-slate-800 text-white shadow-xl border border-slate-700/80 backdrop-blur-md transition-all active:scale-90 animate-fadeIn flex items-center gap-1.5"
+          title="Scroll to Top"
+          aria-label="Scroll to top"
+        >
+          <ArrowUp className="w-4 h-4 text-emerald-400 stroke-[3]" />
+          <span className="text-[10px] font-black uppercase tracking-wider hidden xs:inline">Top</span>
+        </button>
+      )}
+
+      {/* Floating Action Button (FAB) for Quick Log Expense on Mobile */}
+      <div className="fixed bottom-20 right-4 z-40 flex flex-col items-end gap-2 lg:hidden">
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic(20);
+            setIsAddExpenseModalOpen(true);
+          }}
+          className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black shadow-2xl shadow-emerald-500/40 flex items-center justify-center transition-all active:scale-90 border-2 border-white/20"
+          title="Quick Add Expense"
+          aria-label="Quick Add Expense"
+        >
+          <Plus className="w-6 h-6 stroke-[3]" />
+        </button>
+      </div>
 
       {/* Persistent Bottom Navigation for Mobile */}
       <BottomNav />

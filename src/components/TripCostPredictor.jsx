@@ -18,6 +18,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { triggerHaptic } from '../utils/haptics';
 
 const QUICK_CATEGORY_PRESETS = [
   { id: 'rooms', name: 'Hotel & Stay', rateType: 'roomsNights', icon: 'Hotel', color: 'blue' },
@@ -327,13 +328,17 @@ export default function TripCostPredictor() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => handleDaysChange(days - 1)}
-              className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center transition-colors"
+              onClick={() => {
+                triggerHaptic(10);
+                handleDaysChange(days - 1);
+              }}
+              className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center transition-colors active:scale-90"
             >
               <Minus className="w-4 h-4" />
             </button>
             <input
               type="number"
+              inputMode="numeric"
               value={days === 0 ? '' : days}
               placeholder="0"
               onChange={(e) => handleDaysChange(e.target.value)}
@@ -342,8 +347,11 @@ export default function TripCostPredictor() {
             />
             <button
               type="button"
-              onClick={() => handleDaysChange(days + 1)}
-              className="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center justify-center transition-colors"
+              onClick={() => {
+                triggerHaptic(10);
+                handleDaysChange(days + 1);
+              }}
+              className="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center justify-center transition-colors active:scale-90"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
             </button>
@@ -366,13 +374,17 @@ export default function TripCostPredictor() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => handleTravelersChange(travelers - 1)}
-              className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center transition-colors"
+              onClick={() => {
+                triggerHaptic(10);
+                handleTravelersChange(travelers - 1);
+              }}
+              className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center transition-colors active:scale-90"
             >
               <Minus className="w-4 h-4" />
             </button>
             <input
               type="number"
+              inputMode="numeric"
               value={travelers === 0 ? '' : travelers}
               placeholder="0"
               onChange={(e) => handleTravelersChange(e.target.value)}
@@ -381,8 +393,11 @@ export default function TripCostPredictor() {
             />
             <button
               type="button"
-              onClick={() => handleTravelersChange(travelers + 1)}
-              className="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center justify-center transition-colors"
+              onClick={() => {
+                triggerHaptic(10);
+                handleTravelersChange(travelers + 1);
+              }}
+              className="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center justify-center transition-colors active:scale-90"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
             </button>
@@ -549,6 +564,7 @@ export default function TripCostPredictor() {
                         <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">₹</span>
                         <input
                           type="number"
+                          inputMode="decimal"
                           value={cat.rate === 0 ? '' : cat.rate}
                           placeholder="0"
                           onChange={(e) => handleUpdateCategoryRate(cat.id, e.target.value)}
@@ -611,7 +627,10 @@ export default function TripCostPredictor() {
               {/* Action Button */}
               <button
                 type="button"
-                onClick={handleSaveAndGoToTracker}
+                onClick={() => {
+                  triggerHaptic(20);
+                  handleSaveAndGoToTracker();
+                }}
                 className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4 stroke-[3]" />
@@ -622,6 +641,27 @@ export default function TripCostPredictor() {
           </div>
         </div>
 
+      </div>
+
+      {/* Floating Sticky Live Predicted Budget Bar on Mobile */}
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 lg:hidden w-[92%] max-w-sm bg-slate-950/95 dark:bg-slate-900/95 text-white py-2.5 px-4 rounded-2xl shadow-2xl border border-teal-500/40 backdrop-blur-md flex items-center justify-between pointer-events-auto animate-fadeIn">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-black text-xs">
+            <Calculator className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-[10px] text-teal-400 font-bold uppercase tracking-wider block">Predicted Budget</span>
+            <span className="text-sm font-black text-white">
+              ₹{(totalEstimatedCost || 0).toLocaleString('en-IN')}
+            </span>
+          </div>
+        </div>
+        <div className="text-right">
+          <span className="text-[10px] text-slate-400 font-medium block">Per Person</span>
+          <span className="text-xs font-black text-teal-300">
+            ₹{(costPerPerson || 0).toLocaleString('en-IN')}
+          </span>
+        </div>
       </div>
 
     </section>
