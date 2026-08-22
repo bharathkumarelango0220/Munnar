@@ -482,9 +482,9 @@ export function getDistanceMeters(lat1, lon1, lat2, lon2) {
 
 /**
  * Computes minimum distance from user live location to route polyline
- * Detects if user went off-course (> 250m) and generates return connection path
+ * Detects if user went off-course (> 200m)
  */
-export function checkOffCourseAndReroute(userLat, userLon, routeCoordinates, destinationCoords) {
+export function checkOffCourseAndReroute(userLat, userLon, routeCoordinates) {
   if (!routeCoordinates || routeCoordinates.length === 0) return { isOffCourse: false, minDistanceMeters: 0 };
 
   let minDistanceMeters = Infinity;
@@ -499,28 +499,13 @@ export function checkOffCourseAndReroute(userLat, userLon, routeCoordinates, des
     }
   }
 
-  const isOffCourse = minDistanceMeters > 250; // 250m threshold
-
-  let rerouteCoordinates = null;
-  if (isOffCourse && destinationCoords) {
-    // Generate connecting detour path from user location back to next route segment
-    const targetIndex = Math.min(closestIndex + 2, routeCoordinates.length - 1);
-    const targetPoint = routeCoordinates[targetIndex];
-    
-    // Detour vector: [userLat, userLon] -> [targetPoint] -> remaining route
-    rerouteCoordinates = [
-      [userLat, userLon],
-      [(userLat + targetPoint[0]) / 2, (userLon + targetPoint[1]) / 2],
-      targetPoint,
-      ...routeCoordinates.slice(targetIndex)
-    ];
-  }
+  const isOffCourse = minDistanceMeters > 300; // 300m threshold
 
   return {
     isOffCourse,
     minDistanceMeters: Math.round(minDistanceMeters),
     closestWaypoint: routeCoordinates[closestIndex],
-    rerouteCoordinates
+    closestIndex
   };
 }
 

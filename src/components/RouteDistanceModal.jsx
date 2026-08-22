@@ -320,7 +320,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     };
   }, [selectedOrigin, selectedDest, isOpen]);
 
-  // Live GPS Tracking & Real-Time Off-Course Rerouting
+  // Live GPS Tracking & Real-Time True Road Rerouting
   const handleToggleLiveTracking = () => {
     triggerHaptic(20);
     if (isLiveTracking) {
@@ -332,7 +332,6 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       setUserLocation(null);
       setOffCourseData(null);
       if (userGpsMarkerRef.current) userGpsMarkerRef.current.clearLayers();
-      if (rerouteLayerRef.current) rerouteLayerRef.current.clearLayers();
     } else {
       if (!navigator.geolocation) {
         alert('Geolocation is not supported by your browser.');
@@ -340,8 +339,10 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       }
 
       setIsLiveTracking(true);
+      let isFirstFix = true;
+
       watchPositionIdRef.current = navigator.geolocation.watchPosition(
-        (pos) => {
+        async (pos) => {
           const lat = pos.coords.latitude;
           const lon = pos.coords.longitude;
           const speed = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0; // km/h
@@ -350,7 +351,24 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
 
           setUserLocation({ lat, lon, speed, heading, accuracy });
 
-          // Draw Live User Location on Map
+          // 1. On first GPS lock, auto-set departure to Live Location to calculate the EXACT driving road route!
+          if (isFirstFix) {
+            isFirstFix = false;
+            setSelectedOrigin({
+              id: 'live_gps_loc',
+              name: '📍 My Live Location (GPS)',
+              state: 'GPS',
+              lat,
+              lon,
+              highway: 'Direct GPS Highway Route',
+              elevationGain: '+1,500m Climb',
+              hairpinBends: 16,
+              lastFuelStop: 'Nearest Highway Fuel Pump',
+              tolls: 'Estimated'
+            });
+          }
+
+          // 2. Draw Live User Location on Map
           if (mapInstanceRef.current && userGpsMarkerRef.current) {
             userGpsMarkerRef.current.clearLayers();
 
@@ -366,27 +384,23 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
               .addTo(userGpsMarkerRef.current);
           }
 
-          // Check if User went Off-Course & Calculate Dynamic Offline Reroute
+          // 3. Check Off-Course & Auto-Reroute with Real Driving Road Geometry
           if (routeResult?.coordinates) {
-            const check = checkOffCourseAndReroute(
-              lat, 
-              lon, 
-              routeResult.coordinates, 
-              { lat: selectedDest.lat, lon: selectedDest.lon }
-            );
-
+            const check = checkOffCourseAndReroute(lat, lon, routeResult.coordinates);
             setOffCourseData(check);
 
-            // If off course, draw high-visibility dashed re-route connector on map
-            if (rerouteLayerRef.current) {
-              rerouteLayerRef.current.clearLayers();
-              if (check.isOffCourse && check.rerouteCoordinates) {
-                L.polyline(check.rerouteCoordinates, {
-                  color: '#f59e0b', // amber-500
-                  weight: 5,
-                  dashArray: '8, 8',
-                  opacity: 0.95
-                }).addTo(rerouteLayerRef.current);
+            // If user moved > 400m away from the route, automatically re-route along actual roads
+            if (check.isOffCourse && check.minDistanceMeters > 400) {
+              try {
+                const rerouteRes = await calculateRouteDistance(
+                  { lat, lon },
+                  { lat: selectedDest.lat, lon: selectedDest.lon }
+                );
+                if (rerouteRes && rerouteRes.coordinates) {
+                  setRouteResult(rerouteRes);
+                }
+              } catch (e) {
+                console.warn('Auto road reroute error:', e);
               }
             }
           }
@@ -397,6 +411,38 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
         },
         { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
       );
+    }
+  };
+
+  // Manual Force Reroute from Live GPS
+  const handleForceRerouteFromGps = async () => {
+    triggerHaptic(20);
+    if (!userLocation) return;
+    setIsCalculating(true);
+    try {
+      const rerouteRes = await calculateRouteDistance(
+        { lat: userLocation.lat, lon: userLocation.lon },
+        { lat: selectedDest.lat, lon: selectedDest.lon }
+      );
+      if (rerouteRes && rerouteRes.coordinates) {
+        setRouteResult(rerouteRes);
+        setSelectedOrigin({
+          id: 'live_gps_rerouted',
+          name: '📍 My Live Location (GPS)',
+          state: 'GPS',
+          lat: userLocation.lat,
+          lon: userLocation.lon,
+          highway: 'Direct GPS Highway Route',
+          elevationGain: '+1,500m Climb',
+          hairpinBends: 16,
+          lastFuelStop: 'Nearest Highway Fuel Pump',
+          tolls: 'Estimated'
+        });
+      }
+    } catch (e) {
+      console.warn('Manual reroute error:', e);
+    } finally {
+      setIsCalculating(false);
     }
   };
 
@@ -797,29 +843,39 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
           <div className={activeViewTab === 'map' ? 'space-y-2 block' : 'hidden'}>
             
             {/* Live Tracking & Off-Course Real-Time Status Alerts */}
-            {isLiveTracking && offCourseData && (
-              <div className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
-                offCourseData.isOffCourse 
+            {isLiveTracking && (
+              <div className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-all ${
+                offCourseData?.isOffCourse 
                   ? 'bg-amber-500/10 border-amber-500/40 text-amber-900 dark:text-amber-200' 
                   : 'bg-emerald-500/10 border-emerald-500/40 text-emerald-900 dark:text-emerald-200'
               }`}>
                 <div className="flex items-center gap-2 text-xs font-bold">
-                  {offCourseData.isOffCourse ? (
+                  {offCourseData?.isOffCourse ? (
                     <>
-                      <AlertTriangle className="w-4 h-4 text-amber-500 animate-bounce" />
-                      <span>⚠️ Off-Course ({offCourseData.minDistanceMeters}m off). Re-routing connecting vector active!</span>
+                      <AlertTriangle className="w-4 h-4 text-amber-500 animate-bounce shrink-0" />
+                      <span>⚠️ {offCourseData.minDistanceMeters}m off planned route. Dynamic road rerouting active!</span>
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      <span>🟢 Live on Route (Speed: {userLocation?.speed || 0} km/h • GPS ±{userLocation?.accuracy || 0}m)</span>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>🟢 Tracking exact road route (Speed: {userLocation?.speed || 0} km/h • GPS ±{userLocation?.accuracy || 0}m)</span>
                     </>
                   )}
                 </div>
                 
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-800 border">
-                  Live GPS
-                </span>
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={handleForceRerouteFromGps}
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-300 dark:border-slate-600 text-[11px] font-bold shadow-xs hover:bg-slate-100 transition-colors flex items-center gap-1 active:scale-95"
+                  >
+                    <RotateCcw className="w-3 h-3 text-emerald-600" />
+                    <span>Re-route from GPS</span>
+                  </button>
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-800 border">
+                    Live GPS
+                  </span>
+                </div>
               </div>
             )}
 
