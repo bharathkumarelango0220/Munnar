@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, 
   MapPin, 
   Navigation, 
   Compass, 
   ArrowRight, 
-  RotateCw, 
   Check, 
   Sparkles, 
   LocateFixed, 
@@ -13,15 +12,25 @@ import {
   Clock, 
   Route, 
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ExternalLink,
+  Share2,
+  Fuel,
+  ShieldAlert,
+  Coins,
+  Milestone,
+  Layers
 } from 'lucide-react';
 import { 
   POPULAR_ORIGINS, 
   POPULAR_DESTINATIONS, 
   calculateRouteDistance, 
-  geocodeLocation 
+  geocodeLocation,
+  getGoogleMapsNavigationUrl
 } from '../services/routingService';
 import { triggerHaptic } from '../utils/haptics';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance }) {
   const [selectedOrigin, setSelectedOrigin] = useState(POPULAR_ORIGINS[0]);
@@ -35,8 +44,110 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
 
   const [routeResult, setRouteResult] = useState(null);
   const [appliedFeedback, setAppliedFeedback] = useState(false);
+  const [activeViewTab, setActiveViewTab] = useState('map'); // 'map' | 'details'
 
-  // Auto-calculate route whenever origin, destination, or roundtrip changes
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const polylineLayerRef = useRef(null);
+  const markersLayerRef = useRef(null);
+
+  // Initialize and update Leaflet Map
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Small delay to ensure modal DOM is mounted
+    const timer = setTimeout(() => {
+      if (!mapContainerRef.current) return;
+
+      if (!mapInstanceRef.current) {
+        // Create Leaflet Map instance
+        const map = L.map(mapContainerRef.current, {
+          zoomControl: false,
+          attributionControl: false
+        }).setView([10.0889, 77.0595], 9);
+
+        // OpenStreetMap Crisp Tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 18,
+        }).addTo(map);
+
+        // Add sleek zoom control
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        mapInstanceRef.current = map;
+        polylineLayerRef.current = L.layerGroup().addTo(map);
+        markersLayerRef.current = L.layerGroup().addTo(map);
+      }
+
+      // Invalidate size to handle modal transitions
+      mapInstanceRef.current.invalidateSize();
+    }, 150);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isOpen, activeViewTab]);
+
+  // Clean up Leaflet on unmount
+  useEffect(() => {
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update Route Polyline & Markers on Map
+  useEffect(() => {
+    if (!isOpen || !mapInstanceRef.current || !routeResult?.coordinates) return;
+
+    const map = mapInstanceRef.current;
+    if (polylineLayerRef.current) polylineLayerRef.current.clearLayers();
+    if (markersLayerRef.current) markersLayerRef.current.clearLayers();
+
+    const coords = routeResult.coordinates;
+
+    if (coords && coords.length > 0) {
+      // 1. Draw glowing polyline
+      const polyline = L.polyline(coords, {
+        color: '#10b981', // emerald-500
+        weight: 5,
+        opacity: 0.9,
+        lineCap: 'round',
+        lineJoin: 'round'
+      }).addTo(polylineLayerRef.current);
+
+      // 2. Custom Start Marker Icon (A)
+      const startIcon = L.divIcon({
+        className: 'custom-leaflet-marker',
+        html: `<div style="background-color: #047857; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">A</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+
+      // 3. Custom Destination Marker Icon (B - Munnar)
+      const destIcon = L.divIcon({
+        className: 'custom-leaflet-marker',
+        html: `<div style="background-color: #0f766e; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; border: 2.5px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">🏔️</div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      L.marker([selectedOrigin.lat, selectedOrigin.lon], { icon: startIcon })
+        .bindPopup(`<b>Starting Point:</b><br/>${selectedOrigin.name}`)
+        .addTo(markersLayerRef.current);
+
+      L.marker([selectedDest.lat, selectedDest.lon], { icon: destIcon })
+        .bindPopup(`<b>Destination:</b><br/>${selectedDest.name}`)
+        .addTo(markersLayerRef.current);
+
+      // Fit map bounds to show full route
+      map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+    }
+  }, [routeResult, isOpen]);
+
+  // Auto-calculate route whenever origin, destination changes
   useEffect(() => {
     if (!isOpen) return;
 
@@ -85,8 +196,14 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
         const userLoc = {
           id: 'current_gps',
           name: '📍 My Live Location (GPS)',
+          state: 'GPS',
           lat: pos.coords.latitude,
-          lon: pos.coords.longitude
+          lon: pos.coords.longitude,
+          highway: 'Direct GPS Point to Munnar Ghats',
+          elevationGain: '+1,500m Climb',
+          hairpinBends: 16,
+          lastFuelStop: 'Nearest Highway Fuel Pump',
+          tolls: 'Varies by route'
         };
         setSelectedOrigin(userLoc);
         triggerHaptic(20);
@@ -113,8 +230,14 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
       setSelectedOrigin({
         id: 'custom_' + Date.now(),
         name: loc.name,
+        state: 'Custom',
         lat: loc.lat,
-        lon: loc.lon
+        lon: loc.lon,
+        highway: 'Highway to Munnar Mountain Pass',
+        elevationGain: '+1,520m Climb',
+        hairpinBends: 16,
+        lastFuelStop: 'Last Foothill Petrol Bunk',
+        tolls: 'Estimated'
       });
       setCustomOriginQuery('');
       triggerHaptic(20);
@@ -133,12 +256,29 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
     }, 600);
   };
 
+  // Share route summary on WhatsApp
+  const handleShareRoute = () => {
+    triggerHaptic(15);
+    const text = `🗺️ *Munnar Road Trip Route Plan*\n\n` +
+      `🚗 *Route:* ${selectedOrigin.name} ➔ ${selectedDest.name}\n` +
+      `📏 *Total Distance:* ${totalCalculatedKm} KM (${isRoundTrip ? 'Round Trip' : 'One-Way'})\n` +
+      `⏱️ *Driving Duration:* ${routeResult?.durationText || 'N/A'}\n` +
+      `🛣️ *Highway:* ${selectedOrigin.highway || 'Ghat Road'}\n` +
+      `🏔️ *Elevation Gain:* ${selectedOrigin.elevationGain || '+1,500m'}\n` +
+      `⛽ *Last Fuel Stop:* ${selectedOrigin.lastFuelStop || 'Town Bunk'}\n\n` +
+      `Plan & calculate exact trip petrol split on: https://munnartools.vercel.app`;
+    
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const googleMapsUrl = getGoogleMapsNavigationUrl(selectedOrigin, selectedDest);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-slideUp flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-slideUp flex flex-col max-h-[92vh]">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 p-5 text-white relative shrink-0">
+        <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 p-4 sm:p-5 text-white relative shrink-0">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
@@ -146,173 +286,307 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
             <X className="w-5 h-5" />
           </button>
           
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
-              OpenStreetMap & OSRM Engine (100% Free)
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-500/30">
+              OpenStreetMap & OSRM Engine
+            </span>
+            <span className="text-[10px] sm:text-[11px] text-slate-300 font-semibold">
+              Live Mountain Topology & Route Architect
             </span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-            <span>🗺️ Smart Route & Distance Calculator</span>
-          </h2>
-          <p className="text-slate-300 text-xs mt-0.5">
-            Auto-calculates driving road distance and mountain travel times to Munnar viewpoints.
-          </p>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mr-8">
+            <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+              <span>🗺️ Smart Route & Mountain Distance Suite</span>
+            </h2>
+
+            {/* Sub Nav Toggle on Mobile / Desktop */}
+            <div className="flex items-center gap-1 bg-white/10 p-1 rounded-xl self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setActiveViewTab('map')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  activeViewTab === 'map' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Interactive Map</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveViewTab('details')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  activeViewTab === 'details' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <Mountain className="w-3.5 h-3.5" />
+                <span>Ghat Road Analysis</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Scrollable Body */}
         <div className="p-4 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
           
-          {/* Step 1: Starting Location (Origin) */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>1. Starting From (Departure City)</span>
-              </label>
+          {/* TOP ROUTE SELECTORS: ORIGIN & DESTINATION */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* Origin Box */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>1. Departure City</span>
+                </label>
 
-              <button
-                type="button"
-                onClick={handleUseCurrentLocation}
-                disabled={isGpsLoading}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 transition-colors active:scale-95"
-              >
-                <LocateFixed className="w-3.5 h-3.5" />
-                <span>{isGpsLoading ? 'Getting GPS...' : 'Use My Live GPS'}</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={handleUseCurrentLocation}
+                  disabled={isGpsLoading}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition-colors active:scale-95"
+                >
+                  <LocateFixed className="w-3 h-3" />
+                  <span>{isGpsLoading ? 'Getting GPS...' : 'My Live GPS'}</span>
+                </button>
+              </div>
+
+              {/* City Presets Chips */}
+              <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto custom-scrollbar pr-1">
+                {POPULAR_ORIGINS.map((orig) => {
+                  const isSelected = selectedOrigin.id === orig.id;
+                  return (
+                    <button
+                      key={orig.id}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic(10);
+                        setSelectedOrigin(orig);
+                      }}
+                      className={`p-2 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
+                        isSelected
+                          ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20 shadow-xs'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                      }`}
+                    >
+                      <span className="truncate">{orig.name}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-medium ml-1">({orig.state})</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Custom Search Input */}
+              <form onSubmit={handleSearchCustomOrigin} className="flex gap-1.5 pt-1">
+                <input
+                  type="text"
+                  value={customOriginQuery}
+                  onChange={(e) => setCustomOriginQuery(e.target.value)}
+                  placeholder="Or type any city name..."
+                  className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:border-emerald-500"
+                />
+                <button
+                  type="submit"
+                  disabled={isSearchingCustom}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold transition-all shrink-0 active:scale-95"
+                >
+                  {isSearchingCustom ? '...' : 'Search'}
+                </button>
+              </form>
             </div>
 
-            {/* Origin Chips */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {POPULAR_ORIGINS.map((orig) => {
-                const isSelected = selectedOrigin.id === orig.id;
-                return (
-                  <button
-                    key={orig.id}
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic(10);
-                      setSelectedOrigin(orig);
-                    }}
-                    className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
-                      isSelected
-                        ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20 shadow-xs'
-                        : 'border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:border-slate-300'
-                    }`}
-                  >
-                    <span className="truncate">{orig.name}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 ml-1" />}
-                  </button>
-                );
-              })}
+            {/* Destination Box */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                  <span>2. Munnar Viewpoint</span>
+                </label>
+                <span className="text-[11px] font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/80 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-800">
+                  {selectedDest.altitude}
+                </span>
+              </div>
+
+              {/* Destinations Grid */}
+              <div className="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                {POPULAR_DESTINATIONS.map((dest) => {
+                  const isSelected = selectedDest.id === dest.id;
+                  return (
+                    <button
+                      key={dest.id}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic(10);
+                        setSelectedDest(dest);
+                      }}
+                      className={`p-2 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
+                        isSelected
+                          ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/60 text-teal-900 dark:text-teal-200 ring-2 ring-teal-500/20 shadow-xs'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                      }`}
+                    >
+                      <span className="truncate">{dest.name}</span>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0 ml-1" />}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Custom City Search Bar */}
-            <form onSubmit={handleSearchCustomOrigin} className="flex gap-2 pt-1">
-              <input
-                type="text"
-                value={customOriginQuery}
-                onChange={(e) => setCustomOriginQuery(e.target.value)}
-                placeholder="Or type any custom town (e.g. Ooty, Erode, Alappuzha)..."
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white bg-white dark:bg-slate-800 focus:outline-none focus:border-emerald-500"
-              />
-              <button
-                type="submit"
-                disabled={isSearchingCustom}
-                className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white text-xs font-bold transition-all shrink-0 active:scale-95"
-              >
-                {isSearchingCustom ? 'Searching...' : 'Find City'}
-              </button>
-            </form>
           </div>
 
-          {/* Step 2: Destination in Munnar */}
-          <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-              <span>2. Destination (Munnar Spot)</span>
-            </label>
+          {/* TAB 1: INTERACTIVE LIVE MAP VIEW */}
+          {activeViewTab === 'map' && (
+            <div className="space-y-3 animate-fadeIn">
+              <div className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-md">
+                {/* Map Container */}
+                <div 
+                  ref={mapContainerRef} 
+                  className="w-full h-72 sm:h-80 bg-slate-100 dark:bg-slate-950 relative z-10"
+                />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {POPULAR_DESTINATIONS.map((dest) => {
-                const isSelected = selectedDest.id === dest.id;
-                return (
-                  <button
-                    key={dest.id}
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic(10);
-                      setSelectedDest(dest);
-                    }}
-                    className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
-                      isSelected
-                        ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/60 text-teal-900 dark:text-teal-200 ring-2 ring-teal-500/20 shadow-xs'
-                        : 'border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:border-slate-300'
-                    }`}
-                  >
-                    <span className="truncate">{dest.name}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0 ml-1" />}
-                  </button>
-                );
-              })}
+                {/* Floating Map Legend Overlay */}
+                <div className="absolute top-3 left-3 z-20 bg-slate-900/90 text-white px-3 py-1.5 rounded-xl border border-white/20 backdrop-blur-md text-[11px] font-bold flex items-center gap-2 shadow-lg">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>{selectedOrigin.name} ➔ {selectedDest.name}</span>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Step 3: Journey Type Toggle (One-Way vs Round-Trip) */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-            <div>
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white">Round-Trip Return Journey?</h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Doubles calculated distance for return ride (2x KM)</p>
-            </div>
-
-            <div
-              onClick={() => {
-                triggerHaptic(15);
-                setIsRoundTrip(!isRoundTrip);
-              }}
-              className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
-                isRoundTrip ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
-              }`}
-            >
-              <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${isRoundTrip ? 'translate-x-6' : ''}`}></div>
-            </div>
-          </div>
-
-          {/* Calculation Display Result Card */}
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white shadow-xl border border-emerald-500/30 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                <Route className="w-4 h-4" />
-                <span>Calculated Road Route</span>
-              </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-emerald-300 font-bold">
-                {isRoundTrip ? '🔄 Round Trip (2x)' : '➡️ One-Way'}
-              </span>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
-              <div>
-                <p className="text-4xl sm:text-5xl font-black text-white tracking-tight">
-                  {isCalculating ? (
-                    <span className="text-2xl text-slate-400 animate-pulse">Calculating route...</span>
-                  ) : (
-                    <>{totalCalculatedKm} <span className="text-lg font-bold text-emerald-400">KM</span></>
-                  )}
+          {/* TAB 2: GHAT ROAD & MOUNTAIN INCLINE ANALYSIS */}
+          {activeViewTab === 'details' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 animate-fadeIn">
+              
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                  <Mountain className="w-4 h-4 text-emerald-600" />
+                  <span>Altitude Climb</span>
+                </div>
+                <p className="text-base font-black text-slate-900 dark:text-white">
+                  {selectedOrigin.elevationGain || '+1,500m'}
                 </p>
-                <p className="text-xs text-slate-300 mt-1">
+                <span className="text-[11px] text-slate-500">From plains to High Range</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                  <Milestone className="w-4 h-4 text-teal-600" />
+                  <span>Hairpin Bends</span>
+                </div>
+                <p className="text-base font-black text-slate-900 dark:text-white">
+                  {selectedOrigin.hairpinBends || 16} Mountain Hairpins
+                </p>
+                <span className="text-[11px] text-slate-500">Use 2nd/3rd gear on slopes</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                  <Coins className="w-4 h-4 text-amber-600" />
+                  <span>Estimated Tolls</span>
+                </div>
+                <p className="text-base font-black text-slate-900 dark:text-white">
+                  {selectedOrigin.tolls || '₹0'}
+                </p>
+                <span className="text-[11px] text-slate-500">Along highway corridor</span>
+              </div>
+
+              {/* Recommended Fuel Stop Advisory Card */}
+              <div className="sm:col-span-2 md:col-span-3 p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-amber-500 text-slate-950 shrink-0">
+                  <Fuel className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-amber-950 dark:text-amber-200 uppercase tracking-wider">
+                    Crucial Ghat Road Fuel Advisory:
+                  </h4>
+                  <p className="text-xs text-amber-900 dark:text-amber-300 mt-0.5">
+                    Last reliable fuel station before steep hill climb: <strong>{selectedOrigin.lastFuelStop || 'Foothill Fuel Bunk'}</strong>. Fill your tank before entering the forest pass!
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* Step 3: Journey Type Toggle & Live Calculated Result Banner */}
+          <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white shadow-xl border border-emerald-500/30 space-y-4">
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                  <Route className="w-4 h-4" />
+                  <span>Calculated Road Corridor</span>
+                </span>
+                <p className="text-xs text-slate-300 mt-0.5">
                   <strong>{selectedOrigin.name}</strong> ➔ <strong>{selectedDest.name}</strong>
                 </p>
               </div>
 
+              {/* Round Trip Toggle */}
+              <div className="flex items-center gap-3 self-start sm:self-auto bg-white/10 px-3 py-1.5 rounded-2xl border border-white/10">
+                <span className="text-xs font-bold text-slate-200">Round Trip (2x KM):</span>
+                <div
+                  onClick={() => {
+                    triggerHaptic(15);
+                    setIsRoundTrip(!isRoundTrip);
+                  }}
+                  className={`w-11 h-6 flex items-center rounded-full p-0.5 cursor-pointer transition-colors ${
+                    isRoundTrip ? 'bg-emerald-500' : 'bg-slate-600'
+                  }`}
+                >
+                  <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform ${isRoundTrip ? 'translate-x-5' : ''}`}></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-3">
+              <div>
+                <p className="text-4xl sm:text-5xl font-black text-white tracking-tight">
+                  {isCalculating ? (
+                    <span className="text-2xl text-slate-400 animate-pulse">Calculating road route...</span>
+                  ) : (
+                    <>{totalCalculatedKm} <span className="text-lg font-bold text-emerald-400">KM</span></>
+                  )}
+                </p>
+                <p className="text-xs text-slate-300 mt-1 font-medium">
+                  Highway: <strong>{selectedOrigin.highway || 'Direct Mountain Pass'}</strong>
+                </p>
+              </div>
+
               {routeResult && (
-                <div className="sm:text-right space-y-0.5">
+                <div className="sm:text-right space-y-1">
                   <div className="flex items-center sm:justify-end gap-1.5 text-xs text-teal-300 font-bold">
-                    <Clock className="w-3.5 h-3.5" />
+                    <Clock className="w-4 h-4" />
                     <span>Est. Drive: {isRoundTrip ? `2 × ${routeResult.durationText}` : routeResult.durationText}</span>
                   </div>
                   <span className="text-[10px] text-slate-400 block">{routeResult.source}</span>
                 </div>
               )}
             </div>
+
+            {/* Quick External Navigation Buttons */}
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10">
+              <a
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 border border-white/15"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Open in Google Maps Navigation</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={handleShareRoute}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 border border-white/15"
+              >
+                <Share2 className="w-3.5 h-3.5 text-teal-400" />
+                <span>Share Route on WhatsApp</span>
+              </button>
+            </div>
+
           </div>
 
         </div>
@@ -324,7 +598,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
             onClick={onClose}
             className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 transition-colors"
           >
-            Cancel
+            Close
           </button>
 
           <button
@@ -341,7 +615,7 @@ export default function RouteDistanceModal({ isOpen, onClose, onApplyDistance })
             ) : (
               <>
                 <Sparkles className="w-4 h-4" />
-                <span>⚡ Apply {totalCalculatedKm} KM to Calculator</span>
+                <span>⚡ Apply {totalCalculatedKm} KM to Fuel Calculator</span>
               </>
             )}
           </button>
