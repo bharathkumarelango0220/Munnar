@@ -4,19 +4,19 @@ import App from './App.jsx';
 import { AppProvider } from './context/AppContext.jsx';
 import './index.css';
 
-// Register Service Worker for Offline-First PWA & APK Support
-if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+// Register Service Worker for 100% Offline-First PWA Support
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
       .then((reg) => {
-        // Automatically check for background updates every 30 minutes
+        // Automatically check for background updates every 15 minutes when online
         setInterval(() => {
-          reg.update();
-        }, 1000 * 60 * 30);
+          reg.update().catch(() => {});
+        }, 1000 * 60 * 15);
       })
       .catch((err) => {
-        console.warn('Service Worker registration failed:', err);
+        console.warn('Service Worker registration skipped:', err);
       });
   });
 }

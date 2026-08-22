@@ -1,24 +1,26 @@
-const CACHE_NAME = 'triptools-cache-v1';
-const STATIC_ASSETS = [
+const CACHE_NAME = 'triptools-offline-v3';
+const CORE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">✈️</text></svg>'
+  '/icon.svg',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
-// Install Event: Cache Core App Shell
+// Install Event: Pre-cache core app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('Pre-caching assets skipped non-critical:', err);
+      return cache.addAll(CORE_ASSETS).catch((err) => {
+        console.warn('[SW] Core assets pre-caching partial:', err);
       });
     })
   );
   self.skipWaiting();
 });
 
-// Activate Event: Clean Old Caches
+// Activate Event: Delete previous old caches and claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -29,42 +31,62 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Fetch Event: Stale-While-Revalidate Strategy (Offline First with Background Sync)
+// Fetch Event: Offline-First with Stale-While-Revalidate Caching
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  const request = event.request;
+  const url = new URL(request.url);
 
-  // Skip non-GET and API / external auth calls
-  if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) {
+  // Only handle GET requests
+  if (request.method !== 'GET') {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // Fetch fresh copy from network in the background
-      const fetchPromise = fetch(event.request)
+  // Handle SPA Page Navigation (when opening website in offline mode)
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
         .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const responseToCache = networkResponse.clone();
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
+              cache.put('/index.html', responseClone);
             });
           }
           return networkResponse;
         })
         .catch(() => {
-          // If network fails and no cache exists, fallback to root/index.html for navigation
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html') || caches.match('/');
+          // If completely offline, serve cached index.html immediately
+          return caches.match('/index.html') || caches.match('/');
+        })
+    );
+    return;
+  }
+
+  // Handle Static Assets (JS, CSS, Images, Fonts, Icons)
+  event.respondWith(
+    caches.match(request).then((cachedResponse) => {
+      const networkFetch = fetch(request)
+        .then((networkResponse) => {
+          // Cache successful same-origin or CORS responses
+          if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
           }
+          return networkResponse;
+        })
+        .catch(() => {
+          // If offline and not in cache, fallback
+          return cachedResponse;
         });
 
-      // Serve from cache immediately if available, otherwise wait for network
-      return cachedResponse || fetchPromise;
+      // Serve from local cache if present, otherwise fetch from network
+      return cachedResponse || networkFetch;
     })
   );
 });

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from './context/AppContext';
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
@@ -26,11 +26,33 @@ import {
   Calculator,
   Fuel,
   MapPin,
-  Globe
+  Globe,
+  WifiOff,
+  Wifi
 } from 'lucide-react';
 
 export default function App() {
   const { activeTab, setActiveTab } = useApp();
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [showOnlineToast, setShowOnlineToast] = useState(false);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowOnlineToast(true);
+      setTimeout(() => setShowOnlineToast(false), 4000);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -39,6 +61,20 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#080c14] text-slate-900 dark:text-slate-100 font-sans selection:bg-emerald-500 selection:text-white transition-colors">
       
+      {/* Offline / Online Status Banners */}
+      {!isOnline && (
+        <div className="bg-amber-400 text-slate-950 px-4 py-1.5 text-center text-xs font-black flex items-center justify-center gap-2 shadow-sm sticky top-0 z-50">
+          <WifiOff className="w-3.5 h-3.5" />
+          <span>📴 Offline Mode Active • All tools, calculators & spending records work 100% offline</span>
+        </div>
+      )}
+      {showOnlineToast && (
+        <div className="bg-emerald-400 text-slate-950 px-4 py-1.5 text-center text-xs font-black flex items-center justify-center gap-2 shadow-sm sticky top-0 z-50 animate-fadeIn">
+          <Wifi className="w-3.5 h-3.5" />
+          <span>⚡ Back Online • Cloud Sync Active</span>
+        </div>
+      )}
+
       {/* Sticky Top Header */}
       <Navbar />
 
