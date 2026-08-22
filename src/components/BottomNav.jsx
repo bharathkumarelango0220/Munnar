@@ -25,8 +25,8 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200/90 dark:border-slate-800/90 shadow-2xl safe-bottom transition-colors">
-      <div className="grid grid-cols-7 h-16 max-w-lg mx-auto items-center px-1">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-slate-800/90 shadow-2xl safe-bottom transition-colors hardware-accelerated">
+      <div className="grid grid-cols-7 h-[58px] max-w-lg mx-auto items-center px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -39,13 +39,13 @@ export default function BottomNav() {
                 setActiveTab(item.id);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition-all relative active:scale-95 ${
+              className={`flex flex-col items-center justify-center min-h-[48px] py-1 px-0.5 rounded-xl transition-all relative active:scale-95 select-none ${
                 isActive 
                   ? 'text-emerald-700 dark:text-emerald-400 font-black' 
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <div className={`p-1 rounded-lg transition-transform ${isActive ? 'scale-105 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 shadow-xs' : ''}`}>
+              <div className={`p-1 rounded-lg transition-transform ${isActive ? 'scale-110 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 shadow-xs' : ''}`}>
                 <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.5] text-emerald-600 dark:text-emerald-400' : 'stroke-[1.75]'}`} />
               </div>
               <span className="text-[9.5px] font-bold tracking-tight leading-none mt-1 truncate w-full text-center">

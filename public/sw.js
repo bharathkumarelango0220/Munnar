@@ -1,4 +1,4 @@
-const CACHE_NAME = 'triptools-offline-v5';
+const CACHE_NAME = 'triptools-offline-v6';
 const TILE_CACHE = 'triptools-tiles-v1';
 
 const CORE_ASSETS = [

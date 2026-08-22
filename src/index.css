@@ -11,6 +11,7 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
   }
 
   body {
@@ -18,7 +19,45 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    touch-action: manipulation;
+    overscroll-behavior-y: none;
   }
+
+  button, a, input, select, textarea, [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+/* Safe Area Inset Helpers for Modern iOS and Android */
+.safe-bottom {
+  padding-bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px));
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-pb-nav {
+  padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* Mobile Hardware Accelerated Transitions */
+.hardware-accelerated {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Performance List Deferral for Offscreen Cards */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 250px;
+}
+
+/* Contain Overscroll in Dialogs and Dropdowns */
+.overscroll-contain {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* =========================================================

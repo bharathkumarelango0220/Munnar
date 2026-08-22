@@ -14,6 +14,7 @@ import TravelerNameModal from './components/TravelerNameModal';
 import AddExpenseModal from './components/AddExpenseModal';
 import SetBudgetModal from './components/SetBudgetModal';
 import AIReceiptScannerModal from './components/AIReceiptScannerModal';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import ErrorBoundary from './components/ErrorBoundary';
 import { triggerHaptic } from './utils/haptics';
 import { 
@@ -248,6 +249,9 @@ export default function App() {
 
       {/* Persistent Bottom Navigation for Mobile */}
       <BottomNav />
+
+      {/* 1-Tap Offline Mountain PWA Install Prompt */}
+      <PWAInstallPrompt />
 
       {/* Global Modals */}
       <TravelerNameModal />
